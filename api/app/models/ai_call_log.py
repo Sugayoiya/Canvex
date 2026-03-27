@@ -45,6 +45,10 @@ class AICallLog(Base):
     cost: Mapped[Decimal | None] = mapped_column(Numeric(12, 6), nullable=True)
     pricing_model: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
+    input_unit_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 8), nullable=True)
+    output_unit_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 8), nullable=True)
+    pricing_snapshot_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
     credential_source: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
