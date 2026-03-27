@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
-status: verifying
-stopped_at: Completed 02-09-PLAN.md
-last_updated: "2026-03-27T17:38:01.472Z"
-last_activity: 2026-03-27
+status: discussing
+stopped_at: Phase 03 discussion complete — ready for planning
+last_updated: "2026-03-28"
+last_activity: 2026-03-28
 progress:
   total_phases: 6
   completed_phases: 2
@@ -18,17 +18,17 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-27)
+See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 02 — skills-canvas
+**Current focus:** Phase 03 — agent-system (discussion complete, ready to plan)
 
 ## Current Position
 
 Phase: 03
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-03-27
+Plan: Not started — discussion complete with 8 decisions (D1-D8)
+Status: Discussion complete — ready for /gsd-plan-phase 03
+Last activity: 2026-03-28
 
 Progress: [██░░░░░░░░] 17%
 
@@ -68,14 +68,15 @@ Progress: [██░░░░░░░░] 17%
 
 ### Pending Todos
 
-None yet.
+- [ ] /gsd-plan-phase 03 — 根据 8 个决定生成具体执行计划
 
 ### Blockers/Concerns
 
+- D8 前置任务：Phase 03 执行前需先迁移原项目 prompt_seeds（97 prompt + 31 schema）到 SKILL.md 格式
 - Phase 2+ verification and UAT artifacts are not yet executed.
 
 ## Session Continuity
 
-Last session: 2026-03-27T17:31:39.730Z
-Stopped at: Completed 02-09-PLAN.md
-Resume file: None
+Last session: 2026-03-28
+Stopped at: Phase 03 discussion complete (8 decisions locked in 03-CONTEXT.md)
+Resume file: .planning/phases/03-agent-system/03-CONTEXT.md
