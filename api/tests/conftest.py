@@ -16,6 +16,9 @@ os.environ.setdefault("DEFAULT_ADMIN_PASSWORD", "testpassword")
 from app.core.database import Base  # noqa: E402
 from app.main import app  # noqa: E402
 from app.core.deps import get_db, get_current_user  # noqa: E402
+from app.skills.register_all import register_all_skills  # noqa: E402
+
+register_all_skills()
 
 TEST_DB_URL = "sqlite+aiosqlite:///./test.db"
 
