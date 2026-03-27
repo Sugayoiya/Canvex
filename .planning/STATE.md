@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-27T17:15:14.389Z"
+stopped_at: Completed 02-06-PLAN.md
+last_updated: "2026-03-27T17:15:49.633Z"
 last_activity: 2026-03-27
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 17
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (skills-canvas) — EXECUTING
-Plan: 5 of 9
+Plan: 6 of 9
 Status: Ready to execute
 Last activity: 2026-03-27
 
@@ -53,6 +53,9 @@ Progress: [██░░░░░░░░] 17%
 - [Phase 02]: Hardcoded prompts in skills (no PromptTemplateService) — keeps skills self-contained
 - [Phase 02]: Shared json_parser utility for robust LLM JSON parsing across all extract skills
 - [Phase 02]: Partial degradation pattern: return valid items + warnings instead of full failure
+- [Phase 02-06]: Price snapshot captured at write time for cost audit trail
+- [Phase 02-06]: Pricing lookup failure is fail-open — AICallLog write always succeeds
+- [Phase 02-06]: Usage stats scoped: admin sees all, non-admin sees own calls only
 
 ### Pending Todos
 
@@ -64,6 +67,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T17:15:14.387Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-03-27T17:15:49.631Z
+Stopped at: Completed 02-06-PLAN.md
 Resume file: None
