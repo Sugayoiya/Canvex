@@ -1,0 +1,262 @@
+"use client";
+
+import { useCallback, useEffect, useRef } from "react";
+import {
+  ReactFlow,
+  useNodesState,
+  useEdgesState,
+  addEdge,
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  useReactFlow,
+  ReactFlowProvider,
+  type Connection,
+  type Node,
+  type Edge,
+  type NodeTypes,
+  type NodeProps,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+
+import { canvasApi } from "@/lib/api";
+import { useCanvasStore } from "@/stores/canvas-store";
+import { isValidConnection } from "@/lib/connection-rules";
+import { CanvasToolbar } from "./canvas-toolbar";
+import { Handle, Position } from "@xyflow/react";
+
+/* ------------------------------------------------------------------ */
+/*  Placeholder node components — replaced by real nodes in 02-08     */
+/* ------------------------------------------------------------------ */
+
+function PlaceholderNode({ data }: NodeProps) {
+  const nodeData = data as { label: string; nodeType: string };
+  return (
+    <div className="rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-3 text-sm text-zinc-200 shadow-md">
+      <Handle type="target" position={Position.Left} className="!bg-cyan-500" />
+      <span>{nodeData.label}</span>
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!bg-cyan-500"
+      />
+    </div>
+  );
+}
+
+const nodeTypes: NodeTypes = {
+  "text-input": PlaceholderNode,
+  "llm-generate": PlaceholderNode,
+  extract: PlaceholderNode,
+  "image-gen": PlaceholderNode,
+  output: PlaceholderNode,
+};
+
+/* ------------------------------------------------------------------ */
+/*  Backend data → ReactFlow node/edge mappers                        */
+/* ------------------------------------------------------------------ */
+
+interface BackendNode {
+  id: string;
+  node_type: string;
+  position_x: number;
+  position_y: number;
+  config?: Record<string, unknown>;
+  status?: string;
+}
+
+interface BackendEdge {
+  id: string;
+  source_node_id: string;
+  target_node_id: string;
+  source_handle?: string;
+  target_handle?: string;
+}
+
+interface CanvasDetail {
+  id: string;
+  project_id: string;
+  name?: string;
+  nodes?: BackendNode[];
+  edges?: BackendEdge[];
+}
+
+const NODE_LABELS: Record<string, string> = {
+  "text-input": "文本输入",
+  "llm-generate": "LLM 生成",
+  extract: "提取",
+  "image-gen": "图片生成",
+  output: "输出",
+};
+
+function toFlowNode(n: BackendNode): Node {
+  return {
+    id: n.id,
+    type: n.node_type,
+    position: { x: n.position_x, y: n.position_y },
+    data: {
+      label: NODE_LABELS[n.node_type] ?? n.node_type,
+      nodeType: n.node_type,
+      config: n.config ?? {},
+      status: n.status ?? "idle",
+    },
+  };
+}
+
+function toFlowEdge(e: BackendEdge): Edge {
+  return {
+    id: e.id,
+    source: e.source_node_id,
+    target: e.target_node_id,
+    sourceHandle: e.source_handle ?? null,
+    targetHandle: e.target_handle ?? null,
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Inner workspace (must be inside ReactFlowProvider)                */
+/* ------------------------------------------------------------------ */
+
+interface InnerWorkspaceProps {
+  canvasId: string;
+  initialData?: CanvasDetail;
+}
+
+function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
+    (initialData?.nodes ?? []).map(toFlowNode),
+  );
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(
+    (initialData?.edges ?? []).map(toFlowEdge),
+  );
+  const { getViewport } = useReactFlow();
+  const { setCanvas, setSaving } = useCanvasStore();
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (initialData) {
+      setCanvas(canvasId, initialData.project_id);
+    }
+  }, [canvasId, initialData, setCanvas]);
+
+  const persistViewport = useCallback(() => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      const vp = getViewport();
+      canvasApi.update(canvasId, { viewport: vp }).catch(() => {});
+    }, 500);
+  }, [canvasId, getViewport]);
+
+  const handleConnect = useCallback(
+    (connection: Connection) => {
+      if (!isValidConnection(connection, nodes)) return;
+      setEdges((eds) => addEdge(connection, eds));
+      canvasApi
+        .createEdge({
+          canvas_id: canvasId,
+          source_node_id: connection.source!,
+          target_node_id: connection.target!,
+          source_handle: connection.sourceHandle ?? undefined,
+          target_handle: connection.targetHandle ?? undefined,
+        })
+        .catch(() => {});
+    },
+    [canvasId, nodes, setEdges],
+  );
+
+  const handleNodeDragStop = useCallback(
+    (_event: React.MouseEvent, node: Node) => {
+      setSaving(true);
+      canvasApi
+        .updateNode(node.id, {
+          position_x: node.position.x,
+          position_y: node.position.y,
+        })
+        .finally(() => setSaving(false));
+    },
+    [setSaving],
+  );
+
+  const handleAddNode = useCallback(
+    (nodeType: string) => {
+      const vp = getViewport();
+      const posX = (-vp.x + 400) / vp.zoom;
+      const posY = (-vp.y + 300) / vp.zoom;
+
+      setSaving(true);
+      canvasApi
+        .createNode({
+          canvas_id: canvasId,
+          node_type: nodeType,
+          position_x: posX,
+          position_y: posY,
+        })
+        .then((res) => {
+          const created = res.data as BackendNode;
+          setNodes((nds) => [...nds, toFlowNode(created)]);
+        })
+        .finally(() => setSaving(false));
+    },
+    [canvasId, getViewport, setNodes, setSaving],
+  );
+
+  return (
+    <div className="relative h-full w-full" style={{ background: "#09090b" }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={handleConnect}
+        onNodeDragStop={handleNodeDragStop}
+        onMoveEnd={persistViewport}
+        nodeTypes={nodeTypes}
+        isValidConnection={(conn) => isValidConnection(conn, nodes)}
+        deleteKeyCode={["Backspace", "Delete"]}
+        minZoom={0.2}
+        maxZoom={3}
+        fitView
+        fitViewOptions={{ padding: 0.2 }}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={24}
+          size={1.5}
+          color="rgb(96, 96, 104)"
+          style={{ backgroundColor: "#09090b" }}
+        />
+        <Controls className="!bg-zinc-800 !border-zinc-700 !text-zinc-200 [&>button]:!bg-zinc-800 [&>button]:!border-zinc-700 [&>button]:!text-zinc-200 [&>button:hover]:!bg-zinc-700" />
+        <MiniMap
+          style={{
+            backgroundColor: "#18181b",
+            border: "1px solid #27272a",
+          }}
+          maskColor="rgba(0, 0, 0, 0.6)"
+          nodeColor="#3f3f46"
+        />
+      </ReactFlow>
+      <CanvasToolbar onAddNode={handleAddNode} />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Public wrapper with ReactFlowProvider                             */
+/* ------------------------------------------------------------------ */
+
+interface CanvasWorkspaceProps {
+  canvasId: string;
+  initialData?: CanvasDetail;
+}
+
+export function CanvasWorkspace({ canvasId, initialData }: CanvasWorkspaceProps) {
+  return (
+    <ReactFlowProvider>
+      <InnerWorkspace canvasId={canvasId} initialData={initialData} />
+    </ReactFlowProvider>
+  );
+}
+
+export default CanvasWorkspace;

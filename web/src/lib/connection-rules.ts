@@ -1,4 +1,4 @@
-import type { Connection } from "@xyflow/react";
+import type { Connection, Edge } from "@xyflow/react";
 
 type HandleType = "text" | "json" | "image" | "any";
 
@@ -12,7 +12,7 @@ const NODE_IO: Record<string, { inputs: HandleType[]; outputs: HandleType[] }> =
   };
 
 export function isValidConnection(
-  connection: Connection,
+  connection: Connection | Edge,
   nodes: { id: string; type?: string }[],
 ): boolean {
   const sourceNode = nodes.find((n) => n.id === connection.source);
