@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="animate-pulse text-lg text-gray-500">
-        Canvas Studio 加载中...
+        Canvex 加载中...
       </div>
     </div>
   );

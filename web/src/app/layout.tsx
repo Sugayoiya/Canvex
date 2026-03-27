@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Canvas Studio",
+  title: "Canvex",
   description: "AI-powered storyboard & video production workbench",
 };
 

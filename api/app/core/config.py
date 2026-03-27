@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "Canvas Studio"
+    PROJECT_NAME: str = "Canvex"
     API_V1_STR: str = "/api/v1"
 
     # Database
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: str = ""
 
     # Default admin
-    DEFAULT_ADMIN_EMAIL: str = "admin@canvas-studio.com"
+    DEFAULT_ADMIN_EMAIL: str = "admin@canvex.studio"
     DEFAULT_ADMIN_PASSWORD: str = "Admin123!"
 
     class Config:
