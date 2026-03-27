@@ -23,10 +23,10 @@
 **Depends on**: Phase 01
 **UI hint**: yes
 **Requirements:** [REQ-03, REQ-04]
-**Plans:** 1/9 plans executed
+**Plans:** 2/9 plans executed
 
 Plans:
-- [ ] 02-01-PLAN.md — [W1] LLM Provider Infrastructure + fail-open AICallLog + ContextVar rehydration
+- [x] 02-01-PLAN.md — [W1] LLM Provider Infrastructure + fail-open AICallLog + ContextVar rehydration
 - [x] 02-02-PLAN.md — [W1] Canvas Backend Models + project-scoped CRUD API
 - [ ] 02-03-PLAN.md — [W2] Skill Migration: TEXT (llm_generate, refine) + EXTRACT (characters, scenes) + shared JSON parser
 - [ ] 02-05-PLAN.md — [W2] Canvas Frontend Shell: page + workspace + toolbar + API client

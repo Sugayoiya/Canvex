@@ -12,7 +12,7 @@
 
 ### Skills & Canvas
 
-- [ ] **REQ-03**: Core business services are migrated into structured Skills (TEXT/EXTRACT/SCRIPT/STORYBOARD/VISUAL).
+- [x] **REQ-03**: Core business services are migrated into structured Skills (TEXT/EXTRACT/SCRIPT/STORYBOARD/VISUAL).
 - [x] **REQ-04**: Baseline canvas with 5 core node types executes through SkillRegistry.
 
 ### Agent System
@@ -55,7 +55,7 @@
 |-------------|-------|--------|
 | REQ-01 | Phase 1 | Complete |
 | REQ-02 | Phase 1 | Complete |
-| REQ-03 | Phase 2 | Pending |
+| REQ-03 | Phase 2 | Complete |
 | REQ-04 | Phase 2 | Complete |
 | REQ-05 | Phase 3 | Pending |
 | REQ-06 | Phase 3 | Pending |
