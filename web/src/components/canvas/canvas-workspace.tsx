@@ -15,8 +15,6 @@ import {
   type Connection,
   type Node,
   type Edge,
-  type NodeTypes,
-  type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -24,34 +22,7 @@ import { canvasApi } from "@/lib/api";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { isValidConnection } from "@/lib/connection-rules";
 import { CanvasToolbar } from "./canvas-toolbar";
-import { Handle, Position } from "@xyflow/react";
-
-/* ------------------------------------------------------------------ */
-/*  Placeholder node components — replaced by real nodes in 02-08     */
-/* ------------------------------------------------------------------ */
-
-function PlaceholderNode({ data }: NodeProps) {
-  const nodeData = data as { label: string; nodeType: string };
-  return (
-    <div className="rounded-lg border border-zinc-600 bg-zinc-800 px-4 py-3 text-sm text-zinc-200 shadow-md">
-      <Handle type="target" position={Position.Left} className="!bg-cyan-500" />
-      <span>{nodeData.label}</span>
-      <Handle
-        type="source"
-        position={Position.Right}
-        className="!bg-cyan-500"
-      />
-    </div>
-  );
-}
-
-const nodeTypes: NodeTypes = {
-  "text-input": PlaceholderNode,
-  "llm-generate": PlaceholderNode,
-  extract: PlaceholderNode,
-  "image-gen": PlaceholderNode,
-  output: PlaceholderNode,
-};
+import { nodeTypes } from "./nodes";
 
 /* ------------------------------------------------------------------ */
 /*  Backend data → ReactFlow node/edge mappers                        */

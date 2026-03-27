@@ -69,6 +69,7 @@ export const skillsApi = {
     project_id?: string;
     canvas_id?: string;
     node_id?: string;
+    idempotency_key?: string;
   }) => api.post("/skills/invoke", data),
   poll: (task_id: string) => api.post("/skills/poll", { task_id }),
 };
