@@ -23,11 +23,11 @@
 **Depends on**: Phase 01
 **UI hint**: yes
 **Requirements:** [REQ-03, REQ-04]
-**Plans:** 9 plans (5 waves)
+**Plans:** 1/9 plans executed
 
 Plans:
 - [ ] 02-01-PLAN.md — [W1] LLM Provider Infrastructure + fail-open AICallLog + ContextVar rehydration
-- [ ] 02-02-PLAN.md — [W1] Canvas Backend Models + project-scoped CRUD API
+- [x] 02-02-PLAN.md — [W1] Canvas Backend Models + project-scoped CRUD API
 - [ ] 02-03-PLAN.md — [W2] Skill Migration: TEXT (llm_generate, refine) + EXTRACT (characters, scenes) + shared JSON parser
 - [ ] 02-05-PLAN.md — [W2] Canvas Frontend Shell: page + workspace + toolbar + API client
 - [ ] 02-06-PLAN.md — [W2] Billing Baseline: ModelPricing + admin CRUD + cost auto-calc + usage stats
