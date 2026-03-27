@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 02-06-PLAN.md
-last_updated: "2026-03-27T17:15:49.633Z"
+stopped_at: Completed 02-05-PLAN.md
+last_updated: "2026-03-27T17:16:45.839Z"
 last_activity: 2026-03-27
 progress:
   total_phases: 6
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (skills-canvas) — EXECUTING
-Plan: 6 of 9
+Plan: 7 of 9
 Status: Ready to execute
 Last activity: 2026-03-27
 
@@ -56,6 +56,8 @@ Progress: [██░░░░░░░░] 17%
 - [Phase 02-06]: Price snapshot captured at write time for cost audit trail
 - [Phase 02-06]: Pricing lookup failure is fail-open — AICallLog write always succeeds
 - [Phase 02-06]: Usage stats scoped: admin sees all, non-admin sees own calls only
+- [Phase 02-05]: useParams hook for client-side canvas param extraction in Next.js 16
+- [Phase 02-05]: Placeholder node components — real skill-connected nodes deferred to 02-08
 
 ### Pending Todos
 
@@ -67,6 +69,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T17:15:49.631Z
-Stopped at: Completed 02-06-PLAN.md
+Last session: 2026-03-27T17:16:45.830Z
+Stopped at: Completed 02-05-PLAN.md
 Resume file: None
