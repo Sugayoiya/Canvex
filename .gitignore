@@ -35,7 +35,6 @@ Desktop.ini
 .env.*.local
 !.env.example
 !.env.local.example
-!.env.docker
 
 # Database
 *.db

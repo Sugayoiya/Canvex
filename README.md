@@ -1,109 +1,208 @@
-# Canvas Studio
+# Canvex
 
-AI 驱动的分镜与视频创作工作台，采用 Agent-as-Orchestrator 架构，通过 Skill 体系 + Celery 异步任务编排实现端到端的影视创作流程。
-
-## 架构概览
-
-```
-用户 → 系统内 Agent (理解意图 + 画布感知) → SkillRegistry (发现 + 调用 Skill)
-     → Celery (异步执行) → 画布节点 (结果回写)
-```
-
-**核心设计：**
-- **Skill 体系**：每个核心能力封装为带描述、输入/输出 schema、生命周期管理的 Skill 单元
-- **Agent-as-Orchestrator**：AI Agent 通过 Tool Calling 调用 Skills，不直接操作业务逻辑
-- **企业级 Celery**：4 队列路由 (ai_generation / media_processing / pipeline / quick)
-- **完备日志**：structlog 结构化日志 + trace_id 链路追踪 + AI 调用审计
+短剧/短片分镜制作工作台，支持项目大纲、多集剧本、角色场景设定、AI 分镜图生成、视频参考分析、视觉风格库、AI Canvas 工作流编排，以及多租户团队协作。
 
 ## 技术栈
 
-- **前端**：Next.js 16, React 19, TypeScript, TailwindCSS, Zustand, React Query, XYFlow
-- **后端**：FastAPI, SQLAlchemy (async), Pydantic, Celery
-- **数据库**：PostgreSQL (生产) / SQLite (开发)
-- **队列**：Redis (Celery broker & result backend)
-- **AI**：OpenAI, Gemini, DeepSeek (可扩展)
+| 层级 | 技术 |
+|------|------|
+| 前端 | Next.js 16 (App Router), React 19, TypeScript, TailwindCSS 4, Zustand, React Query, TipTap, XYFlow |
+| 后端 | FastAPI, SQLAlchemy (async), Pydantic, Celery |
+| 数据库 | PostgreSQL 16 (生产) / SQLite (本地开发) |
+| 缓存/队列 | Redis 7 |
+| 反向代理 | Nginx Proxy Manager |
+| AI | OpenAI, Google Gemini, DeepSeek, ComfyUI |
 
-## 快速开始
+## 快速开始 (Docker)
 
-### SQLite 模式 (无 Docker)
+### 前置要求
+
+- [Docker](https://www.docker.com/) & Docker Compose v2+
+- Git
+
+### 1. 克隆并配置
 
 ```bash
-# 后端
-cd api
+git clone <repo-url> && cd canvas-studio
 cp .env.example .env
+```
+
+编辑 `.env`，填入你的配置（API Key 等）。所有配置集中在这一个文件：
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `POSTGRES_USER` | 数据库用户 | `postgres` |
+| `POSTGRES_PASSWORD` | 数据库密码 | `postgres` |
+| `POSTGRES_DB` | 数据库名 | `canvex` |
+| `POSTGRES_PORT` | 数据库端口 (宿主机映射) | `5432` |
+| `REDIS_PORT` | Redis 端口 | `6379` |
+| `SECRET_KEY` | JWT 签名密钥 | 请修改 |
+| `OPENAI_API_KEY` | OpenAI API Key | 空 |
+| `GEMINI_API_KEY` | Gemini API Key | 空 |
+| `DEEPSEEK_API_KEY` | DeepSeek API Key | 空 |
+| `DEFAULT_ADMIN_EMAIL` | 初始管理员邮箱 | `admin@canvex.studio` |
+| `DEFAULT_ADMIN_PASSWORD` | 初始管理员密码 | `Admin123!` |
+| `NPM_EMAIL` | NPM 管理面板账号 | `admin@canvex.studio` |
+| `NPM_PASSWORD` | NPM 管理面板密码 | 请修改 |
+| `HTTP_PORT` | HTTP 对外端口 | `80` |
+| `HTTPS_PORT` | HTTPS 对外端口 | `443` |
+| `NPM_ADMIN_PORT` | NPM 管理面板端口 | `81` |
+
+### 2. 启动服务
+
+```bash
+docker compose up -d
+```
+
+### 3. 初始化反向代理
+
+首次部署需要运行一次初始化脚本，配置 Nginx Proxy Manager 的代理规则：
+
+```bash
+bash scripts/init-npm.sh
+```
+
+脚本自动读取 `.env` 配置，完成以下操作：
+- 等待 NPM 启动就绪
+- 创建/更新管理员账号（使用 `NPM_EMAIL` / `NPM_PASSWORD`）
+- 设置默认页面为 404
+- 创建代理规则：`localhost` → 前端，`/api` → 后端
+
+> 后续重启只需 `docker compose up -d`，NPM 数据持久化在 Docker Volume 中，不需要重新初始化。
+
+### 4. 访问
+
+| 服务 | 地址 |
+|------|------|
+| 前端 | `http://localhost` (或你配置的 `HTTP_PORT`) |
+| API | `http://localhost/api/v1/...` |
+| API 文档 (Swagger) | `http://localhost/api/docs` |
+| NPM 管理面板 | `http://localhost:81` (或你配置的 `NPM_ADMIN_PORT`) |
+| 数据库 (外部连接) | `localhost:5432`，用户/密码/库名见 `.env` |
+
+默认管理员账号：见 `.env` 中 `DEFAULT_ADMIN_EMAIL` / `DEFAULT_ADMIN_PASSWORD`。
+
+## Docker 服务架构
+
+```
+                    ┌─────────────────────────────────┐
+                    │    Nginx Proxy Manager (NPM)    │
+                    │    :80 / :443 / :81(管理面板)     │
+                    └──────┬──────────────┬───────────┘
+                           │              │
+                    /api/* │              │ /*
+                           ▼              ▼
+                  ┌──────────────┐  ┌──────────────┐
+                  │   canvex-api │  │   canvex-web │
+                  │   FastAPI    │  │   Next.js    │
+                  │   :8000      │  │   :3000      │
+                  └──────┬───────┘  └──────────────┘
+                         │
+              ┌──────────┼──────────┐
+              ▼          ▼          ▼
+      ┌────────────┐ ┌────────┐ ┌────────────────┐
+      │  canvex-   │ │ canvex-│ │ canvex-worker- │
+      │  postgres  │ │ redis  │ │ ai/media/quick │
+      │  :5432     │ │ :6379  │ │ + beat + flower│
+      └────────────┘ └────────┘ └────────────────┘
+```
+
+所有容器名以 `canvex-` 为前缀：
+
+| 容器 | 说明 |
+|------|------|
+| `canvex-postgres` | PostgreSQL 数据库 |
+| `canvex-redis` | Redis 缓存/消息队列 |
+| `canvex-api` | FastAPI 后端 |
+| `canvex-web` | Next.js 前端 |
+| `canvex-npm` | Nginx Proxy Manager 反向代理 |
+| `canvex-worker-ai` | Celery Worker — AI 生成任务 |
+| `canvex-worker-media` | Celery Worker — 媒体处理任务 |
+| `canvex-worker-quick` | Celery Worker — 快速/管道任务 |
+| `canvex-beat` | Celery Beat — 定时任务调度 |
+| `canvex-flower` | Celery Flower — 任务监控面板 |
+
+## 本地开发 (不使用 Docker)
+
+### 后端
+
+```bash
+cd api
+cp ../.env.example ../.env
+# 在 .env 中设置 USE_SQLITE=true 使用 SQLite 免装数据库
 uv sync
 uv run uvicorn app.main:app --reload --port 8000
+```
 
-# 前端
+### 前端
+
+```bash
 cd web
+echo 'NEXT_PUBLIC_API_URL=http://localhost:8000' > .env.local
 npm install
 npm run dev
 ```
 
-> SQLite 模式下无需 Redis，Celery async Skills 会降级为同步调用。
+前端访问 `http://localhost:3000`，API 访问 `http://localhost:8000/docs`。
 
-### 完整模式 (Docker)
+## 常用命令
 
 ```bash
-docker compose up -d          # 启动 Redis + PostgreSQL
-cd api && uv run uvicorn app.main:app --reload --port 8000
-cd web && npm run dev
+# 启动全部服务
+docker compose up -d
 
-# 启动 Celery workers (单独终端)
-cd api && celery -A app.celery_app worker -Q ai_generation,quick -c 4 --loglevel=info
+# 查看服务状态
+docker compose ps
+
+# 查看日志
+docker compose logs -f api        # 后端日志
+docker compose logs -f web        # 前端日志
+docker compose logs -f worker-ai  # AI Worker 日志
+
+# 重建镜像（代码更新后）
+docker compose build
+docker compose up -d
+
+# 仅重建某个服务
+docker compose build api && docker compose up -d api
+
+# 停止全部服务
+docker compose down
+
+# 停止并清除数据卷（慎用，会删除数据库数据）
+docker compose down -v
 ```
-
-## API 文档
-
-启动后端后访问：http://localhost:8000/docs
-
-### 核心端点
-
-| 端点 | 说明 |
-|------|------|
-| `POST /api/v1/auth/register` | 注册 |
-| `POST /api/v1/auth/login` | 登录 |
-| `GET /api/v1/skills/` | 列出所有 Skills |
-| `GET /api/v1/skills/tools` | 获取 Tool Calling 格式定义 |
-| `POST /api/v1/skills/invoke` | 调用 Skill |
-| `POST /api/v1/skills/poll` | 轮询异步 Skill 进度 |
-| `GET /api/v1/logs/skills` | Skill 执行日志 |
-| `GET /api/v1/logs/ai-calls` | AI 调用日志 |
-| `GET /api/v1/logs/trace/{id}` | 完整链路追踪 |
-| `GET /health` | 健康检查 |
-
-## 已注册 Skills (Phase 1)
-
-| Skill | 类别 | 模式 | 说明 |
-|-------|------|------|------|
-| `text.llm_generate` | TEXT | async | 通用 LLM 文本生成 |
-| `extract.characters` | EXTRACT | async | 从文本提取角色 |
-| `extract.scenes` | EXTRACT | async | 从文本提取场景 |
-| `canvas.get_state` | CANVAS | sync | 获取画布状态 |
-| `asset.get_project_info` | ASSET | sync | 获取项目信息 |
 
 ## 目录结构
 
 ```
 canvas-studio/
-├── api/                          # 后端 (FastAPI)
+├── api/                    # FastAPI 后端
 │   ├── app/
-│   │   ├── main.py               # 入口
-│   │   ├── celery_app.py         # Celery 实例
-│   │   ├── api/v1/               # API 路由
-│   │   ├── skills/               # Skill 体系 (核心)
-│   │   │   ├── registry.py       # SkillRegistry
-│   │   │   ├── descriptor.py     # SkillDescriptor + SkillResult
-│   │   │   ├── executor.py       # SkillExecutor
-│   │   │   ├── context.py        # SkillContext
-│   │   │   └── text/extract/...  # 各类 Skill 实现
-│   │   ├── tasks/                # Celery 任务
-│   │   ├── models/               # 数据库模型
-│   │   ├── core/                 # 配置/认证/日志
-│   │   └── services/             # 底层服务
+│   │   ├── api/v1/         # API 路由
+│   │   ├── core/           # 核心配置 (数据库, 认证, 依赖注入)
+│   │   ├── models/         # SQLAlchemy ORM 模型
+│   │   ├── schemas/        # Pydantic 请求/响应模型
+│   │   └── services/       # 业务逻辑层
+│   │       ├── ai/         # AI 服务 (LLM, 图像生成)
+│   │       └── video/      # 视频处理
+│   ├── Dockerfile
 │   └── pyproject.toml
-├── web/                          # 前端 (Next.js)
-│   └── src/
-├── docker-compose.yml
-└── README.md
+├── web/                    # Next.js 前端
+│   ├── src/
+│   │   ├── app/            # App Router 页面
+│   │   ├── components/     # 功能组件
+│   │   ├── lib/api.ts      # API 客户端
+│   │   └── stores/         # Zustand 状态管理
+│   ├── Dockerfile
+│   └── package.json
+├── scripts/
+│   └── init-npm.sh         # NPM 代理初始化脚本
+├── docker-compose.yml      # Docker Compose 编排
+├── .env.example            # 环境变量模板
+└── .env                    # 本地环境变量 (git ignored)
 ```
+
+## License
+
+Private

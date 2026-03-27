@@ -7,10 +7,9 @@ __pycache__
 .gitignore
 .dockerignore
 
-# env
-.env
+# env (only ignore local overrides, .env is the default docker config)
 .env.local
-!.env.docker
+.env.*.local
 
 # data
 dev.db*
