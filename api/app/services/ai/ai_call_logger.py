@@ -54,6 +54,33 @@ async def log_ai_call(
         from app.core.database import AsyncSessionLocal
         from app.models.ai_call_log import AICallLog
 
+        input_unit_price = None
+        output_unit_price = None
+        pricing_snapshot_id = None
+        pricing_model = extra.get("pricing_model")
+
+        if cost is None and (input_tokens or output_tokens):
+            try:
+                from app.services.billing.pricing_service import calculate_cost_with_snapshot
+
+                cost_result = await calculate_cost_with_snapshot(
+                    provider, model, model_type, input_tokens, output_tokens
+                )
+                if cost_result:
+                    cost = cost_result["cost"]
+                    input_unit_price = cost_result.get("input_unit_price")
+                    output_unit_price = cost_result.get("output_unit_price")
+                    pricing_snapshot_id = cost_result.get("pricing_id")
+            except Exception:
+                logger.warning(
+                    "Cost calculation failed for %s/%s, writing AICallLog without cost",
+                    provider,
+                    model,
+                )
+
+        if pricing_model is None:
+            pricing_model = "per_token" if (input_tokens or output_tokens) else None
+
         ctx = get_ai_call_context()
         log_entry = AICallLog(
             trace_id=ctx.get("trace_id", ""),
@@ -70,6 +97,10 @@ async def log_ai_call(
             status=status,
             error_message=error_message[:2000] if error_message else None,
             cost=cost,
+            pricing_model=pricing_model,
+            input_unit_price=input_unit_price,
+            output_unit_price=output_unit_price,
+            pricing_snapshot_id=pricing_snapshot_id,
             credential_source="env",
         )
         async with AsyncSessionLocal() as session:
