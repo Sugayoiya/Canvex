@@ -23,15 +23,15 @@
 **Depends on**: Phase 01
 **UI hint**: yes
 **Requirements:** [REQ-03, REQ-04]
-**Plans:** 2/9 plans executed
+**Plans:** 5/9 plans executed
 
 Plans:
 - [x] 02-01-PLAN.md — [W1] LLM Provider Infrastructure + fail-open AICallLog + ContextVar rehydration
 - [x] 02-02-PLAN.md — [W1] Canvas Backend Models + project-scoped CRUD API
-- [ ] 02-03-PLAN.md — [W2] Skill Migration: TEXT (llm_generate, refine) + EXTRACT (characters, scenes) + shared JSON parser
+- [x] 02-03-PLAN.md — [W2] Skill Migration: TEXT (llm_generate, refine) + EXTRACT (characters, scenes) + shared JSON parser
 - [ ] 02-05-PLAN.md — [W2] Canvas Frontend Shell: page + workspace + toolbar + API client
-- [ ] 02-06-PLAN.md — [W2] Billing Baseline: ModelPricing + admin CRUD + cost auto-calc + usage stats
-- [ ] 02-07-PLAN.md — [W2] Skill Migration: VISUAL (character_prompt, scene_prompt, generate_image) + GeminiImageProvider
+- [x] 02-06-PLAN.md — [W2] Billing Baseline: ModelPricing + admin CRUD + cost auto-calc + usage stats
+- [x] 02-07-PLAN.md — [W2] Skill Migration: VISUAL (character_prompt, scene_prompt, generate_image) + GeminiImageProvider
 - [ ] 02-04-PLAN.md — [W3] Skill Migration: SCRIPT (split_clips, convert_screenplay) + STORYBOARD (plan, detail)
 - [ ] 02-08-PLAN.md — [W3] Canvas 5 Node Types + useNodeExecution hook (polling backoff)
 - [ ] 02-09-PLAN.md — [W4] Integration Acceptance Test Gate
