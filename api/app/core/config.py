@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
     DEEPSEEK_API_KEY: str = ""
+    GROK_API_KEY: str = ""
 
     # Default admin
     DEFAULT_ADMIN_EMAIL: str = "admin@canvex.studio"
