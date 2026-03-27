@@ -1,0 +1,34 @@
+node_modules
+.next
+out
+.turbo
+.git
+.gitignore
+.dockerignore
+
+# env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# docs & misc
+README.md
+CLAUDE.md
+AGENTS.md
+LICENSE
+*.md
+
+# tests
+coverage
+__tests__
+*.test.*
+*.spec.*

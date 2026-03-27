@@ -1,0 +1,39 @@
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+.git
+.gitignore
+.dockerignore
+
+# env
+.env
+.env.local
+!.env.docker
+
+# data
+dev.db*
+logs/
+uploads/
+
+# testing
+.pytest_cache
+.coverage
+htmlcov/
+coverage/
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# docs & misc
+README.md
+CLAUDE.md
+LICENSE
+*.md

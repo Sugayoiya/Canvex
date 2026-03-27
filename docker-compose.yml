@@ -1,8 +1,8 @@
 services:
+  # ────────────────── Infrastructure ──────────────────
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
+    restart: unless-stopped
     volumes:
       - redis_data:/data
     healthcheck:
@@ -13,6 +13,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
@@ -27,25 +28,56 @@ services:
       timeout: 3s
       retries: 5
 
+  # ────────────────── Nginx Proxy Manager ──────────────────
+  npm:
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"       # HTTP
+      - "443:443"     # HTTPS
+      - "81:81"       # NPM Admin UI
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    depends_on:
+      - api
+      - web
+
+  # ────────────────── Backend API ──────────────────
   api:
     build:
       context: ./api
       dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    env_file: ./api/.env
+    restart: unless-stopped
+    env_file: ./api/.env.docker
+    volumes:
+      - api_uploads:/app/uploads
+      - api_logs:/app/logs
     depends_on:
       redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
 
+  # ────────────────── Frontend ──────────────────
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ""
+    restart: unless-stopped
+    depends_on:
+      - api
+
+  # ────────────────── Celery Workers ──────────────────
   celery-worker-ai:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: celery -A app.celery_app worker -Q ai_generation -c 4 --loglevel=info
-    env_file: ./api/.env
+    restart: unless-stopped
+    command: uv run celery -A app.celery_app worker -Q ai_generation -c 4 --loglevel=info
+    env_file: ./api/.env.docker
     depends_on:
       redis:
         condition: service_healthy
@@ -54,18 +86,9 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: celery -A app.celery_app worker -Q media_processing -c 2 --loglevel=info
-    env_file: ./api/.env
-    depends_on:
-      redis:
-        condition: service_healthy
-
-  celery-worker-pipeline:
-    build:
-      context: ./api
-      dockerfile: Dockerfile
-    command: celery -A app.celery_app worker -Q pipeline -c 2 --loglevel=info
-    env_file: ./api/.env
+    restart: unless-stopped
+    command: uv run celery -A app.celery_app worker -Q media_processing -c 2 --loglevel=info
+    env_file: ./api/.env.docker
     depends_on:
       redis:
         condition: service_healthy
@@ -74,8 +97,9 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: celery -A app.celery_app worker -Q quick -c 8 --loglevel=info
-    env_file: ./api/.env
+    restart: unless-stopped
+    command: uv run celery -A app.celery_app worker -Q quick,pipeline -c 4 --loglevel=info
+    env_file: ./api/.env.docker
     depends_on:
       redis:
         condition: service_healthy
@@ -84,8 +108,9 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: celery -A app.celery_app beat --loglevel=info
-    env_file: ./api/.env
+    restart: unless-stopped
+    command: uv run celery -A app.celery_app beat --loglevel=info
+    env_file: ./api/.env.docker
     depends_on:
       redis:
         condition: service_healthy
@@ -94,23 +119,17 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: celery -A app.celery_app flower --port=5555
-    ports:
-      - "5555:5555"
-    env_file: ./api/.env
+    restart: unless-stopped
+    command: uv run celery -A app.celery_app flower --port=5555
+    env_file: ./api/.env.docker
     depends_on:
       redis:
         condition: service_healthy
 
-  web:
-    build:
-      context: ./web
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api
-
 volumes:
   redis_data:
   postgres_data:
+  npm_data:
+  npm_letsencrypt:
+  api_uploads:
+  api_logs:

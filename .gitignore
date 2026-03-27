@@ -15,21 +15,31 @@ env/
 node_modules/
 .next/
 out/
+.turbo/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+Desktop.ini
 
 # Environment
 .env
 .env.local
 .env.*.local
+!.env.example
+!.env.local.example
+!.env.docker
 
 # Database
 *.db
+*.db-journal
 *.sqlite3
 
 # Logs
@@ -39,11 +49,19 @@ logs/
 # Uploads
 uploads/
 
-# Coverage
+# Testing & Coverage
 .coverage
 htmlcov/
 .pytest_cache/
+coverage/
 
 # Celery
 celerybeat-schedule
 celerybeat.pid
+
+# Docker volumes (local data)
+docker-data/
+
+# uv
+.uv/
+uv.lock.*.tmp

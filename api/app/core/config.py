@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: str = ""
 
     # Default admin
-    DEFAULT_ADMIN_EMAIL: str = "admin@studio.local"
+    DEFAULT_ADMIN_EMAIL: str = "admin@canvas-studio.com"
     DEFAULT_ADMIN_PASSWORD: str = "Admin123!"
 
     class Config:
