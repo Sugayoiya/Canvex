@@ -30,6 +30,14 @@ def run_skill_task(self, skill_name: str, params: dict, context_dict: dict):
     """Generic Celery task that executes any registered Skill."""
     ctx = SkillContext.from_dict(context_dict)
 
+    from app.services.ai.ai_call_logger import set_ai_call_context
+    set_ai_call_context(
+        trace_id=ctx.trace_id,
+        user_id=ctx.user_id,
+        team_id=ctx.team_id,
+        project_id=ctx.project_id,
+    )
+
     structlog.contextvars.bind_contextvars(
         trace_id=ctx.trace_id,
         user_id=ctx.user_id,
