@@ -1,0 +1,30 @@
+[project]
+name = "canvas-studio-api"
+version = "0.1.0"
+description = "Canvas Studio API - Agent-as-Orchestrator with Skill System"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aiofiles>=25.1.0",
+    "aiosqlite>=0.22.1",
+    "asyncpg>=0.31.0",
+    "celery[redis]>=5.4.0",
+    "fastapi>=0.115.0",
+    "httpx>=0.28.1",
+    "openai>=2.16.0",
+    "passlib[bcrypt]>=1.7.4",
+    "pydantic[email]>=2.12.5",
+    "pydantic-settings>=2.12.0",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.22",
+    "sqlalchemy[asyncio]>=2.0.46",
+    "structlog>=24.4.0",
+    "uvicorn[standard]>=0.40.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.25.2",
+]
+flower = ["flower>=2.0.1"]
