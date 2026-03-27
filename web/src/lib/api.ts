@@ -82,4 +82,33 @@ export const logsApi = {
   trace: (traceId: string) => api.get(`/logs/trace/${traceId}`),
 };
 
+export const canvasApi = {
+  list: (projectId: string) =>
+    api.get("/canvas/", { params: { project_id: projectId } }),
+  get: (canvasId: string) => api.get(`/canvas/${canvasId}`),
+  create: (data: { project_id: string; name?: string }) =>
+    api.post("/canvas/", data),
+  update: (canvasId: string, data: { name?: string; viewport?: unknown }) =>
+    api.patch(`/canvas/${canvasId}`, data),
+  delete: (canvasId: string) => api.delete(`/canvas/${canvasId}`),
+  createNode: (data: {
+    canvas_id: string;
+    node_type: string;
+    position_x?: number;
+    position_y?: number;
+    config?: Record<string, unknown>;
+  }) => api.post("/canvas/nodes/", data),
+  updateNode: (nodeId: string, data: Record<string, unknown>) =>
+    api.patch(`/canvas/nodes/${nodeId}`, data),
+  deleteNode: (nodeId: string) => api.delete(`/canvas/nodes/${nodeId}`),
+  createEdge: (data: {
+    canvas_id: string;
+    source_node_id: string;
+    target_node_id: string;
+    source_handle?: string;
+    target_handle?: string;
+  }) => api.post("/canvas/edges/", data),
+  deleteEdge: (edgeId: string) => api.delete(`/canvas/edges/${edgeId}`),
+};
+
 export default api;
