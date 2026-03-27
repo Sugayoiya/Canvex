@@ -1,0 +1,19 @@
+---
+phase: "05"
+name: "phase-5"
+created: 2026-03-27
+---
+
+# Phase 5: phase-5 — Context
+
+## Decisions
+
+_Decisions will be captured during /gsd:discuss-phase 5_
+
+## Discretion Areas
+
+_Areas where the executor can use judgment_
+
+## Deferred Ideas
+
+_Ideas to consider later_
