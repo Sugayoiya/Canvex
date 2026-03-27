@@ -13,10 +13,11 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 ### Validated
 
 - ✓ Phase 1 foundation is implemented and running in repository structure.
+- ✓ Phase 2 skill migration + canvas baseline + billing baseline — Validated in Phase 02: skills-canvas
 
 ### Active
 
-- [ ] Phase 2 skill migration + canvas baseline + billing baseline
+- [x] Phase 2 skill migration + canvas baseline + billing baseline (complete)
 - [ ] Phase 3 agent tool-calling orchestration
 - [ ] Phase 4 media/slash skills + quota controls
 - [ ] Phase 5 canvas/video polish + billing dashboard
@@ -55,4 +56,4 @@ This document evolves at phase transitions and milestone boundaries.
 - After each milestone, re-check core value, constraints, and scope boundaries.
 
 ---
-*Last updated: 2026-03-27 after GSD audit initialization*
+*Last updated: 2026-03-28 after Phase 02 completion — 15 skills across 5 categories, Canvas CRUD + frontend shell, billing baseline*
