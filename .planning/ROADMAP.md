@@ -23,7 +23,7 @@
 **Depends on**: Phase 01
 **UI hint**: yes
 **Requirements:** [REQ-03, REQ-04]
-**Plans:** 7/9 plans executed
+**Plans:** 8/9 plans executed
 
 Plans:
 - [x] 02-01-PLAN.md — [W1] LLM Provider Infrastructure + fail-open AICallLog + ContextVar rehydration
@@ -33,7 +33,7 @@ Plans:
 - [x] 02-06-PLAN.md — [W2] Billing Baseline: ModelPricing + admin CRUD + cost auto-calc + usage stats
 - [x] 02-07-PLAN.md — [W2] Skill Migration: VISUAL (character_prompt, scene_prompt, generate_image) + GeminiImageProvider
 - [x] 02-04-PLAN.md — [W3] Skill Migration: SCRIPT (split_clips, convert_screenplay) + STORYBOARD (plan, detail)
-- [ ] 02-08-PLAN.md — [W3] Canvas 5 Node Types + useNodeExecution hook (polling backoff)
+- [x] 02-08-PLAN.md — [W3] Canvas 5 Node Types + useNodeExecution hook (polling backoff)
 - [ ] 02-09-PLAN.md — [W4] Integration Acceptance Test Gate
 
 **Success Criteria**:

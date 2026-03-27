@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-03-27T17:21:48.988Z"
+stopped_at: Completed 02-08-PLAN.md
+last_updated: "2026-03-27T17:23:26.746Z"
 last_activity: 2026-03-27
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 17
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-27)
 ## Current Position
 
 Phase: 02 (skills-canvas) — EXECUTING
-Plan: 8 of 9
+Plan: 9 of 9
 Status: Ready to execute
 Last activity: 2026-03-27
 
@@ -60,6 +60,9 @@ Progress: [██░░░░░░░░] 17%
 - [Phase 02-05]: Placeholder node components — real skill-connected nodes deferred to 02-08
 - [Phase 02]: Hardcoded prompts in SCRIPT/STORYBOARD skills (no PromptTemplateService) — keeps skills self-contained
 - [Phase 02]: Pydantic strict validators for all structured LLM outputs with partial degradation
+- [Phase 02]: Added lucide-react for node icons — no prior icon library in Canvex
+- [Phase 02]: 7-state node execution machine: idle/queued/running/completed/failed/timeout/blocked
+- [Phase 02]: Idempotency key pattern: nodeId_timestamp for duplicate execution prevention
 
 ### Pending Todos
 
@@ -71,6 +74,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-27T17:21:48.986Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-03-27T17:23:26.744Z
+Stopped at: Completed 02-08-PLAN.md
 Resume file: None
