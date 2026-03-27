@@ -40,6 +40,8 @@ Desktop.ini
 # Database
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 *.sqlite3
 
 # Logs
