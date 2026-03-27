@@ -44,6 +44,7 @@ async def init_db():
     from app.models.project import Project  # noqa
     from app.models.skill_execution_log import SkillExecutionLog  # noqa
     from app.models.ai_call_log import AICallLog  # noqa
+    from app.models.canvas import Canvas, CanvasNode, CanvasEdge  # noqa
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
