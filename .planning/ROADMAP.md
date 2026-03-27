@@ -23,15 +23,18 @@
 **Depends on**: Phase 01
 **UI hint**: yes
 **Requirements:** [REQ-03, REQ-04]
-**Plans:** 6 plans
+**Plans:** 9 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — LLM Provider Infrastructure + AICallLog Write Path
-- [ ] 02-02-PLAN.md — Canvas Backend Models + API
-- [ ] 02-03-PLAN.md — Skill Migration: TEXT + EXTRACT categories
-- [ ] 02-04-PLAN.md — Skill Migration: SCRIPT + STORYBOARD + VISUAL categories
-- [ ] 02-05-PLAN.md — Canvas Frontend: Workspace + 5 Node Types
-- [ ] 02-06-PLAN.md — Billing Baseline: ModelPricing + Cost API
+- [ ] 02-01-PLAN.md — LLM Provider Infrastructure + AICallLog (retry/fail-open/ContextVar)
+- [ ] 02-02-PLAN.md — Canvas Backend Models + API (project-scoped auth)
+- [ ] 02-03-PLAN.md — Skill Migration: TEXT + EXTRACT (structured output)
+- [ ] 02-04-PLAN.md — Skill Migration: SCRIPT + STORYBOARD
+- [ ] 02-05-PLAN.md — Canvas Frontend Shell: Page + Workspace + Toolbar
+- [ ] 02-06-PLAN.md — Billing Baseline: ModelPricing + Cost API (admin auth)
+- [ ] 02-07-PLAN.md — Skill Migration: VISUAL (character_prompt + scene_prompt + generate_image)
+- [ ] 02-08-PLAN.md — Canvas Frontend: 5 Node Types + Execution Hook (backoff)
+- [ ] 02-09-PLAN.md — Integration Acceptance Test Gate
 
 **Success Criteria**:
 1. Core service domains are exposed as skills.
