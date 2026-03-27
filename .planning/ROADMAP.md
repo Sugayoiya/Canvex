@@ -3,7 +3,7 @@
 ## Canvex Roadmap v2.0: Skill + Celery Refactor
 
 - [x] **Phase 01: Foundation + SkillRegistry + Celery + Logging**
-- [ ] **Phase 02: Full Skill Migration + Base Canvas + Billing Baseline**
+- [x] **Phase 02: Full Skill Migration + Base Canvas + Billing Baseline** (completed 2026-03-27)
 - [ ] **Phase 03: Agent System + Tool Calling + Pipeline Orchestration**
 - [ ] **Phase 04: Media/Slash Skills + Quota Controls**
 - [ ] **Phase 05: Canvas/Video Experience + Billing Dashboard**
@@ -23,7 +23,7 @@
 **Depends on**: Phase 01
 **UI hint**: yes
 **Requirements:** [REQ-03, REQ-04]
-**Plans:** 8/9 plans executed
+**Plans:** 9/9 plans complete
 
 Plans:
 - [x] 02-01-PLAN.md — [W1] LLM Provider Infrastructure + fail-open AICallLog + ContextVar rehydration
@@ -34,7 +34,7 @@ Plans:
 - [x] 02-07-PLAN.md — [W2] Skill Migration: VISUAL (character_prompt, scene_prompt, generate_image) + GeminiImageProvider
 - [x] 02-04-PLAN.md — [W3] Skill Migration: SCRIPT (split_clips, convert_screenplay) + STORYBOARD (plan, detail)
 - [x] 02-08-PLAN.md — [W3] Canvas 5 Node Types + useNodeExecution hook (polling backoff)
-- [ ] 02-09-PLAN.md — [W4] Integration Acceptance Test Gate
+- [x] 02-09-PLAN.md — [W4] Integration Acceptance Test Gate
 
 **Success Criteria**:
 1. Core service domains are exposed as skills.
