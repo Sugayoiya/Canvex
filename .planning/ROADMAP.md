@@ -65,13 +65,13 @@ Plans:
 **Goal:** Fix 12 quality issues across Agent Chat (pipeline toolset, context injection, session history, suggestion chips, heartbeat cleanup) and Canvas (upstream data flow, node persistence, edge deletion sync, execution result writeback, output node aggregation).
 **Requirements**: None (inserted bugfix phase)
 **Depends on:** Phase 03
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 03.1-01-PLAN.md — [W1] Agent Backend: mount pipeline toolset + context injection + context query tools + schema fix + heartbeat cleanup
 - [x] 03.1-02-PLAN.md — [W1] Canvas Hooks: useUpstreamData (typed data flow) + useNodePersistence (debounce save) + edge deletion sync
 - [x] 03.1-03-PLAN.md — [W1] Chat Frontend: session history loading + suggestion chips fix + sendMessage verification
-- [ ] 03.1-04-PLAN.md — [W2] Canvas Node Integration: wire hooks into all 5 node types + execution result writeback
+- [x] 03.1-04-PLAN.md — [W2] Canvas Node Integration: wire hooks into all 5 node types + execution result writeback
 
 ### Phase 04: Media/Slash Skills + Quota Controls
 **Goal**: Add media-heavy workflows and enforce quota constraints.
