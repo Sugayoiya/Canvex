@@ -1,7 +1,7 @@
 ---
 phase: 03
 slug: agent-system
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-03-28
@@ -35,17 +35,17 @@ Declared values (must be multiples of 4):
 |-------|-------|-------|
 | xs | 4px | Icon gaps, inline padding within message bubbles |
 | sm | 8px | Inner padding for compact elements (badges, status pills) |
-| md | 12px | Chat input padding, sidebar section gaps |
-| lg | 16px | Message list item spacing, card padding |
-| xl | 24px | Sidebar header/footer padding, section breaks |
-| 2xl | 32px | Major section breaks (session list ↔ chat area) |
+| md | 16px | Message list item spacing, card padding |
+| lg | 24px | Sidebar header/footer padding, section breaks |
+| xl | 32px | Major section breaks (session list ↔ chat area) |
 
 Exceptions:
+- **12px** (`px-3`): Chat input padding, sidebar section gaps — chat sidebar requires compact density between 8px and 16px; matches existing codebase `px-3` pattern in canvas toolbar
 - Chat sidebar width: **380px** collapsed toggle button + expanded panel
 - Toggle button hit area: **40px × 40px** (accessible touch target)
 - Chat input minimum height: **44px** (single line), max: **120px** (multi-line expand)
 
-> Source: Existing patterns — canvas toolbar uses `px-3 py-2` (12px/8px), node cards use `p-3`/`p-5` (12px/20px). Scale aligned to observed usage.
+> Source: Existing patterns — canvas toolbar uses `px-3 py-2` (12px/8px), node cards use `p-3`/`p-5` (12px/20px). Standard scale uses {4, 8, 16, 24, 32}; 12px listed as exception with justification.
 
 ---
 
@@ -54,11 +54,11 @@ Exceptions:
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | Body | 14px | 400 (regular) | 1.5 | Chat message text, tool result descriptions |
-| Label | 12px | 500 (medium) | 1.4 | Timestamps, metadata, tool names, thinking status |
+| Label | 12px | 400 (regular) | 1.4 | Timestamps, metadata, tool names, thinking status |
 | Heading | 16px | 600 (semibold) | 1.3 | Sidebar title, session titles, section headers |
 | Mono | 13px | 400 (regular) | 1.5 | Tool call arguments, JSON previews (Geist Mono) |
 
-> Source: Existing codebase uses `text-xs` (12px), `text-sm` (14px), `text-xl` (20px), and semibold for headings. Chat UI needs compact density — 3 sizes plus mono for code.
+> Source: Existing codebase uses `text-xs` (12px), `text-sm` (14px), `text-xl` (20px), and semibold for headings. Labels are visually distinct from Body via size (12px vs 14px); no separate weight needed. 2 weights only: 400 (regular) + 600 (semibold).
 
 ---
 
@@ -365,11 +365,11 @@ interface ChatState {
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: PASS
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved 2026-03-28
