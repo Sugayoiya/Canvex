@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 03.1-01-PLAN.md
-last_updated: "2026-03-28T18:45:41.064Z"
+stopped_at: Completed 03.1-02-PLAN.md
+last_updated: "2026-03-28T18:46:01.017Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 7
@@ -81,6 +81,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 03.1-03]: sendMessage closure with [] deps confirmed correct — getState() pattern
 - [Phase 03.1]: Lazy model imports with try/except for models not yet in Canvex (Character/Scene/Episode/Script)
 - [Phase 03.1]: Context tools return JSON error strings instead of raising exceptions for agent-friendly error surfacing
+- [Phase 03.1]: Stable edge ordering via localeCompare on source node ID for deterministic upstream aggregation
+- [Phase 03.1]: fetch with keepalive+PATCH+auth instead of sendBeacon for beforeunload flush (sendBeacon incompatible with PATCH)
+- [Phase 03.1]: isSavingRef/needsSaveRef write serialization — at most one PATCH in-flight per node
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-28T18:45:38.615Z
-Stopped at: Completed 03.1-01-PLAN.md
+Last session: 2026-03-28T18:46:01.015Z
+Stopped at: Completed 03.1-02-PLAN.md
 Resume file: None
