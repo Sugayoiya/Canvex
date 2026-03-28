@@ -1,12 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { canvasApi } from "@/lib/api";
 import { CanvasWorkspace } from "@/components/canvas/canvas-workspace";
+import { ChatSidebar } from "@/components/chat/chat-sidebar";
+import { useChatStore } from "@/stores/chat-store";
 
 export default function CanvasPage() {
   const { id: canvasId } = useParams<{ id: string }>();
+  const isOpen = useChatStore((s) => s.isOpen);
+  const [isOverlayMode, setIsOverlayMode] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsOverlayMode(window.innerWidth < 1024);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   const {
     data: canvas,
@@ -43,8 +55,13 @@ export default function CanvasPage() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
-      <CanvasWorkspace canvasId={canvasId} initialData={canvas} />
+    <div className="h-screen w-screen overflow-hidden flex">
+      <div
+        className={`flex-1 transition-all duration-200 ${isOpen && !isOverlayMode ? "mr-[380px]" : ""}`}
+      >
+        <CanvasWorkspace canvasId={canvasId} initialData={canvas} />
+      </div>
+      <ChatSidebar projectId={canvas.project_id} canvasId={canvasId} />
     </div>
   );
 }
