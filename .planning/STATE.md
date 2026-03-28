@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-03-28T15:00:13.144Z"
+stopped_at: Completed 03-04-PLAN.md
+last_updated: "2026-03-28T15:04:03.896Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 15
-  completed_plans: 11
+  completed_plans: 12
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 03 (agent-system) — EXECUTING
-Plan: 2 of 5
+Plan: 3 of 5
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -68,6 +68,8 @@ Progress: [███░░░░░░░] 33%
 - [Phase 03]: pydantic-ai-slim with openai+google+xai extras for multi-provider agent
 - [Phase 03]: Two-level session scope: project_id (always) + canvas_id (optional) for project vs canvas agent context
 - [Phase 03]: SSE event envelope with optional request_id for frontend reconnect dedup
+- [Phase 03]: No persist on chat store — session-scoped, not localStorage
+- [Phase 03]: SSE hook uses fetchEventSource with throw-on-error (no auto-retry) + openWhenHidden
 
 ### Pending Todos
 
@@ -81,6 +83,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-28T15:00:13.141Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-03-28T15:04:03.893Z
+Stopped at: Completed 03-04-PLAN.md
 Resume file: None
