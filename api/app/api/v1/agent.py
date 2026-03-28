@@ -24,6 +24,7 @@ from app.agent.sse_protocol import (
     sse_tool_call,
     sse_tool_result,
 )
+from app.core.database import AsyncSessionLocal
 from app.core.deps import get_current_user, get_db, resolve_project_access
 from app.models.agent_session import AgentMessage, AgentSession
 from app.models.canvas import Canvas
@@ -318,13 +319,15 @@ async def chat(
             toolset.cancel()
             logger.info("Client disconnected from session %s", session_id)
             try:
-                await agent_service.save_messages(
-                    db,
-                    session.id,
-                    b"[]",
-                    user_content=body.message,
-                    assistant_content=collected_text,
-                )
+                async with AsyncSessionLocal() as fresh_db:
+                    await agent_service.save_messages(
+                        fresh_db,
+                        session.id,
+                        b"[]",
+                        user_content=body.message,
+                        assistant_content=collected_text,
+                    )
+                    await fresh_db.commit()
             except Exception:
                 logger.exception("Failed to save partial messages on disconnect")
             return
@@ -333,13 +336,15 @@ async def chat(
             logger.exception("Chat error in session %s", session_id)
             yield sse_error(str(e), "INTERNAL", request_id=request_id)
             try:
-                await agent_service.save_messages(
-                    db,
-                    session.id,
-                    b"[]",
-                    user_content=body.message,
-                    assistant_content=collected_text,
-                )
+                async with AsyncSessionLocal() as fresh_db:
+                    await agent_service.save_messages(
+                        fresh_db,
+                        session.id,
+                        b"[]",
+                        user_content=body.message,
+                        assistant_content=collected_text,
+                    )
+                    await fresh_db.commit()
             except Exception:
                 logger.exception("Failed to save partial messages on error")
 
