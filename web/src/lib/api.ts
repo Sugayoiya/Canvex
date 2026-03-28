@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL =
+export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "";
 
 const api = axios.create({
@@ -110,6 +110,28 @@ export const canvasApi = {
     target_handle?: string;
   }) => api.post("/canvas/edges/", data),
   deleteEdge: (edgeId: string) => api.delete(`/canvas/edges/${edgeId}`),
+};
+
+export const agentApi = {
+  createSession: (data: {
+    project_id: string;
+    canvas_id?: string;
+    title?: string;
+    model_name?: string;
+    provider?: string;
+  }) => api.post("/agent/sessions", data),
+  listSessions: (projectId: string, canvasId?: string) =>
+    api.get("/agent/sessions", {
+      params: { project_id: projectId, canvas_id: canvasId },
+    }),
+  getSession: (sessionId: string) =>
+    api.get(`/agent/sessions/${sessionId}`),
+  deleteSession: (sessionId: string) =>
+    api.delete(`/agent/sessions/${sessionId}`),
+  getMessages: (sessionId: string, limit?: number, offset?: number) =>
+    api.get(`/agent/sessions/${sessionId}/messages`, {
+      params: { limit, offset },
+    }),
 };
 
 export default api;
