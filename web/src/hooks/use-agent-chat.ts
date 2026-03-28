@@ -1,26 +1,85 @@
 import { useCallback, useRef } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
+import axios from "axios";
 import {
   useChatStore,
   type AgentMessage,
   type ToolCallData,
   type ToolResultData,
 } from "@/stores/chat-store";
-import { API_BASE_URL } from "@/lib/api";
+import { API_BASE_URL, agentApi } from "@/lib/api";
+
+class StreamClosedError extends Error {
+  constructor() {
+    super("SSE stream closed normally");
+    this.name = "StreamClosedError";
+  }
+}
+
+async function getFreshAccessToken(): Promise<string | null> {
+  let token = localStorage.getItem("access_token");
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const expiresAt = payload.exp * 1000;
+    const bufferMs = 60_000;
+    if (Date.now() < expiresAt - bufferMs) return token;
+  } catch {
+    return token;
+  }
+
+  const refreshToken = localStorage.getItem("refresh_token");
+  if (!refreshToken) return token;
+
+  try {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/api/v1/auth/refresh`,
+      { refresh_token: refreshToken },
+    );
+    localStorage.setItem("access_token", data.access_token);
+    localStorage.setItem("refresh_token", data.refresh_token);
+    return data.access_token;
+  } catch {
+    return token;
+  }
+}
 
 export function useAgentChat() {
   const abortRef = useRef<AbortController | null>(null);
   const isStreaming = useChatStore((s) => s.isStreaming);
 
   const sendMessage = useCallback(async (content: string) => {
+    const store = useChatStore.getState();
+    let { sessionId } = store;
     const {
-      sessionId,
+      projectId,
+      canvasId,
       addMessage,
       updateLastMessage,
       setStreaming,
       setThinkingText,
-    } = useChatStore.getState();
-    if (!sessionId || !content.trim()) return;
+      setSession,
+    } = store;
+
+    if (!content.trim()) return;
+
+    if (!sessionId) {
+      if (!projectId) return;
+      try {
+        const res = await agentApi.createSession({
+          project_id: projectId,
+          canvas_id: canvasId ?? undefined,
+        });
+        const newId = res.data?.id ?? res.data?.session_id;
+        if (!newId) return;
+        setSession(newId);
+        sessionId = newId;
+      } catch (err) {
+        console.error("Failed to auto-create chat session:", err);
+        return;
+      }
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -39,6 +98,8 @@ export function useAgentChat() {
     let hasAssistantMessage = false;
     let currentRequestId: string | null = null;
 
+    const accessToken = await getFreshAccessToken();
+
     try {
       await fetchEventSource(
         `${API_BASE_URL}/api/v1/agent/chat/${sessionId}`,
@@ -46,10 +107,18 @@ export function useAgentChat() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({ message: content.trim() }),
           signal: controller.signal,
+
+          async onopen(response) {
+            if (response.ok) return;
+            if (response.status === 401) {
+              throw new Error("认证已过期，请重新登录");
+            }
+            throw new Error(`服务器返回 ${response.status}`);
+          },
 
           onmessage(ev) {
             if (!ev.data) return;
@@ -68,12 +137,14 @@ export function useAgentChat() {
                 setThinkingText(
                   data.status === "analyzing"
                     ? "正在分析你的需求…"
-                    : "正在规划接下来的步骤…"
+                    : data.status === "executing tools"
+                      ? "正在执行工具调用…"
+                      : "正在规划接下来的步骤…",
                 );
                 break;
 
               case "tool_call": {
-                setThinkingText(null);
+                setThinkingText("正在执行工具调用…");
                 const toolCall: ToolCallData = {
                   tool: data.tool,
                   args: data.args,
@@ -96,15 +167,9 @@ export function useAgentChat() {
                   summary: data.summary,
                   callId: data.call_id,
                   success: data.success,
+                  data: data.data,
                 };
-                const trMsg: AgentMessage = {
-                  id: `tr-${data.call_id}`,
-                  role: "tool-result",
-                  content: data.summary,
-                  toolResults: [toolResult],
-                  timestamp: Date.now(),
-                };
-                addMessage(trMsg);
+                useChatStore.getState().completeToolCall(data.call_id, toolResult);
                 break;
               }
 
@@ -126,6 +191,7 @@ export function useAgentChat() {
 
               case "done":
                 setThinkingText(null);
+                setStreaming(false);
                 break;
 
               case "error":
@@ -133,7 +199,7 @@ export function useAgentChat() {
                 addMessage({
                   id: `err-${Date.now()}`,
                   role: "assistant",
-                  content: `❌ ${data.message}`,
+                  content: `${data.message}`,
                   timestamp: Date.now(),
                 });
                 break;
@@ -146,6 +212,7 @@ export function useAgentChat() {
           onclose() {
             setStreaming(false);
             setThinkingText(null);
+            throw new StreamClosedError();
           },
 
           onerror(err) {
@@ -155,13 +222,26 @@ export function useAgentChat() {
           },
 
           openWhenHidden: true,
-        }
+        },
       );
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        // User cancelled — normal flow
+        // User cancelled
+      } else if (err instanceof StreamClosedError) {
+        // Normal completion — not an error
       } else {
         console.error("Agent chat error:", err);
+        if (
+          err instanceof Error &&
+          err.message.includes("认证已过期")
+        ) {
+          addMessage({
+            id: `err-${Date.now()}`,
+            role: "assistant",
+            content: "认证已过期，请刷新页面重新登录。",
+            timestamp: Date.now(),
+          });
+        }
       }
     } finally {
       setStreaming(false);

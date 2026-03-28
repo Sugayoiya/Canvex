@@ -2,7 +2,7 @@
 import logging
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 from app.skills.descriptor import SkillDescriptor, SkillCategory, SkillResult
 from app.skills.context import SkillContext
@@ -17,6 +17,13 @@ class ExtractedCharacter(BaseModel):
     gender: str = "未知"
     age: str = "未知"
     personality: str = ""
+
+    @field_validator("description", "gender", "age", "personality", mode="before")
+    @classmethod
+    def coerce_none_to_default(cls, v):
+        if v is None:
+            return ""
+        return str(v)
 
 
 descriptor = SkillDescriptor(

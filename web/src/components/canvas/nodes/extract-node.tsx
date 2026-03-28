@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
+import { useCallback, useState, useMemo } from "react";
+import { Handle, Position, useReactFlow, useEdges, useNodes, type NodeProps } from "@xyflow/react";
 import {
   ListFilter,
   Play,
@@ -56,6 +56,19 @@ export function ExtractNode({ id, data }: NodeProps) {
   const execution = useNodeExecution(id);
   const [jsonExpanded, setJsonExpanded] = useState(false);
 
+  const edges = useEdges();
+  const nodes = useNodes();
+
+  const inputText = useMemo(() => {
+    if (nodeData.text) return nodeData.text as string;
+    const incoming = edges.filter((e) => e.target === id);
+    for (const edge of incoming) {
+      const sourceNode = nodes.find((n) => n.id === edge.source);
+      if (sourceNode?.data?.text) return sourceNode.data.text as string;
+    }
+    return "";
+  }, [id, nodeData.text, edges, nodes]);
+
   const extractType =
     (config.extract_type as ExtractType) ?? "extract.characters";
   const style = STATUS_STYLES[execution.status] ?? STATUS_STYLES.idle;
@@ -84,9 +97,9 @@ export function ExtractNode({ id, data }: NodeProps) {
 
   const handleExecute = useCallback(() => {
     execution.execute(extractType, {
-      ...(nodeData.text ? { text: nodeData.text } : {}),
+      ...(inputText ? { text: inputText } : {}),
     });
-  }, [execution, extractType, nodeData.text]);
+  }, [execution, extractType, inputText]);
 
   const resultData = execution.data;
   const resultItems = Array.isArray(resultData)

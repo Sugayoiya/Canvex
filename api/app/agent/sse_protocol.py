@@ -46,13 +46,18 @@ def sse_tool_result(
     summary: str,
     call_id: str,
     success: bool = True,
+    data: dict | None = None,
     request_id: str | None = None,
 ) -> dict:
-    return sse_event(
-        SSEEventType.TOOL_RESULT,
-        {"tool": tool_name, "summary": summary, "call_id": call_id, "success": success},
-        request_id=request_id,
-    )
+    payload: dict = {
+        "tool": tool_name,
+        "summary": summary,
+        "call_id": call_id,
+        "success": success,
+    }
+    if data:
+        payload["data"] = data
+    return sse_event(SSEEventType.TOOL_RESULT, payload, request_id=request_id)
 
 
 def sse_token(text: str, request_id: str | None = None) -> dict:

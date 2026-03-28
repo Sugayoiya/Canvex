@@ -11,6 +11,7 @@ export interface ToolResultData {
   summary: string;
   callId: string;
   success: boolean;
+  data?: Record<string, unknown>;
 }
 
 export interface AgentMessage {
@@ -38,6 +39,7 @@ interface ChatState {
   setSession: (sessionId: string) => void;
   addMessage: (message: AgentMessage) => void;
   updateLastMessage: (content: string) => void;
+  completeToolCall: (callId: string, result: ToolResultData) => void;
   setStreaming: (streaming: boolean) => void;
   setThinkingText: (text: string | null) => void;
   reset: () => void;
@@ -69,6 +71,14 @@ export const useChatStore = create<ChatState>()((set) => ({
       }
       return { messages: msgs };
     }),
+  completeToolCall: (callId, result) =>
+    set((s) => ({
+      messages: s.messages.map((m) => {
+        if (m.role !== "tool-call") return m;
+        if (!m.toolCalls?.some((tc) => tc.callId === callId)) return m;
+        return { ...m, toolResults: [result] };
+      }),
+    })),
   setStreaming: (streaming) => set({ isStreaming: streaming }),
   setThinkingText: (text) => set({ thinkingText: text }),
   reset: () =>

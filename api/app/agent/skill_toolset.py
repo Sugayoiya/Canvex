@@ -37,18 +37,17 @@ class SkillToolset(AbstractToolset):
         registry: SkillRegistry,
         context: SkillContext,
         categories: list[str] | None = None,
-        max_result_chars: int = 2000,
         toolset_id: str | None = None,
     ) -> None:
         self._registry = registry
         self._context = context
         self._categories = categories
-        self._max_result_chars = max_result_chars
         self._toolset_id = toolset_id or "skill_toolset"
 
         self._cancelled = False
         self._tools: dict[str, SkillDescriptor] = {}
         self._original_names: dict[str, str] = {}
+        self._completed_results: list[dict[str, Any]] = []
         self._build_tool_map()
 
     @property
@@ -109,13 +108,24 @@ class SkillToolset(AbstractToolset):
             else:
                 result = await self._poll_async(original_name, tool_args, desc)
 
-            raw = json.dumps(result.to_dict(), ensure_ascii=False)
-            return self._truncate(raw)
+            self._completed_results.append({
+                "tool": name,
+                "status": result.status,
+                "data": result.data if hasattr(result, "data") else {},
+                "message": result.message if hasattr(result, "message") else "",
+            })
+            return json.dumps(result.to_dict(), ensure_ascii=False)
 
         except asyncio.CancelledError:
             raise
         except Exception as exc:
             logger.exception("Tool call failed: %s", name)
+            self._completed_results.append({
+                "tool": name,
+                "status": "failed",
+                "data": {},
+                "message": str(exc),
+            })
             return json.dumps(
                 {"error": str(exc), "tool": name}, ensure_ascii=False
             )
@@ -160,21 +170,10 @@ class SkillToolset(AbstractToolset):
             data={"error": "Tool execution timed out", "task_id": task_id},
         )
 
-    def _truncate(self, text: str) -> str:
-        if len(text) <= self._max_result_chars:
-            return text
-        try:
-            parsed = json.loads(text)
-            if isinstance(parsed, dict) and "data" in parsed:
-                data_str = json.dumps(parsed["data"], ensure_ascii=False)
-                overhead = len(text) - len(data_str)
-                allowed = self._max_result_chars - overhead - 30
-                if allowed > 0:
-                    parsed["data"] = json.loads(data_str[:allowed] + "}")
-                    return json.dumps(parsed, ensure_ascii=False)[: self._max_result_chars]
-        except (json.JSONDecodeError, Exception):
-            pass
-        return text[: self._max_result_chars]
+    def pop_completed_results(self) -> list[dict[str, Any]]:
+        results = self._completed_results[:]
+        self._completed_results.clear()
+        return results
 
     def cancel(self) -> None:
         self._cancelled = True

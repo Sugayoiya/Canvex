@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import time
+import threading
 from datetime import datetime
 
 import structlog
@@ -11,6 +12,22 @@ from app.skills.context import SkillContext
 from app.skills.descriptor import SkillResult
 
 logger = logging.getLogger(__name__)
+
+_registry_init_lock = threading.Lock()
+_registry_initialized = False
+
+
+def _ensure_skills_registered():
+    """Ensure skills are registered in the Celery worker process (lazy, once)."""
+    global _registry_initialized
+    if _registry_initialized:
+        return
+    with _registry_init_lock:
+        if _registry_initialized:
+            return
+        from app.skills.register_all import register_all_skills
+        register_all_skills()
+        _registry_initialized = True
 
 
 def _get_or_create_event_loop():
@@ -49,6 +66,7 @@ def run_skill_task(self, skill_name: str, params: dict, context_dict: dict):
 
     logger.info("Celery worker executing skill: %s (trace=%s)", skill_name, ctx.trace_id)
 
+    _ensure_skills_registered()
     from app.skills.registry import skill_registry
 
     try:

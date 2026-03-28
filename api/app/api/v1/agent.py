@@ -155,6 +155,7 @@ async def chat(
         tool_results_log: list[dict] = []
         heartbeat_task: asyncio.Task | None = None
         heartbeat_stop = asyncio.Event()
+        pending_tool_calls: list[dict] = []
 
         async def _heartbeat():
             while not heartbeat_stop.is_set():
@@ -202,6 +203,25 @@ async def chat(
             ) as run:
                 async for node in run:
                     if AgentCls.is_model_request_node(node):
+                        if pending_tool_calls:
+                            completed = toolset.pop_completed_results()
+                            completed_by_tool = {r["tool"]: r for r in completed}
+                            for ptc in pending_tool_calls:
+                                cr = completed_by_tool.get(ptc["tool"], {})
+                                success = cr.get("status") == "completed"
+                                result_data = cr.get("data") or {}
+                                summary = cr.get("message") or ("完成" if success else "失败")
+                                tool_results_log.append(
+                                    {"tool": ptc["tool"], "call_id": ptc["call_id"],
+                                     "success": success, "data": result_data}
+                                )
+                                yield sse_tool_result(
+                                    ptc["tool"], summary, ptc["call_id"],
+                                    success=success, data=result_data,
+                                    request_id=request_id,
+                                )
+                            pending_tool_calls.clear()
+
                         async with node.stream(run.ctx) as stream:
                             async for text in stream.stream_text(delta=True):
                                 collected_text += text
@@ -215,12 +235,34 @@ async def chat(
                                     tool_calls_log.append(
                                         {"tool": tc.tool_name, "args": tc_args, "call_id": tc_id}
                                     )
+                                    pending_tool_calls.append(
+                                        {"tool": tc.tool_name, "call_id": tc_id}
+                                    )
                                     yield sse_tool_call(
                                         tc.tool_name, tc_args, tc_id, request_id=request_id
                                     )
 
                     elif AgentCls.is_call_tools_node(node):
                         yield sse_thinking("executing tools", request_id=request_id)
+
+                if pending_tool_calls:
+                    completed = toolset.pop_completed_results()
+                    completed_by_tool = {r["tool"]: r for r in completed}
+                    for ptc in pending_tool_calls:
+                        cr = completed_by_tool.get(ptc["tool"], {})
+                        success = cr.get("status") == "completed"
+                        result_data = cr.get("data") or {}
+                        summary = cr.get("message") or ("完成" if success else "失败")
+                        tool_results_log.append(
+                            {"tool": ptc["tool"], "call_id": ptc["call_id"],
+                             "success": success, "data": result_data}
+                        )
+                        yield sse_tool_result(
+                            ptc["tool"], summary, ptc["call_id"],
+                            success=success, data=result_data,
+                            request_id=request_id,
+                        )
+                    pending_tool_calls.clear()
 
                 run_result = run.result
                 usage_info = run_result.usage()

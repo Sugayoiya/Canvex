@@ -52,6 +52,45 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
 
     await _seed_default_admin()
+    await _seed_demo_project()
+
+
+async def _seed_demo_project():
+    """Create a demo project + canvas if none exist, so the chat UI is testable immediately."""
+    import logging
+    from sqlalchemy import func, select
+
+    logger = logging.getLogger(__name__)
+
+    async with AsyncSessionLocal() as session:
+        from app.models.project import Project
+        from app.models.canvas import Canvas
+        from app.models.user import User
+
+        count = (await session.execute(select(func.count()).select_from(Project))).scalar() or 0
+        if count > 0:
+            return
+
+        admin = (await session.execute(select(User).limit(1))).scalar_one_or_none()
+        if admin is None:
+            return
+
+        project = Project(
+            name="Demo Project",
+            description="Auto-created demo project for testing",
+            owner_type="personal",
+            owner_id=admin.id,
+            created_by=admin.id,
+        )
+        session.add(project)
+        await session.flush()
+
+        canvas = Canvas(project_id=project.id, name="Demo Canvas")
+        session.add(canvas)
+        await session.flush()
+
+        await session.commit()
+        logger.info("Demo project (%s) and canvas (%s) created", project.id, canvas.id)
 
 
 async def _seed_default_admin():
