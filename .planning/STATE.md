@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-03-28T15:06:03.692Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-03-28T15:17:34.514Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 03 (agent-system) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -73,6 +73,8 @@ Progress: [███░░░░░░░] 33%
 - [Phase 03]: Adapted to actual PydanticAI AbstractToolset API (get_tools/call_tool with RunContext+ToolsetTool)
 - [Phase 03]: Category__skill double-underscore namespacing for collision-free tool names in SkillToolset
 - [Phase 03]: Explicit API key resolution from settings — never PydanticAI auto-env (openai/gemini/deepseek)
+- [Phase 03]: PydanticAI agent.iter() graph API for SSE chat — per-node visibility into tool calls
+- [Phase 03]: Pipeline tool returns structured JSON (completed/partial/cancelled) for resilient step chaining
 
 ### Pending Todos
 
@@ -86,6 +88,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-28T15:06:03.690Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-03-28T15:17:34.512Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
