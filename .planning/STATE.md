@@ -2,12 +2,12 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
-status: verifying
-stopped_at: Completed 03-05-PLAN.md
-last_updated: "2026-03-28T15:22:45.900Z"
-last_activity: 2026-03-28
+status: planning
+stopped_at: Phase 03.1 context gathered
+last_updated: "2026-03-28T17:58:49.464Z"
+last_activity: 2026-03-29
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 3
   total_plans: 15
   completed_plans: 15
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 03 — agent-system
+**Current focus:** Phase 03.1 — Agent Chat + Canvas Quality Fix
 
 ## Current Position
 
-Phase: 03 (agent-system) — EXECUTING
-Plan: 5 of 5
-Status: Phase complete — ready for verification
-Last activity: 2026-03-28
+Phase: 03.1 (agent-chat-canvas-quality-fix) — INSERTED
+Plan: 0 of 0
+Status: Phase inserted — needs planning
+Last activity: 2026-03-29
 
 Progress: [███░░░░░░░] 33%
 
@@ -83,13 +83,18 @@ Progress: [███░░░░░░░] 33%
 - [x] /gsd-plan-phase 03 — 5 plans created, checker verified
 - [ ] /gsd-execute-phase 03 — execute all 5 plans in 4 waves
 
+### Roadmap Evolution
+
+- Phase 03.1 inserted after Phase 03: Agent Chat + Canvas Quality Fix (URGENT)
+
 ### Blockers/Concerns
 
 - D8 前置任务：Phase 03 执行前需先迁移原项目 prompt_seeds（97 prompt + 31 schema）到 SKILL.md 格式
 - Phase 2+ verification and UAT artifacts are not yet executed.
+- Phase 03 功能质量不达标：Agent Chat 缺 pipeline 工具/上下文注入/历史加载；Canvas 缺链式输入/持久化/执行编排
 
 ## Session Continuity
 
-Last session: 2026-03-28T15:22:45.897Z
-Stopped at: Completed 03-05-PLAN.md
-Resume file: None
+Last session: 2026-03-28T17:58:49.461Z
+Stopped at: Phase 03.1 context gathered
+Resume file: .planning/phases/03.1-agent-chat-canvas-quality-fix/03.1-CONTEXT.md
