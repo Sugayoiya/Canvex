@@ -12,6 +12,8 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { useNodeExecution } from "../hooks/use-node-execution";
+import { useUpstreamData } from "../hooks/use-upstream-data";
+import { useNodePersistence } from "../hooks/use-node-persistence";
 
 const ASPECT_RATIOS = ["16:9", "1:1", "9:16"] as const;
 type AspectRatio = (typeof ASPECT_RATIOS)[number];
@@ -54,40 +56,58 @@ export function ImageGenNode({ id, data }: NodeProps) {
   const nodeData = data as Record<string, unknown>;
   const config = (nodeData.config as Record<string, unknown>) ?? {};
   const { setNodes } = useReactFlow();
-  const execution = useNodeExecution(id);
+  const upstream = useUpstreamData(id);
+  const persistence = useNodePersistence(id);
   const [imgError, setImgError] = useState(false);
+
+  const handleExecutionComplete = useCallback((resultData: any) => {
+    persistence.cancelPending();
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                result_text: typeof resultData === "string" ? resultData : (resultData?.text ?? resultData?.result ?? null),
+                result_url: resultData?.url ?? resultData?.result_url ?? null,
+                result_data: typeof resultData === "object" ? resultData : null,
+              },
+            }
+          : n,
+      ),
+    );
+  }, [id, setNodes, persistence]);
+
+  const execution = useNodeExecution(id, handleExecutionComplete);
 
   const aspectRatio = (config.aspect_ratio as AspectRatio) ?? "16:9";
   const style = STATUS_STYLES[execution.status] ?? STATUS_STYLES.idle;
 
   const updateAspectRatio = useCallback(
     (value: string) => {
+      const newConfig = { ...(config as Record<string, unknown>), aspect_ratio: value };
       setNodes((nds) =>
         nds.map((n) =>
           n.id === id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  config: {
-                    ...(n.data.config as Record<string, unknown>),
-                    aspect_ratio: value,
-                  },
-                },
-              }
+            ? { ...n, data: { ...n.data, config: newConfig } }
             : n,
         ),
       );
+      persistence.saveDebounced({ config: newConfig });
     },
-    [id, setNodes],
+    [id, setNodes, config, persistence],
   );
 
   const handleExecute = useCallback(() => {
+    const promptText = upstream.text.join("\n") || (nodeData.text as string) || "";
+    persistence.cancelPending();
     execution.execute("visual.generate_image", {
       aspect_ratio: aspectRatio,
-      ...(nodeData.text ? { prompt: nodeData.text } : {}),
+      ...(promptText ? { prompt: promptText } : {}),
     });
-  }, [execution, aspectRatio, nodeData.text]);
+    persistence.saveImmediate({ config, status: "queued" });
+  }, [execution, aspectRatio, upstream.text, nodeData.text, config, persistence]);
 
   const resultUrl =
     execution.data?.url ?? execution.data?.result_url ?? null;

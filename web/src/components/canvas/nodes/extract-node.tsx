@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState, useMemo } from "react";
-import { Handle, Position, useReactFlow, useEdges, useNodes, type NodeProps } from "@xyflow/react";
+import { useCallback, useState } from "react";
+import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import {
   ListFilter,
   Play,
@@ -11,6 +11,8 @@ import {
   Clock,
 } from "lucide-react";
 import { useNodeExecution } from "../hooks/use-node-execution";
+import { useUpstreamData } from "../hooks/use-upstream-data";
+import { useNodePersistence } from "../hooks/use-node-persistence";
 
 type ExtractType = "extract.characters" | "extract.scenes";
 
@@ -53,21 +55,32 @@ export function ExtractNode({ id, data }: NodeProps) {
   const nodeData = data as Record<string, unknown>;
   const config = (nodeData.config as Record<string, unknown>) ?? {};
   const { setNodes } = useReactFlow();
-  const execution = useNodeExecution(id);
+  const upstream = useUpstreamData(id);
+  const persistence = useNodePersistence(id);
   const [jsonExpanded, setJsonExpanded] = useState(false);
 
-  const edges = useEdges();
-  const nodes = useNodes();
+  const inputText = upstream.text[0] ?? "";
 
-  const inputText = useMemo(() => {
-    if (nodeData.text) return nodeData.text as string;
-    const incoming = edges.filter((e) => e.target === id);
-    for (const edge of incoming) {
-      const sourceNode = nodes.find((n) => n.id === edge.source);
-      if (sourceNode?.data?.text) return sourceNode.data.text as string;
-    }
-    return "";
-  }, [id, nodeData.text, edges, nodes]);
+  const handleExecutionComplete = useCallback((resultData: any) => {
+    persistence.cancelPending();
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                result_text: typeof resultData === "string" ? resultData : (resultData?.text ?? resultData?.result ?? null),
+                result_url: resultData?.url ?? resultData?.result_url ?? null,
+                result_data: typeof resultData === "object" ? resultData : null,
+              },
+            }
+          : n,
+      ),
+    );
+  }, [id, setNodes, persistence]);
+
+  const execution = useNodeExecution(id, handleExecutionComplete);
 
   const extractType =
     (config.extract_type as ExtractType) ?? "extract.characters";
@@ -75,31 +88,26 @@ export function ExtractNode({ id, data }: NodeProps) {
 
   const updateExtractType = useCallback(
     (value: string) => {
+      const newConfig = { ...(config as Record<string, unknown>), extract_type: value };
       setNodes((nds) =>
         nds.map((n) =>
           n.id === id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  config: {
-                    ...(n.data.config as Record<string, unknown>),
-                    extract_type: value,
-                  },
-                },
-              }
+            ? { ...n, data: { ...n.data, config: newConfig } }
             : n,
         ),
       );
+      persistence.saveDebounced({ config: newConfig });
     },
-    [id, setNodes],
+    [id, setNodes, config, persistence],
   );
 
   const handleExecute = useCallback(() => {
+    persistence.cancelPending();
     execution.execute(extractType, {
       ...(inputText ? { text: inputText } : {}),
     });
-  }, [execution, extractType, inputText]);
+    persistence.saveImmediate({ config, status: "queued" });
+  }, [execution, extractType, inputText, config, persistence]);
 
   const resultData = execution.data;
   const resultItems = Array.isArray(resultData)

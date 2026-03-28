@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { skillsApi } from "@/lib/api";
+import { skillsApi, canvasApi } from "@/lib/api";
 import { useCanvasStore } from "@/stores/canvas-store";
 
 type NodeExecutionStatus =
@@ -26,7 +26,7 @@ const MAX_POLL_INTERVAL = 15000;
 const MAX_POLL_ATTEMPTS = 60;
 const BACKOFF_MULTIPLIER = 1.5;
 
-export function useNodeExecution(nodeId: string) {
+export function useNodeExecution(nodeId: string, onComplete?: (data: any) => void) {
   const [state, setState] = useState<ExecutionState>({
     status: "idle",
     data: null,
@@ -60,6 +60,10 @@ export function useNodeExecution(nodeId: string) {
         status: "timeout",
         message: "轮询超时，请重试",
       }));
+      canvasApi.updateNode(nodeId, {
+        status: "timeout",
+        error_message: "轮询超时",
+      }).catch(() => {});
       return;
     }
 
@@ -76,6 +80,14 @@ export function useNodeExecution(nodeId: string) {
           progress: 1,
           idempotencyKey: null,
         });
+        canvasApi.updateNode(nodeId, {
+          status: "completed",
+          result_text: typeof data === "string" ? data : (data?.text ?? data?.result ?? null),
+          result_url: data?.url ?? data?.result_url ?? null,
+        }).catch((err) => {
+          console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
+        });
+        onComplete?.(data);
         return;
       }
       if (status === "failed") {
@@ -86,6 +98,12 @@ export function useNodeExecution(nodeId: string) {
           progress: 0,
           idempotencyKey: null,
         });
+        canvasApi.updateNode(nodeId, {
+          status: "failed",
+          error_message: message ?? "execution failed",
+        }).catch((err) => {
+          console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
+        });
         return;
       }
       if (status === "blocked") {
@@ -95,6 +113,12 @@ export function useNodeExecution(nodeId: string) {
           message: message || "内容安全策略拦截",
           progress: 0,
           idempotencyKey: null,
+        });
+        canvasApi.updateNode(nodeId, {
+          status: "blocked",
+          error_message: message || "内容安全策略拦截",
+        }).catch((err) => {
+          console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
         });
         return;
       }
@@ -121,7 +145,7 @@ export function useNodeExecution(nodeId: string) {
         message: `轮询出错: ${err?.message || "未知错误"}`,
       }));
     }
-  }, []);
+  }, [nodeId, onComplete]);
 
   const execute = useCallback(
     async (skillName: string, params: Record<string, any> = {}) => {
@@ -159,6 +183,14 @@ export function useNodeExecution(nodeId: string) {
             message: message ?? "",
             progress: 1,
           }));
+          canvasApi.updateNode(nodeId, {
+            status: "completed",
+            result_text: typeof data === "string" ? data : (data?.text ?? data?.result ?? null),
+            result_url: data?.url ?? data?.result_url ?? null,
+          }).catch((err) => {
+            console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
+          });
+          onComplete?.(data);
         } else if (status === "failed") {
           setState((prev) => ({
             ...prev,
@@ -167,6 +199,12 @@ export function useNodeExecution(nodeId: string) {
             message: message ?? "",
             progress: 0,
           }));
+          canvasApi.updateNode(nodeId, {
+            status: "failed",
+            error_message: message ?? "execution failed",
+          }).catch((err) => {
+            console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
+          });
         } else if (status === "blocked") {
           setState((prev) => ({
             ...prev,
@@ -175,6 +213,12 @@ export function useNodeExecution(nodeId: string) {
             message: message || "内容安全策略拦截",
             progress: 0,
           }));
+          canvasApi.updateNode(nodeId, {
+            status: "blocked",
+            error_message: message || "内容安全策略拦截",
+          }).catch((err) => {
+            console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
+          });
         } else if (task_id) {
           setState((prev) => ({
             ...prev,
@@ -197,7 +241,7 @@ export function useNodeExecution(nodeId: string) {
         });
       }
     },
-    [nodeId, canvasId, projectId, pollResult, state.status],
+    [nodeId, canvasId, projectId, pollResult, state.status, onComplete],
   );
 
   const reset = useCallback(() => {

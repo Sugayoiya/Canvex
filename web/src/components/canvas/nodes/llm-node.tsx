@@ -11,6 +11,8 @@ import {
   Clock,
 } from "lucide-react";
 import { useNodeExecution } from "../hooks/use-node-execution";
+import { useUpstreamData } from "../hooks/use-upstream-data";
+import { useNodePersistence } from "../hooks/use-node-persistence";
 
 type ModelProvider = "auto" | "gemini" | "openai" | "deepseek";
 
@@ -54,40 +56,58 @@ export function LLMNode({ id, data }: NodeProps) {
   const nodeData = data as Record<string, unknown>;
   const config = (nodeData.config as Record<string, unknown>) ?? {};
   const { setNodes } = useReactFlow();
-  const execution = useNodeExecution(id);
+  const upstream = useUpstreamData(id);
+  const persistence = useNodePersistence(id);
   const [expanded, setExpanded] = useState(false);
+
+  const handleExecutionComplete = useCallback((resultData: any) => {
+    persistence.cancelPending();
+    setNodes((nds) =>
+      nds.map((n) =>
+        n.id === id
+          ? {
+              ...n,
+              data: {
+                ...n.data,
+                result_text: typeof resultData === "string" ? resultData : (resultData?.text ?? resultData?.result ?? null),
+                result_url: resultData?.url ?? resultData?.result_url ?? null,
+                result_data: typeof resultData === "object" ? resultData : null,
+              },
+            }
+          : n,
+      ),
+    );
+  }, [id, setNodes, persistence]);
+
+  const execution = useNodeExecution(id, handleExecutionComplete);
 
   const provider = (config.provider as ModelProvider) ?? "auto";
   const style = STATUS_STYLES[execution.status] ?? STATUS_STYLES.idle;
 
   const updateProvider = useCallback(
     (value: string) => {
+      const newConfig = { ...(config as Record<string, unknown>), provider: value };
       setNodes((nds) =>
         nds.map((n) =>
           n.id === id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  config: {
-                    ...(n.data.config as Record<string, unknown>),
-                    provider: value,
-                  },
-                },
-              }
+            ? { ...n, data: { ...n.data, config: newConfig } }
             : n,
         ),
       );
+      persistence.saveDebounced({ config: newConfig });
     },
-    [id, setNodes],
+    [id, setNodes, config, persistence],
   );
 
   const handleExecute = useCallback(() => {
+    const inputText = upstream.text.join("\n") || (nodeData.text as string) || "";
+    persistence.cancelPending();
     execution.execute("text.llm_generate", {
       provider,
-      ...(nodeData.text ? { text: nodeData.text } : {}),
+      ...(inputText ? { text: inputText } : {}),
     });
-  }, [execution, provider, nodeData.text]);
+    persistence.saveImmediate({ config, status: "queued" });
+  }, [execution, provider, upstream.text, nodeData.text, config, persistence]);
 
   const resultText =
     typeof execution.data === "string"
