@@ -9,9 +9,11 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sse_starlette.sse import EventSourceResponse
 
 from app.agent.agent_service import AgentDeps, AgentService
+from app.agent.pipeline_tools import get_pipeline_toolset
 from app.agent.skill_toolset import SkillToolset
 from app.agent.sse_protocol import (
     sse_done,
@@ -24,6 +26,8 @@ from app.agent.sse_protocol import (
 )
 from app.core.deps import get_current_user, get_db, resolve_project_access
 from app.models.agent_session import AgentMessage, AgentSession
+from app.models.canvas import Canvas
+from app.models.project import Project
 from app.schemas.agent import (
     ChatRequest,
     MessageListResponse,
@@ -153,15 +157,7 @@ async def chat(
         collected_text = ""
         tool_calls_log: list[dict] = []
         tool_results_log: list[dict] = []
-        heartbeat_task: asyncio.Task | None = None
-        heartbeat_stop = asyncio.Event()
         pending_tool_calls: list[dict] = []
-
-        async def _heartbeat():
-            while not heartbeat_stop.is_set():
-                await asyncio.sleep(15)
-                if not heartbeat_stop.is_set():
-                    yield sse_heartbeat()
 
         try:
             yield sse_thinking("analyzing", request_id=request_id)
@@ -176,10 +172,37 @@ async def chat(
                 trigger_source="agent",
             )
             toolset = SkillToolset(registry=skill_registry, context=context)
+            pipeline_toolset = get_pipeline_toolset()
+
+            project_name = None
+            canvas_name = None
+            canvas_summary = None
+            try:
+                project = await db.get(Project, session.project_id)
+                project_name = project.name if project else None
+
+                if session.canvas_id:
+                    canvas_stmt = select(Canvas).options(
+                        selectinload(Canvas.nodes)
+                    ).where(Canvas.id == session.canvas_id)
+                    canvas_result = await db.execute(canvas_stmt)
+                    canvas_obj = canvas_result.scalar_one_or_none()
+                    if canvas_obj:
+                        canvas_name = canvas_obj.name
+                        node_types: dict[str, int] = {}
+                        for n in canvas_obj.nodes:
+                            node_types[n.node_type] = node_types.get(n.node_type, 0) + 1
+                        canvas_summary = {"node_counts": node_types, "total_nodes": len(canvas_obj.nodes)}
+            except Exception:
+                logger.warning("Failed to load project/canvas context for session %s — proceeding with degraded context", session_id)
 
             provider = body.provider or session.provider
             model_name = body.model_name or session.model_name
-            agent = agent_service.create_agent(provider, model_name)
+            agent = agent_service.create_agent(
+                provider, model_name,
+                project_name=project_name,
+                canvas_name=canvas_name,
+            )
 
             deps = AgentDeps(
                 user_id=user.id,
@@ -199,7 +222,7 @@ async def chat(
                 user_prompt=body.message,
                 message_history=history,
                 deps=deps,
-                toolsets=[toolset],
+                toolsets=[toolset, pipeline_toolset],
             ) as run:
                 async for node in run:
                     if AgentCls.is_model_request_node(node):
@@ -319,9 +342,7 @@ async def chat(
                 logger.exception("Failed to save partial messages on error")
 
         finally:
-            if heartbeat_task and not heartbeat_task.done():
-                heartbeat_stop.set()
-                heartbeat_task.cancel()
+            pass
 
     return EventSourceResponse(
         event_generator(), media_type="text/event-stream", ping=15

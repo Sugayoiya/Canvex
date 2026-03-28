@@ -42,6 +42,8 @@ class NodeUpdate(BaseModel):
     config: dict[str, Any] | None = None
     status: str | None = None
     result_text: str | None = None
+    result_url: str | None = None
+    error_message: str | None = None
 
 
 class NodeResponse(BaseModel):

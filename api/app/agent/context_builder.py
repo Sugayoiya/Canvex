@@ -14,6 +14,10 @@ SYSTEM_PROMPT_TEMPLATE = """\
 当用户请求涉及完整流程时（如"帮我生成一整个剧集"），优先使用 Pipeline 工具来执行确定性的多步流程。
 当用户请求涉及单个步骤时，使用对应的具体工具。
 
+**响应策略：**
+- 明确的单步任务（如"提取角色"、"生成图片"）→ 直接调用对应工具执行
+- 复杂/模糊的多步任务（如"帮我完善这个剧集"）→ 先分析并输出执行计划，用户确认后再逐步执行
+
 **重要：工具返回的创作内容（剧本、文案、角色描述等）必须完整原文输出给用户，不要自行总结或缩写。** 如果工具返回了 text 字段，直接展示该文本即可。
 
 {context_section}
@@ -25,11 +29,23 @@ SYSTEM_PROMPT_TEMPLATE = """\
 def build_system_prompt(
     project_name: str | None = None,
     canvas_name: str | None = None,
+    canvas_summary: dict | None = None,
+    characters: list[str] | None = None,
+    scenes: list[str] | None = None,
 ) -> str:
     parts: list[str] = []
     if project_name:
         parts.append(f"当前项目：{project_name}")
     if canvas_name:
         parts.append(f"当前画布：{canvas_name}")
+    if canvas_summary:
+        node_counts = canvas_summary.get("node_counts", {})
+        total = canvas_summary.get("total_nodes", 0)
+        counts_str = "、".join(f"{t}×{c}" for t, c in node_counts.items())
+        parts.append(f"画布节点：{total} 个（{counts_str}）")
+    if characters:
+        parts.append(f"项目角色：{'、'.join(characters[:10])}")
+    if scenes:
+        parts.append(f"项目场景：{'、'.join(scenes[:10])}")
     context_section = "\n".join(parts)
     return SYSTEM_PROMPT_TEMPLATE.format(context_section=context_section.strip())
