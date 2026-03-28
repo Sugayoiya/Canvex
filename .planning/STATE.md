@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 03-04-PLAN.md
-last_updated: "2026-03-28T15:04:03.896Z"
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-03-28T15:06:03.692Z"
 last_activity: 2026-03-28
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 15
-  completed_plans: 12
+  completed_plans: 13
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 03 (agent-system) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-03-28
 
@@ -70,6 +70,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 03]: SSE event envelope with optional request_id for frontend reconnect dedup
 - [Phase 03]: No persist on chat store — session-scoped, not localStorage
 - [Phase 03]: SSE hook uses fetchEventSource with throw-on-error (no auto-retry) + openWhenHidden
+- [Phase 03]: Adapted to actual PydanticAI AbstractToolset API (get_tools/call_tool with RunContext+ToolsetTool)
+- [Phase 03]: Category__skill double-underscore namespacing for collision-free tool names in SkillToolset
+- [Phase 03]: Explicit API key resolution from settings — never PydanticAI auto-env (openai/gemini/deepseek)
 
 ### Pending Todos
 
@@ -83,6 +86,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-28T15:04:03.893Z
-Stopped at: Completed 03-04-PLAN.md
+Last session: 2026-03-28T15:06:03.690Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
