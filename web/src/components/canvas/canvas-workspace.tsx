@@ -15,6 +15,7 @@ import {
   type Connection,
   type Node,
   type Edge,
+  type EdgeChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -136,6 +137,20 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
     [canvasId, nodes, setEdges],
   );
 
+  const handleEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      onEdgesChange(changes);
+      for (const change of changes) {
+        if (change.type === "remove") {
+          canvasApi.deleteEdge(change.id).catch((err) => {
+            console.warn("[canvas] edge deletion sync failed:", err);
+          });
+        }
+      }
+    },
+    [onEdgesChange],
+  );
+
   const handleNodeDragStop = useCallback(
     (_event: React.MouseEvent, node: Node) => {
       setSaving(true);
@@ -178,7 +193,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
+        onEdgesChange={handleEdgesChange}
         onConnect={handleConnect}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={persistViewport}
