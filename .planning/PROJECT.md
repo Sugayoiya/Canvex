@@ -14,11 +14,14 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 
 - ✓ Phase 1 foundation is implemented and running in repository structure.
 - ✓ Phase 2 skill migration + canvas baseline + billing baseline — Validated in Phase 02: skills-canvas
+- ✓ Phase 3 agent tool-calling orchestration — Validated in Phase 03: agent-system
+- ✓ Phase 3.1 agent chat + canvas quality fix — 12 issues resolved across Agent Chat and Canvas
 
 ### Active
 
 - [x] Phase 2 skill migration + canvas baseline + billing baseline (complete)
-- [ ] Phase 3 agent tool-calling orchestration
+- [x] Phase 3 agent tool-calling orchestration (complete)
+- [x] Phase 3.1 agent chat + canvas quality fix (complete)
 - [ ] Phase 4 media/slash skills + quota controls
 - [ ] Phase 5 canvas/video polish + billing dashboard
 - [ ] Phase 6 collaboration/versioning/production hardening
@@ -56,4 +59,4 @@ This document evolves at phase transitions and milestone boundaries.
 - After each milestone, re-check core value, constraints, and scope boundaries.
 
 ---
-*Last updated: 2026-03-28 after Phase 02 completion — 15 skills across 5 categories, Canvas CRUD + frontend shell, billing baseline*
+*Last updated: 2026-03-29 after Phase 03.1 completion — Agent Chat fully wired (3 toolsets + context injection + session history), Canvas nodes with typed data flow + persistence + result writeback*
