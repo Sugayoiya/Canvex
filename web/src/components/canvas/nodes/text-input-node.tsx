@@ -3,11 +3,13 @@
 import { useCallback } from "react";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import { PencilLine } from "lucide-react";
+import { useNodePersistence } from "../hooks/use-node-persistence";
 
 export function TextInputNode({ id, data }: NodeProps) {
   const nodeData = data as Record<string, unknown>;
   const text = (nodeData.text as string) ?? "";
   const { setNodes } = useReactFlow();
+  const persistence = useNodePersistence(id);
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -17,9 +19,14 @@ export function TextInputNode({ id, data }: NodeProps) {
           n.id === id ? { ...n, data: { ...n.data, text: value } } : n,
         ),
       );
+      persistence.saveDebounced({ config: { text: value } });
     },
-    [id, setNodes],
+    [id, setNodes, persistence],
   );
+
+  const handleBlur = useCallback(() => {
+    persistence.flush();
+  }, [persistence]);
 
   return (
     <div className="min-w-[220px] rounded-lg border border-zinc-700 bg-zinc-800 shadow-md">
@@ -31,6 +38,7 @@ export function TextInputNode({ id, data }: NodeProps) {
         <textarea
           value={text}
           onChange={handleChange}
+          onBlur={handleBlur}
           placeholder="输入文本内容..."
           rows={4}
           className="w-full resize-none rounded-md border border-zinc-600 bg-zinc-900 px-2.5 py-2 text-xs text-zinc-200 placeholder-zinc-500 focus:border-cyan-500/50 focus:outline-none"
