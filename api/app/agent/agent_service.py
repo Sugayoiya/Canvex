@@ -81,11 +81,13 @@ class AgentService:
         model_name: str,
         project_name: str | None = None,
         canvas_name: str | None = None,
+        canvas_summary: dict | None = None,
     ) -> Agent[AgentDeps, str]:
         model = create_pydantic_model(provider, model_name)
         system_prompt = build_system_prompt(
             project_name=project_name,
             canvas_name=canvas_name,
+            canvas_summary=canvas_summary,
         )
         return Agent(
             model,

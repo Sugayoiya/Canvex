@@ -19,7 +19,6 @@ from app.agent.skill_toolset import SkillToolset
 from app.agent.sse_protocol import (
     sse_done,
     sse_error,
-    sse_heartbeat,
     sse_thinking,
     sse_token,
     sse_tool_call,
@@ -204,6 +203,7 @@ async def chat(
                 provider, model_name,
                 project_name=project_name,
                 canvas_name=canvas_name,
+                canvas_summary=canvas_summary,
             )
 
             deps = AgentDeps(
