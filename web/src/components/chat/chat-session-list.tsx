@@ -38,6 +38,7 @@ export function ChatSessionList({
 }: ChatSessionListProps) {
   const currentSessionId = useChatStore((s) => s.sessionId);
   const setSession = useChatStore((s) => s.setSession);
+  const loadSessionHistory = useChatStore((s) => s.loadSessionHistory);
   const queryClient = useQueryClient();
 
   const { data: sessions, isLoading } = useQuery<SessionItem[]>({
@@ -70,9 +71,10 @@ export function ChatSessionList({
   const handleSelectSession = useCallback(
     (id: string) => {
       setSession(id);
+      loadSessionHistory(id);
       onClose();
     },
-    [setSession, onClose],
+    [setSession, loadSessionHistory, onClose],
   );
 
   const visibleSessions = (sessions ?? [])

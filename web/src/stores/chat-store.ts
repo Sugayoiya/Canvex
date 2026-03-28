@@ -1,5 +1,7 @@
 import { create } from "zustand";
 
+let _loadRequestId = 0;
+
 export interface ToolCallData {
   tool: string;
   args: Record<string, unknown>;
@@ -33,10 +35,13 @@ interface ChatState {
   thinkingText: string | null;
   lastRequestId: string | null;
 
+  isLoadingHistory: boolean;
+
   toggle: () => void;
   open: (projectId: string, canvasId?: string) => void;
   close: () => void;
   setSession: (sessionId: string) => void;
+  loadSessionHistory: (sessionId: string) => Promise<void>;
   addMessage: (message: AgentMessage) => void;
   updateLastMessage: (content: string) => void;
   completeToolCall: (callId: string, result: ToolResultData) => void;
@@ -52,6 +57,7 @@ export const useChatStore = create<ChatState>()((set) => ({
   canvasId: null,
   messages: [],
   isStreaming: false,
+  isLoadingHistory: false,
   thinkingText: null,
   lastRequestId: null,
 
@@ -60,6 +66,39 @@ export const useChatStore = create<ChatState>()((set) => ({
     set({ isOpen: true, projectId, canvasId: canvasId ?? null }),
   close: () => set({ isOpen: false }),
   setSession: (sessionId) => set({ sessionId, messages: [] }),
+  loadSessionHistory: async (sessionId: string) => {
+    const requestId = ++_loadRequestId;
+    set({ isLoadingHistory: true });
+    try {
+      const { agentApi } = await import("@/lib/api");
+      const res = await agentApi.getMessages(sessionId, 50);
+
+      if (requestId !== _loadRequestId) return;
+
+      const rawMessages: Array<{
+        id: string;
+        role: string;
+        content: string | null;
+        created_at: string;
+      }> = res.data?.messages ?? [];
+
+      const messages: AgentMessage[] = rawMessages
+        .filter((m) => m.role === "user" || m.role === "assistant")
+        .map((m) => ({
+          id: m.id,
+          role: m.role as "user" | "assistant",
+          content: m.content ?? "",
+          timestamp: new Date(m.created_at).getTime(),
+        }));
+
+      if (requestId !== _loadRequestId) return;
+      set({ messages, isLoadingHistory: false });
+    } catch {
+      if (requestId === _loadRequestId) {
+        set({ isLoadingHistory: false });
+      }
+    }
+  },
   addMessage: (message) =>
     set((s) => ({ messages: [...s.messages, message] })),
   updateLastMessage: (content) =>
