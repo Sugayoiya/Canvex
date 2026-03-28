@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useChatStore, type AgentMessage } from "@/stores/chat-store";
+import { useAgentChat } from "@/hooks/use-agent-chat";
 import { ToolCallDisplay } from "./tool-call-display";
 import { ThinkingIndicator } from "./thinking-indicator";
 
@@ -44,6 +45,7 @@ export function ChatMessages() {
   const messages = useChatStore((s) => s.messages);
   const isStreaming = useChatStore((s) => s.isStreaming);
   const thinkingText = useChatStore((s) => s.thinkingText);
+  const { sendMessage } = useAgentChat();
   const containerRef = useRef<HTMLDivElement>(null);
   const [userScrolled, setUserScrolled] = useState(false);
 
@@ -64,17 +66,12 @@ export function ChatMessages() {
     setUserScrolled(!atBottom);
   }, []);
 
-  const handleSuggestionSend = useCallback((text: string) => {
-    const { sessionId } = useChatStore.getState();
-    if (!sessionId) return;
-    const { addMessage } = useChatStore.getState();
-    addMessage({
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: text,
-      timestamp: Date.now(),
-    });
-  }, []);
+  const handleSuggestionSend = useCallback(
+    (text: string) => {
+      sendMessage(text);
+    },
+    [sendMessage],
+  );
 
   const isEmpty = messages.length === 0 && !isStreaming && !thinkingText;
 
