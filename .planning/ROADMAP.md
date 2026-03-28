@@ -4,7 +4,7 @@
 
 - [x] **Phase 01: Foundation + SkillRegistry + Celery + Logging**
 - [x] **Phase 02: Full Skill Migration + Base Canvas + Billing Baseline** (completed 2026-03-27)
-- [ ] **Phase 03: Agent System + Tool Calling + Pipeline Orchestration**
+- [x] **Phase 03: Agent System + Tool Calling + Pipeline Orchestration** (completed 2026-03-28)
 - [ ] **Phase 04: Media/Slash Skills + Quota Controls**
 - [ ] **Phase 05: Canvas/Video Experience + Billing Dashboard**
 - [ ] **Phase 06: Collaboration + Versioning + Production Hardening**
@@ -46,14 +46,14 @@ Plans:
 **Depends on**: Phase 02
 **UI hint**: yes
 **Requirements:** [REQ-05, REQ-06]
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [x] 03-01-PLAN.md — [W1] Backend Foundation: deps + AgentSession/Message models + schemas + SSE protocol
 - [x] 03-02-PLAN.md — [W1] SkillToolset adapter (AbstractToolset) + AgentService + ContextBuilder
 - [x] 03-03-PLAN.md — [W2] Agent API endpoints (SSE chat + session CRUD) + Pipeline Tool + tests
 - [x] 03-04-PLAN.md — [W2] Chat Frontend: Zustand store + agentApi + useAgentChat SSE hook
-- [ ] 03-05-PLAN.md — [W3] Chat Sidebar UI components + canvas page integration
+- [x] 03-05-PLAN.md — [W3] Chat Sidebar UI components + canvas page integration
 
 **Success Criteria**:
 1. Agent tool-calling loop invokes skills reliably.
