@@ -46,10 +46,10 @@ Plans:
 **Depends on**: Phase 02
 **UI hint**: yes
 **Requirements:** [REQ-05, REQ-06]
-**Plans:** 5 plans
+**Plans:** 1/5 plans executed
 
 Plans:
-- [ ] 03-01-PLAN.md — [W1] Backend Foundation: deps + AgentSession/Message models + schemas + SSE protocol
+- [x] 03-01-PLAN.md — [W1] Backend Foundation: deps + AgentSession/Message models + schemas + SSE protocol
 - [ ] 03-02-PLAN.md — [W1] SkillToolset adapter (AbstractToolset) + AgentService + ContextBuilder
 - [ ] 03-03-PLAN.md — [W2] Agent API endpoints (SSE chat + session CRUD) + Pipeline Tool + tests
 - [ ] 03-04-PLAN.md — [W2] Chat Frontend: Zustand store + agentApi + useAgentChat SSE hook
