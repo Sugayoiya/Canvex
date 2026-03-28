@@ -13,6 +13,7 @@ from sqlalchemy.orm import selectinload
 from sse_starlette.sse import EventSourceResponse
 
 from app.agent.agent_service import AgentDeps, AgentService
+from app.agent.context_tools import get_context_toolset
 from app.agent.pipeline_tools import get_pipeline_toolset
 from app.agent.skill_toolset import SkillToolset
 from app.agent.sse_protocol import (
@@ -173,6 +174,7 @@ async def chat(
             )
             toolset = SkillToolset(registry=skill_registry, context=context)
             pipeline_toolset = get_pipeline_toolset()
+            context_toolset = get_context_toolset()
 
             project_name = None
             canvas_name = None
@@ -222,7 +224,7 @@ async def chat(
                 user_prompt=body.message,
                 message_history=history,
                 deps=deps,
-                toolsets=[toolset, pipeline_toolset],
+                toolsets=[toolset, pipeline_toolset, context_toolset],
             ) as run:
                 async for node in run:
                     if AgentCls.is_model_request_node(node):

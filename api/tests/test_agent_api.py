@@ -342,6 +342,39 @@ class TestPipelineTool:
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# TestContextTools
+# ---------------------------------------------------------------------------
+
+
+class TestContextTools:
+    @pytest.mark.asyncio
+    async def test_context_toolset_created(self):
+        from app.agent.context_tools import get_context_toolset
+
+        toolset = get_context_toolset()
+        assert toolset is not None
+
+    @pytest.mark.asyncio
+    async def test_context_tool_functions_exist(self):
+        from app.agent.context_tools import (
+            get_canvas_state,
+            get_project_characters,
+            get_project_scenes,
+            get_script_content,
+        )
+
+        assert callable(get_project_characters)
+        assert callable(get_project_scenes)
+        assert callable(get_script_content)
+        assert callable(get_canvas_state)
+
+
+# ---------------------------------------------------------------------------
+# TestAgentAuth
+# ---------------------------------------------------------------------------
+
+
 class TestAgentAuth:
     @pytest.mark.asyncio
     async def test_endpoints_require_auth(self):
