@@ -27,36 +27,54 @@ def sse_event(
     return {"event": event_type.value, "data": json.dumps(data, ensure_ascii=False)}
 
 
-def sse_thinking(status: str = "analyzing") -> dict:
-    return sse_event(SSEEventType.THINKING, {"status": status})
+def sse_thinking(status: str = "analyzing", request_id: str | None = None) -> dict:
+    return sse_event(SSEEventType.THINKING, {"status": status}, request_id=request_id)
 
 
-def sse_tool_call(tool_name: str, args: dict, call_id: str) -> dict:
+def sse_tool_call(
+    tool_name: str, args: dict, call_id: str, request_id: str | None = None
+) -> dict:
     return sse_event(
         SSEEventType.TOOL_CALL,
         {"tool": tool_name, "args": args, "call_id": call_id},
+        request_id=request_id,
     )
 
 
 def sse_tool_result(
-    tool_name: str, summary: str, call_id: str, success: bool = True
+    tool_name: str,
+    summary: str,
+    call_id: str,
+    success: bool = True,
+    request_id: str | None = None,
 ) -> dict:
     return sse_event(
         SSEEventType.TOOL_RESULT,
         {"tool": tool_name, "summary": summary, "call_id": call_id, "success": success},
+        request_id=request_id,
     )
 
 
-def sse_token(text: str) -> dict:
-    return sse_event(SSEEventType.TOKEN, {"text": text})
+def sse_token(text: str, request_id: str | None = None) -> dict:
+    return sse_event(SSEEventType.TOKEN, {"text": text}, request_id=request_id)
 
 
-def sse_done(output: str, usage: dict | None = None) -> dict:
-    return sse_event(SSEEventType.DONE, {"output": output, "usage": usage or {}})
+def sse_done(
+    output: str, usage: dict | None = None, request_id: str | None = None
+) -> dict:
+    return sse_event(
+        SSEEventType.DONE,
+        {"output": output, "usage": usage or {}},
+        request_id=request_id,
+    )
 
 
-def sse_error(message: str, code: str | None = None) -> dict:
-    return sse_event(SSEEventType.ERROR, {"message": message, "code": code})
+def sse_error(
+    message: str, code: str | None = None, request_id: str | None = None
+) -> dict:
+    return sse_event(
+        SSEEventType.ERROR, {"message": message, "code": code}, request_id=request_id
+    )
 
 
 def sse_heartbeat() -> dict:
