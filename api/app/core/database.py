@@ -46,6 +46,7 @@ async def init_db():
     from app.models.ai_call_log import AICallLog  # noqa
     from app.models.canvas import Canvas, CanvasNode, CanvasEdge  # noqa
     from app.models.model_pricing import ModelPricing  # noqa
+    from app.models.agent_session import AgentSession, AgentMessage  # noqa
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
