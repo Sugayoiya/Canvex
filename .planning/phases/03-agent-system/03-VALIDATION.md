@@ -38,7 +38,18 @@ created: 2026-03-28
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| *Populated during planning* | | | | | | | |
+| 01-T1 | 03-01 | 1 | REQ-05, REQ-06 | import | `cd api && uv run python -c "import pydantic_ai; import sse_starlette" && cd ../web && node -e "require('@microsoft/fetch-event-source')"` | — | ⬜ pending |
+| 01-T2 | 03-01 | 1 | REQ-05, REQ-06 | import | `cd api && uv run python -c "from app.models.agent_session import AgentSession, AgentMessage; print(AgentSession.__tablename__)"` | api/app/models/agent_session.py | ⬜ pending |
+| 01-T3 | 03-01 | 1 | REQ-05, REQ-06 | import | `cd api && uv run python -c "from app.schemas.agent import ChatRequest; from app.agent.sse_protocol import SSEEventType, sse_token"` | api/app/schemas/agent.py, api/app/agent/sse_protocol.py | ⬜ pending |
+| 02-T1 | 03-02 | 2 | REQ-05 | integration | `cd api && uv run python -c "from app.agent.skill_toolset import SkillToolset; from app.skills.registry import skill_registry; from app.skills.context import SkillContext; ts=SkillToolset(registry=skill_registry, context=SkillContext()); import asyncio; assert len(asyncio.run(ts.tool_defs()))>0"` | api/app/agent/skill_toolset.py | ⬜ pending |
+| 02-T2 | 03-02 | 2 | REQ-05 | import | `cd api && uv run python -c "from app.agent import AgentService, AgentDeps, SkillToolset, SSEEventType; from app.agent.context_builder import build_system_prompt; assert '当前项目' in build_system_prompt(project_name='T')"` | api/app/agent/agent_service.py, api/app/agent/context_builder.py | ⬜ pending |
+| 03-T1 | 03-03 | 3 | REQ-05, REQ-06 | import | `cd api && uv run python -c "from app.api.v1.agent import router; assert len(router.routes)>=6"` | api/app/api/v1/agent.py | ⬜ pending |
+| 03-T2 | 03-03 | 3 | REQ-05, REQ-06 | pytest | `cd api && uv run pytest tests/test_agent_api.py -x -q` | api/tests/test_agent_api.py | ⬜ pending |
+| 04-T1 | 03-04 | 2 | REQ-06 | typecheck | `cd web && npx tsc --noEmit --strict src/stores/chat-store.ts src/lib/api.ts 2>&1 \| head -20` | web/src/stores/chat-store.ts | ⬜ pending |
+| 04-T2 | 03-04 | 2 | REQ-06 | typecheck | `cd web && npx tsc --noEmit --strict src/hooks/use-agent-chat.ts 2>&1 \| head -20` | web/src/hooks/use-agent-chat.ts | ⬜ pending |
+| 05-T1 | 03-05 | 4 | REQ-06 | typecheck | `cd web && npx tsc --noEmit 2>&1 \| head -30` | web/src/components/chat/chat-sidebar.tsx, chat-messages.tsx, chat-input.tsx | ⬜ pending |
+| 05-T2 | 03-05 | 4 | REQ-06 | typecheck | `cd web && npx tsc --noEmit 2>&1 \| head -30` | web/src/components/chat/tool-call-display.tsx, thinking-indicator.tsx, chat-session-list.tsx | ⬜ pending |
+| 05-T3 | 03-05 | 4 | REQ-06 | typecheck | `cd web && npx tsc --noEmit 2>&1 \| head -30` | web/src/app/canvas/[id]/page.tsx | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
