@@ -36,6 +36,9 @@ interface BackendNode {
   position_y: number;
   config?: Record<string, unknown>;
   status?: string;
+  result_text?: string;
+  result_url?: string;
+  error_message?: string;
 }
 
 interface BackendEdge {
@@ -55,14 +58,14 @@ interface CanvasDetail {
 }
 
 const NODE_LABELS: Record<string, string> = {
-  "text-input": "文本输入",
-  "llm-generate": "LLM 生成",
-  extract: "提取",
-  "image-gen": "图片生成",
-  output: "输出",
+  text: "文本",
+  image: "图片",
+  video: "视频",
+  audio: "音频",
 };
 
 function toFlowNode(n: BackendNode): Node {
+  const config = n.config ?? {};
   return {
     id: n.id,
     type: n.node_type,
@@ -70,8 +73,13 @@ function toFlowNode(n: BackendNode): Node {
     data: {
       label: NODE_LABELS[n.node_type] ?? n.node_type,
       nodeType: n.node_type,
-      config: n.config ?? {},
+      config,
       status: n.status ?? "idle",
+      text: (config.text as string) ?? "",
+      prompt: (config.prompt as string) ?? "",
+      result_text: n.result_text ?? "",
+      result_url: n.result_url ?? "",
+      error_message: n.error_message ?? "",
     },
   };
 }

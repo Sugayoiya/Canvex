@@ -24,3 +24,72 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* === Phase 04 Canvas V4 Design Tokens === */
+:root, .theme-dark {
+  --cv4-canvas-bg: #131313;
+  --cv4-grid-dot: #3c494e;
+  --cv4-surface-primary: #2A2A2A;
+  --cv4-surface-secondary: #353534;
+  --cv4-surface-elevated: #201F1F;
+  --cv4-surface-overlay: #1C1B1BDD;
+  --cv4-surface-popup: #1C1B1B;
+  --cv4-surface-code: #0E0E0E;
+  --cv4-text-primary: #E5E2E1;
+  --cv4-text-secondary: #BBC9CF;
+  --cv4-text-muted: #859399;
+  --cv4-text-placeholder: #85939930;
+  --cv4-text-disabled: #85939960;
+  --cv4-border-default: #3c494e20;
+  --cv4-border-subtle: #3c494e15;
+  --cv4-border-faint: #3c494e12;
+  --cv4-border-focused: #E5E2E130;
+  --cv4-border-divider: #3c494e40;
+  --cv4-btn-primary: #E5E2E1;
+  --cv4-btn-primary-text: #131313;
+  --cv4-btn-secondary: #2A2A2A;
+  --cv4-btn-secondary-text: #BBC9CF;
+  --cv4-active-highlight: #E5E2E115;
+  --cv4-hover-highlight: #E5E2E110;
+  --cv4-shadow-sm: 0 2px 10px #00000040;
+  --cv4-shadow-md: 0 4px 20px #00000040;
+  --cv4-shadow-lg: 0 6px 30px #00000050;
+  --cv4-shadow-xl: 0 12px 60px #00000060;
+  --cv4-radius-node: 12px;
+  --cv4-radius-panel: 16px;
+  --cv4-radius-popup: 20px;
+  --cv4-radius-toolbar: 10px;
+  --cv4-radius-menu: 14px;
+  --cv4-radius-tag: 8px;
+  --cv4-radius-button: 8px;
+}
+.theme-light {
+  --cv4-canvas-bg: #F5F5F5;
+  --cv4-grid-dot: #D0D0D0;
+  --cv4-surface-primary: #FFFFFF;
+  --cv4-surface-secondary: #EBEBEB;
+  --cv4-surface-elevated: #FFFFFF;
+  --cv4-surface-overlay: #FFFFFFEE;
+  --cv4-surface-popup: #FFFFFF;
+  --cv4-surface-code: #F0F0F0;
+  --cv4-text-primary: #1A1A1A;
+  --cv4-text-secondary: #4A5A62;
+  --cv4-text-muted: #7A8A92;
+  --cv4-text-placeholder: #9AA5AD40;
+  --cv4-text-disabled: #9AA5AD80;
+  --cv4-border-default: #D0D0D040;
+  --cv4-border-subtle: #D0D0D030;
+  --cv4-border-faint: #D0D0D020;
+  --cv4-border-focused: #1A1A1A15;
+  --cv4-border-divider: #D0D0D060;
+  --cv4-btn-primary: #1A1A1A;
+  --cv4-btn-primary-text: #FFFFFF;
+  --cv4-btn-secondary: #F0F0F0;
+  --cv4-btn-secondary-text: #4A5A62;
+  --cv4-active-highlight: #1A1A1A08;
+  --cv4-hover-highlight: #1A1A1A05;
+  --cv4-shadow-sm: 0 1px 8px #00000010;
+  --cv4-shadow-md: 0 2px 12px #00000010;
+  --cv4-shadow-lg: 0 3px 16px #00000012;
+  --cv4-shadow-xl: 0 6px 30px #00000015;
+}

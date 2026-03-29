@@ -2,7 +2,7 @@ from datetime import datetime
 from pydantic import BaseModel
 from typing import Any
 
-VALID_NODE_TYPES = {"text-input", "llm-generate", "extract", "image-gen", "output"}
+VALID_NODE_TYPES = {"text", "image", "video", "audio"}
 
 
 class CanvasCreate(BaseModel):
