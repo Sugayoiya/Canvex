@@ -26,10 +26,22 @@ class SkillExecutor:
         params: dict[str, Any],
         context: SkillContext,
     ) -> SkillResult:
+        from decimal import Decimal
+        from app.services.quota_service import QuotaService
+
+        quota_result = await QuotaService.check_quota(
+            user_id=context.user_id,
+            team_id=context.team_id,
+        )
+        if not quota_result.allowed:
+            return SkillResult.failed(
+                message=quota_result.reason,
+                error_code=quota_result.error_code,
+            )
+
         descriptor = self.registry.get_descriptor(name)
         start = time.monotonic()
 
-        # Log the skill invocation start
         log_id = await self._log_start(name, descriptor.category.value, params, context)
 
         try:
@@ -38,7 +50,8 @@ class SkillExecutor:
 
             if result.status in ("completed", "failed"):
                 await self._log_finish(log_id, result, duration_ms)
-            # For "running" (async), completion log is written by the Celery task
+
+            await self._update_quota_usage(log_id, context)
 
             return result
         except Exception as e:
@@ -46,6 +59,34 @@ class SkillExecutor:
             result = SkillResult.failed(message=str(e))
             await self._log_finish(log_id, result, duration_ms)
             raise
+
+    async def _update_quota_usage(self, log_id: str, ctx: SkillContext) -> None:
+        """Post-execution: increment quota counters using the finalized cost from SkillExecutionLog."""
+        if not log_id:
+            return
+        try:
+            from decimal import Decimal
+            from sqlalchemy import select
+            from app.core.database import AsyncSessionLocal
+            from app.models.skill_execution_log import SkillExecutionLog
+            from app.services.quota_service import QuotaService
+
+            async with AsyncSessionLocal() as session:
+                row = (
+                    await session.execute(
+                        select(SkillExecutionLog).where(SkillExecutionLog.id == log_id)
+                    )
+                ).scalar_one_or_none()
+
+            if row and row.total_cost and row.total_cost > Decimal("0"):
+                await QuotaService.update_usage(
+                    user_id=ctx.user_id,
+                    team_id=ctx.team_id,
+                    skill_execution_id=row.id,
+                    credit_amount=row.total_cost,
+                )
+        except Exception:
+            logger.exception("Quota usage update failed for log %s", log_id)
 
     async def _log_start(
         self,
