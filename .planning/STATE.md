@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-03-29T17:26:38.542Z"
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-29T17:27:49.920Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 26
-  completed_plans: 21
+  completed_plans: 22
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 04 (media-tools) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -91,6 +91,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 04]: Fail-closed quota enforcement: check_quota returns allowed=False on any exception including DB errors
 - [Phase 04]: Idempotent usage tracking by unique QuotaUsageLog.skill_execution_id — Celery retries safe
 - [Phase 04]: Lazy month/day counter reset on access — no cron dependency for quota resets
+- [Phase 04]: 4 material types only (text/image/video/audio) — no legacy type backward compat in connection rules
+- [Phase 04]: CSS custom properties under --cv4-* namespace for canvas theming
+- [Phase 04]: toFlowNode extracts config.text/config.prompt into data top-level for direct access
 
 ### Pending Todos
 
@@ -109,6 +112,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-29T17:26:38.539Z
-Stopped at: Completed 04-02-PLAN.md
+Last session: 2026-03-29T17:27:49.917Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: None
