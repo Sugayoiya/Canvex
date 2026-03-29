@@ -110,6 +110,34 @@ export const canvasApi = {
     target_handle?: string;
   }) => api.post("/canvas/edges/", data),
   deleteEdge: (edgeId: string) => api.delete(`/canvas/edges/${edgeId}`),
+
+  listAssets: (
+    projectId: string,
+    params?: { asset_type?: string; limit?: number; offset?: number },
+  ) =>
+    api.get("/canvas/assets/", {
+      params: { project_id: projectId, ...params },
+    }),
+  getAsset: (assetId: string) => api.get(`/canvas/assets/${assetId}`),
+  createAsset: (data: {
+    project_id: string;
+    asset_type: string;
+    name: string;
+    tags?: string;
+    content_text?: string;
+    content_url?: string;
+    config_json?: Record<string, unknown>;
+    source_node_id?: string;
+  }) => api.post("/canvas/assets/", data),
+  updateAsset: (
+    assetId: string,
+    data: {
+      name?: string;
+      tags?: string;
+      config_json?: Record<string, unknown>;
+    },
+  ) => api.patch(`/canvas/assets/${assetId}`, data),
+  deleteAsset: (assetId: string) => api.delete(`/canvas/assets/${assetId}`),
 };
 
 export const agentApi = {
