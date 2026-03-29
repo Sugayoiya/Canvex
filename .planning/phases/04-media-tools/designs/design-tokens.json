@@ -98,37 +98,37 @@
       "mono": "Space Grotesk"
     },
     "scale": {
-      "nodeTitle": { "size": 12, "weight": "500", "font": "Space Grotesk" },
+      "nodeTitle": { "size": 12, "weight": "normal", "font": "Space Grotesk" },
       "nodeContent": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.6 },
       "nodeContentTitle": { "size": 15, "weight": "700", "font": "Manrope", "lineHeight": 1.6 },
-      "nodeHint": { "size": 11, "weight": "normal", "font": "Manrope" },
-      "tag": { "size": 12, "weight": "500", "font": "Manrope" },
+      "nodeHint": { "size": 12, "weight": "normal", "font": "Manrope" },
+      "tag": { "size": 12, "weight": "normal", "font": "Manrope" },
       "inputPlaceholder": { "size": 13, "weight": "normal", "font": "Manrope" },
       "chatMessage": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
       "chatTitle": { "size": 13, "weight": "700", "font": "Space Grotesk" },
-      "chatSubtitle": { "size": 9, "weight": "500", "font": "Space Grotesk", "letterSpacing": 1 },
-      "code": { "size": 10, "weight": "normal", "font": "Space Grotesk", "lineHeight": 1.5 },
+      "chatSubtitle": { "size": 9, "weight": "normal", "font": "Space Grotesk", "letterSpacing": 1 },
+      "code": { "size": 9, "weight": "normal", "font": "Space Grotesk", "lineHeight": 1.5 },
       "statusLabel": { "size": 9, "weight": "700", "font": "Space Grotesk", "letterSpacing": 1 },
       "metadata": { "size": 9, "weight": "normal", "font": "Space Grotesk" },
-      "templateChip": { "size": 10, "weight": "500", "font": "Manrope" },
-      "toolbarLabel": { "size": 11, "weight": "600", "font": "Space Grotesk" }
+      "templateChip": { "size": 9, "weight": "normal", "font": "Manrope" },
+      "toolbarLabel": { "size": 12, "weight": "700", "font": "Space Grotesk" }
     }
   },
 
   "spacing": {
-    "nodeCardPadding": [10, 14],
-    "nodeContentPadding": [10, 16],
-    "panelPadding": [12, 14],
-    "chatPadding": [14, 18],
-    "tagPadding": [6, 12],
-    "chipPadding": [6, 10],
+    "nodeCardPadding": [12, 16],
+    "nodeContentPadding": [12, 16],
+    "panelPadding": [12, 16],
+    "chatPadding": [16, 20],
+    "tagPadding": [8, 12],
+    "chipPadding": [8, 12],
     "toolbarPadding": [4, 8],
     "gap": {
-      "nodeItems": 6,
+      "nodeItems": 8,
       "tagItems": 8,
       "chatMessages": 16,
       "menuItems": 4,
-      "toolbarItems": 2
+      "toolbarItems": 4
     }
   },
 

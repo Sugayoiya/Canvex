@@ -64,8 +64,8 @@ shadow: shadow.md (默认) / shadow.lg (聚焦)
 ### 3.2 标题行 (NodeHeader)
 
 ```yaml
-padding: [10, 14]
-layout: horizontal, gap=6, alignItems=center
+padding: [12, 16]
+layout: horizontal, gap=8, alignItems=center
 children:
   - icon: 对应类型图标, 14px, text.muted
   - title: "类型名 + ID后缀", nodeTitle, text.secondary
@@ -89,11 +89,11 @@ children:
 
 ```yaml
 height: fill
-padding: [10, 16]
-layout: horizontal, gap=10
+padding: [12, 16]
+layout: horizontal, gap=12
 children:
   - leftBorder: 3px wide, text.disabled (60% opacity), cornerRadius=2
-  - textContent: vertical layout, gap=6
+  - textContent: vertical layout, gap=8
     - 标题行: nodeContentTitle, text.primary
     - 正文行: nodeContent, text.secondary / text.muted
 ```
@@ -112,8 +112,8 @@ children:
 ### 3.4 提示行 (NodeHints) — 仅空状态显示
 
 ```yaml
-padding: [10, 14]
-layout: vertical, gap=6
+padding: [12, 16]
+layout: vertical, gap=8
 children:
   - 每行: "尝试: xxx", nodeHint, text.disabled
 ```
@@ -121,7 +121,7 @@ children:
 ### 3.5 底部行 (NodeFooter) — 仅有内容状态显示
 
 ```yaml
-padding: [6, 14]
+padding: [8, 16]
 layout: horizontal, alignItems=center
 children:
   # 图片节点:
@@ -156,7 +156,7 @@ background: surface.primary
 cornerRadius: 10
 border: border.default (1px)
 shadow: shadow.sm
-layout: horizontal, gap=2, padding=[4, 8], alignItems=center
+layout: horizontal, gap=4, padding=[4, 8], alignItems=center
 ```
 
 ### 按钮列表
@@ -184,7 +184,7 @@ layout: horizontal, gap=2, padding=[4, 8], alignItems=center
 > 聚焦**空节点（无内容）**时，浮动在**节点下方**。
 
 ```yaml
-position: 节点下方 10px, 左对齐
+position: 节点下方 12px, 左对齐
 direction: below  # 空节点的 AI 生成面板统一在下方
 width: 460px
 background: surface.elevated
@@ -197,10 +197,10 @@ layout: vertical
 ### 5.1 标签行 (Tags)
 
 ```yaml
-padding: [12, 14, 6, 14]
+padding: [12, 16, 8, 16]
 layout: horizontal, gap=8, alignItems=center
 children:
-  - tag[]: { cornerRadius=8, bg=surface.primary, padding=[6,12], gap=4 }
+  - tag[]: { cornerRadius=8, bg=surface.primary, padding=[8,12], gap=4 }
     - icon: 14px, text.secondary
     - text: tag, text.secondary
   - spacer: flex
@@ -212,7 +212,7 @@ children:
 ### 5.2 输入区 (Input)
 
 ```yaml
-padding: [8, 14, 10, 14]
+padding: [8, 16, 12, 16]
 children:
   - placeholder: inputPlaceholder, text.placeholder
     content: "描述你想要生成的画面内容，按/呼出指令，@引用素材"
@@ -221,20 +221,20 @@ children:
 ### 5.3 底部操作栏 (BottomBar)
 
 ```yaml
-padding: [8, 14, 12, 14]
+padding: [8, 16, 12, 16]
 layout: horizontal, gap=8, alignItems=center
 children:
-  - modelSelector: { cornerRadius=8, bg=surface.primary, padding=[5,10] }
+  - modelSelector: { cornerRadius=8, bg=surface.primary, padding=[8,12] }
     - icon: sparkles, 12px, text.secondary
-    - text: "Lib Nano Pro", 11px, text.secondary
+    - text: "Lib Nano Pro", 12px, text.secondary
     - chevron: chevron-down, 10px, text.disabled
   - ratioSelector: 同结构, text="16:9 · 2K"
   - cameraSelector: 同结构, icon=camera, text="摄像机控制"
   - spacer: flex
-  - count: "1张", 11px, text.secondary + chevron
+  - count: "1张", 12px, text.secondary + chevron
   - divider: 1×16px, border.divider
   - tokenIcon: zap, 12px, text.disabled
-  - tokenCount: "14", 11px, text.disabled
+  - tokenCount: "14", 12px, text.disabled
   - sendButton: 30×30px, cornerRadius=8
     - bg: interactive.buttonPrimary
     - icon: arrow-up, 16px, interactive.buttonPrimaryText
@@ -247,34 +247,34 @@ children:
 > 聚焦**有内容**的图片/视频/音频节点时，浮动在**节点上方**。
 
 ```yaml
-position: 节点上方 10px
+position: 节点上方 12px
 direction: above  # 有内容节点的面板统一在上方
 width: 350–380px, height: ~80px
 background: surface.elevated
 cornerRadius: 14
 border: border.default (1px)
 shadow: shadow.lg (dark) / shadow.md (light)
-padding: [10, 14]
+padding: [12, 16]
 layout: vertical, gap=8
 ```
 
 ### 标题行
 
 ```yaml
-layout: horizontal, gap=6, alignItems=center
+layout: horizontal, gap=8, alignItems=center
 children:
   - icon: sparkles, 12px, text.secondary
-  - label: "模板功能", 11px/600, text.secondary
+  - label: "模板功能", 12px/700, text.secondary
   - spacer: flex
-  - link: "查看全部 ›", 10px, text.disabled
+  - link: "查看全部 ›", 9px, text.disabled
 ```
 
 ### 模板标签行
 
 ```yaml
-layout: horizontal, gap=6
+layout: horizontal, gap=8
 children:
-  - chip[]: { cornerRadius=8, bg=surface.primary, border=border.default, padding=[6,10], gap=4 }
+  - chip[]: { cornerRadius=8, bg=surface.primary, border=border.default, padding=[8,12], gap=4 }
     - icon: 对应图标, 12px, text.muted (90% opacity)
     - text: templateChip, text.secondary
 ```
@@ -307,9 +307,9 @@ effects:
 ### 7.1 头部 (Header)
 
 ```yaml
-padding: [14, 18]
+padding: [16, 20]
 borderBottom: border.subtle (1px)
-layout: horizontal, gap=10, alignItems=center
+layout: horizontal, gap=12, alignItems=center
 children:
   - avatar: 32×32, cornerRadius=10, bg=surface.primary
     - icon: bot, 16px, text.secondary
@@ -324,7 +324,7 @@ children:
 ### 7.2 消息区 (Body)
 
 ```yaml
-padding: [14, 18]
+padding: [16, 20]
 layout: vertical, gap=16
 flex: 1 (填满剩余空间)
 overflow: scroll
@@ -336,7 +336,7 @@ alignItems: end (右对齐)
 bubble:
   bg: surface.secondary
   cornerRadius: [12, 2, 12, 12]
-  padding: [10, 14]
+  padding: [12, 16]
   text: chatMessage, text.primary
 timestamp: metadata, text.placeholder
 ```
@@ -351,14 +351,14 @@ bubble:
   bg: surface.elevated
   cornerRadius: [2, 12, 12, 12]
   border: border.faint (1px)
-  padding: [10, 14]
+  padding: [12, 16]
   children:
     - text: chatMessage, text.secondary
     - codeBlock:
         bg: surface.code
         cornerRadius: 8
         border: border.faint
-        padding: 10
+        padding: 12
         text: code, text.muted (90%)
 ```
 
@@ -375,7 +375,7 @@ children:
 
 ```yaml
 borderTop: border.subtle (1px)
-padding: [12, 18, 14, 18]
+padding: [12, 20, 16, 20]
 children:
   - textArea: (layout=none, 自由定位)
     width: fill, height: 80px
@@ -448,11 +448,11 @@ stroke: border.focused (1px)
 
 | 节点状态 | 节点类型 | 弹出面板 | 弹出方向 | 间距 |
 |---------|---------|---------|---------|------|
-| 空（无内容） | 所有类型 | AI 生成面板 (AIGeneratePanel) | **节点下方 ↓** | 10px |
+| 空（无内容） | 所有类型 | AI 生成面板 (AIGeneratePanel) | **节点下方 ↓** | 12px |
 | 有内容 | 文本 (text) | 文本编辑工具栏 (TextToolbar) | **节点上方 ↑** | 8px |
-| 有内容 | 图片 (image) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 10px |
-| 有内容 | 视频 (video) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 10px |
-| 有内容 | 音频 (audio) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 10px |
+| 有内容 | 图片 (image) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 12px |
+| 有内容 | 视频 (video) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 12px |
+| 有内容 | 音频 (audio) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 12px |
 
 ### 定位算法
 
@@ -464,13 +464,13 @@ function getPanelPosition(node: Node, panelHeight: number): { x: number; y: numb
     // 有内容 → 面板在节点上方
     return {
       x: node.position.x,
-      y: node.position.y - panelHeight - GAP_ABOVE, // 8-10px
+      y: node.position.y - panelHeight - GAP_ABOVE, // 8-12px
     };
   } else {
     // 无内容 → 面板在节点下方
     return {
       x: node.position.x,
-      y: node.position.y + nodeHeight + GAP_BELOW, // 10px
+      y: node.position.y + nodeHeight + GAP_BELOW, // 12px
     };
   }
 }
