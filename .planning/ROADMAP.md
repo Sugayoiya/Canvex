@@ -81,13 +81,13 @@ Plans:
 **Plans:** 7 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — [W1] Frontend Infra: CSS --cv4-* tokens, connection-rules rewrite, bug fixes, NodeShell + StatusIndicator
-- [ ] 04-02-PLAN.md — [W1] Backend Quota: UserQuota/TeamQuota models, QuotaService, SkillExecutor enforcement, API endpoints
-- [ ] 04-03-PLAN.md — [W1] Backend Video: Provider "auto" fix, GeminiVideoProvider, video.generate_video skill
-- [ ] 04-04-PLAN.md — [W2] Material Nodes: useNodeFocus + usePromptBuilder hooks, 4 node components, backward-compat registry
-- [ ] 04-05-PLAN.md — [W3] Focus Panels + Menu: PanelHost, AIGeneratePanel, TextToolbar, TemplateMenu, LeftFloatingMenu, NodeCreationMenu
-- [ ] 04-06-PLAN.md — [W3] Asset Library: CanvasAsset model + CRUD API, AssetPanel, SaveAssetDialog
-- [ ] 04-07-PLAN.md — [W4] Integration + Templates: Workspace rewrite, template data structures, template application logic
+- [ ] 04-01-PLAN.md — [W1] Frontend Infra: CSS --cv4-* tokens, connection-rules rewrite (4 types only), toFlowNode bug fix, NodeShell + StatusIndicator, DB migration script
+- [ ] 04-02-PLAN.md — [W1] Backend Quota: UserQuota/TeamQuota models, fail-closed QuotaService with atomic locks, SkillExecutor enforcement, admin API with authz+audit
+- [ ] 04-03-PLAN.md — [W1] Backend Video: Provider "auto" fix, GeminiVideoProvider (Veo), video.generate_video skill
+- [ ] 04-04-PLAN.md — [W2] Material Nodes: useNodeFocus + usePromptBuilder hooks, 4 node components, nodeTypes registry (NO legacy compat)
+- [ ] 04-05-PLAN.md — [W3] Focus Panels + Menus: PanelHost, AIGeneratePanel, TextToolbar, TemplateMenu, LeftFloatingMenu, NodeCreationMenu
+- [ ] 04-06-PLAN.md — [W3] Asset Library: CanvasAsset model + CRUD API (authz, pagination, PATCH, JSON limits), AssetPanel, SaveAssetDialog
+- [ ] 04-07-PLAN.md — [W4] Incremental Integration + Templates: canvas-workspace targeted edits, template system with graph validation (cycle + IO check)
 
 **Success Criteria**:
 1. Media/slash skill set is available and callable.
