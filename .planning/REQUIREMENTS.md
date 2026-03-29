@@ -22,7 +22,7 @@
 
 ### Media & Quota
 
-- [ ] **REQ-07**: Media/slash skills are available for image/video workflows.
+- [x] **REQ-07**: Media/slash skills are available for image/video workflows.
 - [ ] **REQ-08**: Usage quota checks and enforcement exist at user/team level.
 
 ### Production Experience
@@ -59,7 +59,7 @@
 | REQ-04 | Phase 2 | Complete |
 | REQ-05 | Phase 3 | Complete |
 | REQ-06 | Phase 3 | Complete |
-| REQ-07 | Phase 4 | Pending |
+| REQ-07 | Phase 4 | Complete |
 | REQ-08 | Phase 4 | Pending |
 | REQ-09 | Phase 5 | Pending |
 | REQ-10 | Phase 5 | Pending |

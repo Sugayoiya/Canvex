@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
-status: verifying
-stopped_at: Phase 04 plans verified (7 plans, 4 waves)
-last_updated: "2026-03-29T16:48:43.931Z"
-last_activity: 2026-03-28
+status: executing
+stopped_at: Completed 04-03-PLAN.md
+last_updated: "2026-03-29T17:26:09.641Z"
+last_activity: 2026-03-29
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 26
-  completed_plans: 19
+  completed_plans: 21
   percent: 33
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 03.1 — agent-chat-canvas-quality-fix
+**Current focus:** Phase 04 — media-tools
 
 ## Current Position
 
-Phase: 04
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-03-28
+Phase: 04 (media-tools) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
+Last activity: 2026-03-29
 
 Progress: [███░░░░░░░] 33%
 
@@ -86,6 +86,8 @@ Progress: [███░░░░░░░] 33%
 - [Phase 03.1]: isSavingRef/needsSaveRef write serialization — at most one PATCH in-flight per node
 - [Phase 03.1]: Hook order: useReactFlow → useUpstreamData → useNodePersistence → handleExecutionComplete → useNodeExecution (TDZ safety)
 - [Phase 03.1]: Execution writeback via canvasApi with .catch graceful degradation — local-first state, best-effort backend sync
+- [Phase 04]: Provider auto-select iterates [gemini, openai, deepseek] priority order
+- [Phase 04]: Video skill uses media_processing Celery queue (not ai_generation)
 
 ### Pending Todos
 
@@ -104,6 +106,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-29T16:48:43.927Z
-Stopped at: Phase 04 plans verified (7 plans, 4 waves)
-Resume file: .planning/phases/04-media-tools/04-01-PLAN.md
+Last session: 2026-03-29T17:26:09.638Z
+Stopped at: Completed 04-03-PLAN.md
+Resume file: None
