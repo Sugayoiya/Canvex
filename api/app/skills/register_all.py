@@ -13,6 +13,7 @@ def register_all_skills():
     from app.skills.canvas_ops import register_canvas_ops_skills
     from app.skills.asset import register_asset_skills
     from app.skills.visual import register_visual_skills
+    from app.skills.video import register_video_skills
 
     register_text_skills()
     register_extract_skills()
@@ -21,6 +22,7 @@ def register_all_skills():
     register_canvas_ops_skills()
     register_asset_skills()
     register_visual_skills()
+    register_video_skills()
 
     from app.skills.registry import skill_registry
 
