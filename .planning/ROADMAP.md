@@ -5,7 +5,7 @@
 - [x] **Phase 01: Foundation + SkillRegistry + Celery + Logging**
 - [x] **Phase 02: Full Skill Migration + Base Canvas + Billing Baseline** (completed 2026-03-27)
 - [x] **Phase 03: Agent System + Tool Calling + Pipeline Orchestration** (completed 2026-03-28)
-- [ ] **Phase 04: Media/Slash Skills + Quota Controls**
+- [x] **Phase 04: Media/Slash Skills + Quota Controls** (completed 2026-03-29)
 - [ ] **Phase 05: Canvas/Video Experience + Billing Dashboard**
 - [ ] **Phase 06: Collaboration + Versioning + Production Hardening**
 
@@ -78,7 +78,7 @@ Plans:
 **Depends on**: Phase 03
 **UI hint**: yes
 **Requirements:** [REQ-07, REQ-08]
-**Plans:** 6/7 plans executed
+**Plans:** 7/7 plans complete
 
 Plans:
 - [x] 04-01-PLAN.md — [W1] Frontend Infra: CSS --cv4-* tokens, connection-rules rewrite (4 types only), toFlowNode bug fix, NodeShell + StatusIndicator, DB migration script
@@ -87,7 +87,7 @@ Plans:
 - [x] 04-04-PLAN.md — [W2] Material Nodes: useNodeFocus + usePromptBuilder hooks, 4 node components, nodeTypes registry (NO legacy compat)
 - [x] 04-05-PLAN.md — [W3] Focus Panels + Menus: PanelHost, AIGeneratePanel, TextToolbar, TemplateMenu, LeftFloatingMenu, NodeCreationMenu
 - [x] 04-06-PLAN.md — [W3] Asset Library: CanvasAsset model + CRUD API (authz, pagination, PATCH, JSON limits), AssetPanel, SaveAssetDialog
-- [ ] 04-07-PLAN.md — [W4] Incremental Integration + Templates: canvas-workspace targeted edits, template system with graph validation (cycle + IO check)
+- [x] 04-07-PLAN.md — [W4] Incremental Integration + Templates: canvas-workspace targeted edits, template system with graph validation (cycle + IO check)
 
 **Success Criteria**:
 1. Media/slash skill set is available and callable.
