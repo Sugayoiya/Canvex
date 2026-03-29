@@ -78,13 +78,13 @@ Plans:
 **Depends on**: Phase 03
 **UI hint**: yes
 **Requirements:** [REQ-07, REQ-08]
-**Plans:** 3/7 plans executed
+**Plans:** 4/7 plans executed
 
 Plans:
 - [x] 04-01-PLAN.md — [W1] Frontend Infra: CSS --cv4-* tokens, connection-rules rewrite (4 types only), toFlowNode bug fix, NodeShell + StatusIndicator, DB migration script
 - [x] 04-02-PLAN.md — [W1] Backend Quota: UserQuota/TeamQuota models, fail-closed QuotaService with atomic locks, SkillExecutor enforcement, admin API with authz+audit
 - [x] 04-03-PLAN.md — [W1] Backend Video: Provider "auto" fix, GeminiVideoProvider (Veo), video.generate_video skill
-- [ ] 04-04-PLAN.md — [W2] Material Nodes: useNodeFocus + usePromptBuilder hooks, 4 node components, nodeTypes registry (NO legacy compat)
+- [x] 04-04-PLAN.md — [W2] Material Nodes: useNodeFocus + usePromptBuilder hooks, 4 node components, nodeTypes registry (NO legacy compat)
 - [ ] 04-05-PLAN.md — [W3] Focus Panels + Menus: PanelHost, AIGeneratePanel, TextToolbar, TemplateMenu, LeftFloatingMenu, NodeCreationMenu
 - [ ] 04-06-PLAN.md — [W3] Asset Library: CanvasAsset model + CRUD API (authz, pagination, PATCH, JSON limits), AssetPanel, SaveAssetDialog
 - [ ] 04-07-PLAN.md — [W4] Incremental Integration + Templates: canvas-workspace targeted edits, template system with graph validation (cycle + IO check)
