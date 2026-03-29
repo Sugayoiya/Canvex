@@ -74,9 +74,21 @@ Plans:
 - [x] 03.1-04-PLAN.md — [W2] Canvas Node Integration: wire hooks into all 5 node types + execution result writeback
 
 ### Phase 04: Media/Slash Skills + Quota Controls
-**Goal**: Add media-heavy workflows and enforce quota constraints.
+**Goal**: Replace 5 functional-type canvas nodes with 4 material-type nodes (text/image/video/audio), add focus-panel interaction system, template-driven workflows, asset library, video generation skill, and enforce quota constraints.
 **Depends on**: Phase 03
 **UI hint**: yes
+**Requirements:** [REQ-07, REQ-08]
+**Plans:** 7 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — [W1] Frontend Infra: CSS --cv4-* tokens, connection-rules rewrite, bug fixes, NodeShell + StatusIndicator
+- [ ] 04-02-PLAN.md — [W1] Backend Quota: UserQuota/TeamQuota models, QuotaService, SkillExecutor enforcement, API endpoints
+- [ ] 04-03-PLAN.md — [W1] Backend Video: Provider "auto" fix, GeminiVideoProvider, video.generate_video skill
+- [ ] 04-04-PLAN.md — [W2] Material Nodes: useNodeFocus + usePromptBuilder hooks, 4 node components, backward-compat registry
+- [ ] 04-05-PLAN.md — [W3] Focus Panels + Menu: PanelHost, AIGeneratePanel, TextToolbar, TemplateMenu, LeftFloatingMenu, NodeCreationMenu
+- [ ] 04-06-PLAN.md — [W3] Asset Library: CanvasAsset model + CRUD API, AssetPanel, SaveAssetDialog
+- [ ] 04-07-PLAN.md — [W4] Integration + Templates: Workspace rewrite, template data structures, template application logic
+
 **Success Criteria**:
 1. Media/slash skill set is available and callable.
 2. Usage aggregation and quota checks are enforced.
