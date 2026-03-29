@@ -146,10 +146,11 @@ children:
 
 ## 4. 文本编辑工具栏 (TextToolbar)
 
-> 聚焦有内容的文本节点时，浮动在节点上方。
+> 聚焦**有内容**的文本节点时，浮动在**节点上方**。
 
 ```yaml
 position: 节点上方 8px, 水平居中对齐
+direction: above  # 有内容节点的面板统一在上方
 width: 310px, height: 36px
 background: surface.primary
 cornerRadius: 10
@@ -180,10 +181,11 @@ layout: horizontal, gap=2, padding=[4, 8], alignItems=center
 
 ## 5. AI 生成面板 (AIGeneratePanel)
 
-> 聚焦空节点时，浮动在节点下方。
+> 聚焦**空节点（无内容）**时，浮动在**节点下方**。
 
 ```yaml
 position: 节点下方 10px, 左对齐
+direction: below  # 空节点的 AI 生成面板统一在下方
 width: 460px
 background: surface.elevated
 cornerRadius: 16
@@ -242,10 +244,11 @@ children:
 
 ## 6. 模板功能菜单 (TemplateMenu)
 
-> 聚焦有内容节点时，浮动在节点下方。
+> 聚焦**有内容**的图片/视频/音频节点时，浮动在**节点上方**。
 
 ```yaml
-position: 节点下方 10px
+position: 节点上方 10px
+direction: above  # 有内容节点的面板统一在上方
 width: 350–380px, height: ~80px
 background: surface.elevated
 cornerRadius: 14
@@ -436,3 +439,39 @@ stroke: border.focused (1px)
 | `border.divider` | `#3c494e40` | `#D0D0D060` |
 | `interactive.buttonPrimary` | `#E5E2E1` | `#1A1A1A` |
 | `interactive.buttonPrimaryText` | `#131313` | `#FFFFFF` |
+
+---
+
+## 10. 聚焦面板定位规则 (Focus Panel Positioning)
+
+> 核心交互原则：**有内容 → 上方，无内容 → 下方**
+
+| 节点状态 | 节点类型 | 弹出面板 | 弹出方向 | 间距 |
+|---------|---------|---------|---------|------|
+| 空（无内容） | 所有类型 | AI 生成面板 (AIGeneratePanel) | **节点下方 ↓** | 10px |
+| 有内容 | 文本 (text) | 文本编辑工具栏 (TextToolbar) | **节点上方 ↑** | 8px |
+| 有内容 | 图片 (image) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 10px |
+| 有内容 | 视频 (video) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 10px |
+| 有内容 | 音频 (audio) | 模板功能菜单 (TemplateMenu) | **节点上方 ↑** | 10px |
+
+### 定位算法
+
+```typescript
+function getPanelPosition(node: Node, panelHeight: number): { x: number; y: number } {
+  const hasContent = node.data.resultText || node.data.resultUrl;
+
+  if (hasContent) {
+    // 有内容 → 面板在节点上方
+    return {
+      x: node.position.x,
+      y: node.position.y - panelHeight - GAP_ABOVE, // 8-10px
+    };
+  } else {
+    // 无内容 → 面板在节点下方
+    return {
+      x: node.position.x,
+      y: node.position.y + nodeHeight + GAP_BELOW, // 10px
+    };
+  }
+}
+```
