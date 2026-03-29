@@ -33,31 +33,27 @@ created: 2026-03-29
 
 ## Spacing Scale
 
-All spacing values derived from `design-tokens.json` `spacing.*`. This phase uses a **2px base grid** with practical multiples.
+All spacing values derived from `design-tokens.json` `spacing.*`. This phase uses a **4px base grid** — every value is a multiple of 4.
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| 2xs | 2px | Toolbar button gaps (`gap.toolbarItems`) |
-| xs | 4px | Floating menu item gap (`gap.menuItems`), toolbar padding-y |
-| sm | 6px | Node header gap, hint row gap, chip padding-y, tag padding-y |
-| md | 8px | Tag row gap, bottom-bar gap, toolbar padding-x, floating menu padding-y |
-| lg | 10px | Node card padding-y, content padding-y, template menu padding, panel gap from node |
-| xl | 12px | AI panel padding-top, tag padding-x, chat input padding |
-| 2xl | 14px | Node card padding-x, AI panel padding-x, chat header padding |
-| 3xl | 16px | Node content padding-x, chat message gap |
-| 4xl | 18px | Chat body padding-x, chat input outer padding |
-| 5xl | 24px | Left menu x-offset from canvas edge |
+| xs | 4px | Toolbar button gaps, floating menu item gap, toolbar padding-y |
+| sm | 8px | Node header gap, hint row gap, tag padding-y, chip padding-y, tag row gap, bottom-bar gap, toolbar padding-x, floating menu padding-y |
+| md | 12px | Node card padding-y, content padding-y, AI panel padding-top, tag padding-x, chat input padding, template menu padding, panel gap from node |
+| lg | 16px | Node card padding-x, AI panel padding-x, node content padding-x, chat header padding, chat message gap |
+| xl | 20px | Chat body padding-x, chat input outer padding |
+| 2xl | 24px | Left menu x-offset from canvas edge |
 
 **Component-specific padding (y, x):**
 
 | Component | Padding | Source |
 |-----------|---------|--------|
-| Node card header/footer | 10px 14px | `spacing.nodeCardPadding` |
-| Node content area | 10px 16px | `spacing.nodeContentPadding` |
-| AI Generate panel sections | 12px 14px | `spacing.panelPadding` |
-| Chat header/body | 14px 18px | `spacing.chatPadding` |
-| Tags | 6px 12px | `spacing.tagPadding` |
-| Template chips | 6px 10px | `spacing.chipPadding` |
+| Node card header/footer | 12px 16px | `spacing.nodeCardPadding` |
+| Node content area | 12px 16px | `spacing.nodeContentPadding` |
+| AI Generate panel sections | 12px 16px | `spacing.panelPadding` |
+| Chat header/body | 16px 20px | `spacing.chatPadding` |
+| Tags | 8px 12px | `spacing.tagPadding` |
+| Template chips | 8px 12px | `spacing.chipPadding` |
 | Text toolbar | 4px 8px | `spacing.toolbarPadding` |
 
 Exceptions: Chat bubble user corner radius is asymmetric `[12, 2, 12, 12]` — intentional design for speech-bubble feel.
@@ -66,36 +62,39 @@ Exceptions: Chat bubble user corner radius is asymmetric `[12, 2, 12, 12]` — i
 
 ## Typography
 
-12 type roles defined in `design-tokens.json`. Grouped by usage:
+14 type roles defined in `design-tokens.json`, consolidated to **4 font sizes** and **2 font weights**.
+
+**Font size scale:** 9px · 12px · 13px · 15px
+**Font weight scale:** 400 (regular) · 700 (bold)
 
 ### Node Typography
 
 | Role | Font | Size | Weight | Line Height | Usage |
 |------|------|------|--------|-------------|-------|
-| nodeTitle | Space Grotesk | 12px | 500 | default | Node header label ("文本节点 12") |
+| nodeTitle | Space Grotesk | 12px | 400 | default | Node header label ("文本节点 12") |
 | nodeContentTitle | Manrope | 15px | 700 | 1.6 | Text node content title (bold first line) |
 | nodeContent | Manrope | 12px | 400 | 1.6 | Text node body content |
-| nodeHint | Manrope | 11px | 400 | default | Empty node hint text ("尝试: ...") |
+| nodeHint | Manrope | 12px | 400 | default | Empty node hint text ("尝试: ...") |
 | metadata | Space Grotesk | 9px | 400 | default | Node footer model/ratio labels |
 
 ### Panel Typography
 
 | Role | Font | Size | Weight | Line Height | Usage |
 |------|------|------|--------|-------------|-------|
-| tag | Manrope | 12px | 500 | default | AI panel tag labels (风格/标记/聚焦) |
+| tag | Manrope | 12px | 400 | default | AI panel tag labels (风格/标记/聚焦) |
 | inputPlaceholder | Manrope | 13px | 400 | default | AI panel text input placeholder |
-| templateChip | Manrope | 10px | 500 | default | Template menu chip labels |
-| toolbarLabel | Space Grotesk | 11px | 600 | default | Text toolbar H1/H2/H3/B/I buttons |
+| templateChip | Manrope | 9px | 400 | default | Template menu chip labels |
+| toolbarLabel | Space Grotesk | 12px | 700 | default | Text toolbar H1/H2/H3/B/I buttons |
 
 ### Chat Typography
 
 | Role | Font | Size | Weight | Line Height | Usage |
 |------|------|------|--------|-------------|-------|
 | chatTitle | Space Grotesk | 13px | 700 | default | "Cinematic AI" header |
-| chatSubtitle | Space Grotesk | 9px | 500 | default | "Canvas Agent" subtitle (letter-spacing: 1px) |
+| chatSubtitle | Space Grotesk | 9px | 400 | default | "Canvas Agent" subtitle (letter-spacing: 1px) |
 | chatMessage | Manrope | 12px | 400 | 1.5 | Chat bubble text content |
 | statusLabel | Space Grotesk | 9px | 700 | default | "EXECUTING" status (letter-spacing: 1px) |
-| code | Space Grotesk | 10px | 400 | 1.5 | Agent workflow code blocks |
+| code | Space Grotesk | 9px | 400 | 1.5 | Agent workflow code blocks |
 
 ---
 
@@ -166,6 +165,14 @@ Dual-theme system. All hex values from `design-tokens.json`.
 
 Accent reserved for: **Send/generate button only** (`interactive.buttonPrimary`). No other element uses the accent color.
 
+### Focal Point
+
+On initial canvas load, the user's eye is drawn to (in priority order):
+
+1. **Center viewport node** — The most recently created or first node, positioned near viewport center. Node card surface (`surface.primary`) contrasts against the dominant canvas background (`canvas.background`), creating an immediate figure-ground separation.
+2. **Left floating menu "+" button** — The only menu item with a filled background (`surface.primary`) and border, visually heavier than other icon-only menu buttons. Guides new users to the primary creation action.
+3. **AI Chat popup header** (if open) — "Cinematic AI" title at `chatTitle` weight (700) is the boldest text element visible, anchoring the Agent interaction area.
+
 Destructive color: Not defined in current tokens. Use `#EF4444` (dark) / `#DC2626` (light) for delete actions — node deletion, asset deletion. Applied to icon + text only, never as background fill.
 
 ---
@@ -233,11 +240,11 @@ Destructive color: Not defined in current tokens. Use `#EF4444` (dark) / `#DC262
 
 | Node State | Node Type | Panel | Direction | Gap |
 |------------|-----------|-------|-----------|-----|
-| Empty (no content) | All types | AIGeneratePanel | Below node ↓ | 10px |
+| Empty (no content) | All types | AIGeneratePanel | Below node ↓ | 12px |
 | Has content | text | TextToolbar | Above node ↑ | 8px |
-| Has content | image | TemplateMenu | Above node ↑ | 10px |
-| Has content | video | TemplateMenu | Above node ↑ | 10px |
-| Has content | audio | TemplateMenu | Above node ↑ | 10px |
+| Has content | image | TemplateMenu | Above node ↑ | 12px |
+| Has content | video | TemplateMenu | Above node ↑ | 12px |
+| Has content | audio | TemplateMenu | Above node ↑ | 12px |
 
 **Panel positioning algorithm:**
 ```
@@ -267,7 +274,7 @@ empty      → panel at (node.x, node.y + nodeHeight + gap)
 | Assets | `package` (16px) | 36×36px | Toggle AssetPanel sidebar |
 | History | `history` (16px) | 36×36px | Toggle version history |
 | Help | `info` (16px) | 36×36px | Toggle help panel |
-| User | Letter avatar (11px) | 36×36px | User menu |
+| User | Letter avatar (12px) | 36×36px | User menu |
 
 ### Template Application Flow
 
@@ -289,7 +296,7 @@ empty      → panel at (node.x, node.y + nodeHeight + gap)
 ### Quota Indicator
 
 Token/credit consumption shown in AI Generate Panel bottom-bar:
-- `⚡` zap icon (12px, `text.disabled`) + count ("14", 11px, `text.disabled`)
+- `⚡` zap icon (12px, `text.disabled`) + count ("14", 12px, `text.disabled`)
 - Position: right side of bottom-bar, before send button, separated by 1×16px divider
 
 When quota exceeded:
@@ -307,7 +314,7 @@ When quota exceeded:
 | **Empty state — text node** | Icon: `file-text` 28px `text.disabled` / Hints: "✏ 自己编写内容" "▶ 文生视频" "🖼 图片反推提示词" "🎵 文字生音乐" |
 | **Empty state — image node** | Icon: `image` 28px `text.disabled` / Hints: "↑ 图生图" "HD 图片高清" |
 | **Empty state — video node** | Icon: `play-circle` 28px `text.disabled` / Hints: "🎬 首尾帧生成视频" "▶ 首帧生成视频" |
-| **Empty state — audio node** | Icon: `music` 28px `text.disabled` / Hints: (reserved) |
+| **Empty state — audio node** | Icon: `music` 28px `text.disabled` / Hint: "🎵 音频功能即将上线" |
 | **Empty state — asset library** | Icon: `package` 48px `text.disabled` / "还没有保存任何资产" / "在节点的模板菜单中点击「保存到资产库」" |
 | **AI panel placeholder** | "描述你想要生成的画面内容，按/呼出指令，@引用素材" (13px, `text.placeholder`) |
 | **Chat input placeholder** | "描述你的创作意图..." (12px, `text.placeholder`) |
@@ -322,7 +329,7 @@ When quota exceeded:
 | Action | Trigger | Confirmation |
 |--------|---------|--------------|
 | Delete node | Backspace/Delete key with node selected | No confirmation — undo via Ctrl+Z (ReactFlow built-in) |
-| Delete asset | Delete button in asset panel | Confirmation dialog: "删除「{asset_name}」？此操作不可撤销。" Buttons: "取消" (secondary) / "删除" (destructive red text) |
+| Delete asset | Delete button in asset panel | Confirmation dialog: "删除「{asset_name}」？此操作不可撤销。" Buttons: "保留资产" (secondary) / "删除" (destructive red text) |
 
 ---
 
