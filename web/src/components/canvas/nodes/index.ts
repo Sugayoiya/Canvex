@@ -1,14 +1,12 @@
 import type { NodeTypes } from "@xyflow/react";
-import { TextInputNode } from "./text-input-node";
-import { LLMNode } from "./llm-node";
-import { ExtractNode } from "./extract-node";
-import { ImageGenNode } from "./image-gen-node";
-import { OutputNode } from "./output-node";
+import { TextNode } from "./text-node";
+import { ImageNode } from "./image-node";
+import { VideoNode } from "./video-node";
+import { AudioNode } from "./audio-node";
 
 export const nodeTypes: NodeTypes = {
-  "text-input": TextInputNode,
-  "llm-generate": LLMNode,
-  extract: ExtractNode,
-  "image-gen": ImageGenNode,
-  output: OutputNode,
+  text: TextNode,
+  image: ImageNode,
+  video: VideoNode,
+  audio: AudioNode,
 } as const;
