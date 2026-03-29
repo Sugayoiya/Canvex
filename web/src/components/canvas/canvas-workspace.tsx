@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow,
   useNodesState,
@@ -22,7 +22,10 @@ import "@xyflow/react/dist/style.css";
 import { canvasApi } from "@/lib/api";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { isValidConnection } from "@/lib/connection-rules";
-import { CanvasToolbar } from "./canvas-toolbar";
+import { LeftFloatingMenu } from "./canvas-floating-toolbar";
+import { PanelHost } from "./panels/panel-host";
+import { AssetPanel } from "./canvas-asset-panel";
+import { useNodeFocus } from "./hooks/use-node-focus";
 import { nodeTypes } from "./nodes";
 
 /* ------------------------------------------------------------------ */
@@ -113,6 +116,8 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const { getViewport } = useReactFlow();
   const { setCanvas, setSaving } = useCanvasStore();
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { handlePaneClick } = useNodeFocus();
+  const [showAssets, setShowAssets] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -196,7 +201,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   );
 
   return (
-    <div className="relative h-full w-full" style={{ background: "#09090b" }}>
+    <div className="relative h-full w-full" style={{ background: "var(--cv4-canvas-bg)" }}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -205,6 +210,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         onConnect={handleConnect}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={persistViewport}
+        onPaneClick={handlePaneClick}
         nodeTypes={nodeTypes}
         isValidConnection={(conn) => isValidConnection(conn, nodes)}
         deleteKeyCode={["Backspace", "Delete"]}
@@ -216,10 +222,10 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
       >
         <Background
           variant={BackgroundVariant.Dots}
-          gap={24}
-          size={1.5}
-          color="rgb(96, 96, 104)"
-          style={{ backgroundColor: "#09090b" }}
+          gap={40}
+          size={2}
+          color="var(--cv4-grid-dot)"
+          style={{ backgroundColor: "var(--cv4-canvas-bg)" }}
         />
         <Controls className="!bg-zinc-800 !border-zinc-700 !text-zinc-200 [&>button]:!bg-zinc-800 [&>button]:!border-zinc-700 [&>button]:!text-zinc-200 [&>button:hover]:!bg-zinc-700" />
         <MiniMap
@@ -231,7 +237,9 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
           nodeColor="#3f3f46"
         />
       </ReactFlow>
-      <CanvasToolbar onAddNode={handleAddNode} />
+      <LeftFloatingMenu onAddNode={handleAddNode} onToggleAssets={() => setShowAssets(v => !v)} />
+      <PanelHost />
+      <AssetPanel open={showAssets} onClose={() => setShowAssets(false)} />
     </div>
   );
 }
