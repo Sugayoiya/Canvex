@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 04-03-PLAN.md
-last_updated: "2026-03-29T17:26:09.641Z"
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-03-29T17:26:38.542Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 7
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 04 (media-tools) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -88,6 +88,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 03.1]: Execution writeback via canvasApi with .catch graceful degradation — local-first state, best-effort backend sync
 - [Phase 04]: Provider auto-select iterates [gemini, openai, deepseek] priority order
 - [Phase 04]: Video skill uses media_processing Celery queue (not ai_generation)
+- [Phase 04]: Fail-closed quota enforcement: check_quota returns allowed=False on any exception including DB errors
+- [Phase 04]: Idempotent usage tracking by unique QuotaUsageLog.skill_execution_id — Celery retries safe
+- [Phase 04]: Lazy month/day counter reset on access — no cron dependency for quota resets
 
 ### Pending Todos
 
@@ -106,6 +109,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-29T17:26:09.638Z
-Stopped at: Completed 04-03-PLAN.md
+Last session: 2026-03-29T17:26:38.539Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None
