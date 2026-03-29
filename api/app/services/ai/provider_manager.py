@@ -55,6 +55,18 @@ class ProviderManager:
     ) -> AIProviderBase:
         _ensure_registry()
 
+        if provider == "auto":
+            for candidate in ["gemini", "openai", "deepseek"]:
+                candidate_key = api_key or _get_env_api_key(candidate)
+                if candidate_key:
+                    provider = candidate
+                    api_key = candidate_key
+                    break
+            else:
+                raise ValueError(
+                    "No AI provider configured. Set GEMINI_API_KEY, OPENAI_API_KEY, or DEEPSEEK_API_KEY."
+                )
+
         key = api_key or _get_env_api_key(provider)
         if not key:
             env_var = _ENV_KEY_MAP.get(provider, f"{provider.upper()}_API_KEY")
