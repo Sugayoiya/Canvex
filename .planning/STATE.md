@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 04-04-PLAN.md
-last_updated: "2026-03-29T17:32:30.689Z"
+stopped_at: Completed 04-05-PLAN.md
+last_updated: "2026-03-29T17:37:53.375Z"
 last_activity: 2026-03-29
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 26
-  completed_plans: 23
+  completed_plans: 25
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 04 (media-tools) — EXECUTING
-Plan: 5 of 7
+Plan: 7 of 7
 Status: Ready to execute
 Last activity: 2026-03-29
 
@@ -97,6 +97,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 04]: nodeTypes has exactly 4 keys — no legacy type backward compat (per user decision)
 - [Phase 04]: Audio node is placeholder-only with hasContent=false; real audio deferred
 - [Phase 04]: Focus state in Zustand store; panel type/direction derived in useNodeFocus hook
+- [Phase 04]: CSS transitions over CSS keyframes for panel enter/exit — React state-driven animation control
+- [Phase 04]: Template chip click visual-only for MVP — actual template application deferred to Plan 07
+- [Phase 04]: canvas_assets router registered before canvas router for correct prefix matching
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-29T17:32:30.687Z
-Stopped at: Completed 04-04-PLAN.md
+Last session: 2026-03-29T17:37:40.259Z
+Stopped at: Completed 04-05-PLAN.md
 Resume file: None
