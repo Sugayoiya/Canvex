@@ -1,59 +1,100 @@
 "use client";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
-  Palette,
-  MapPin,
-  Target,
-  Maximize2,
   Sparkles,
   ChevronDown,
   Zap,
   ArrowUp,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { usePromptBuilder } from "../hooks/use-prompt-builder";
-import { skillsApi } from "@/lib/api";
+import { useNodeExecution } from "../hooks/use-node-execution";
 import { useCanvasStore } from "@/stores/canvas-store";
 
 interface AIGeneratePanelProps {
   nodeId: string;
-  quotaExceeded?: boolean;
 }
 
-const TAGS = [
-  { icon: Palette, label: "风格" },
-  { icon: MapPin, label: "标记" },
-  { icon: Target, label: "聚焦" },
-] as const;
+const nodePromptCache = new Map<string, string>();
 
-export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePanelProps) {
-  const [prompt, setPrompt] = useState("");
-  const [sending, setSending] = useState(false);
+export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
+  const [prompt, setPrompt] = useState(() => nodePromptCache.get(nodeId) ?? "");
+  const prevNodeIdRef = useRef(nodeId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { finalPrompt, upstreamImages } = usePromptBuilder(nodeId);
-  const { canvasId, projectId } = useCanvasStore();
+  const { canvasId, projectId, focusedNodeType } = useCanvasStore();
+  const { status: execStatus, message: execMessage, execute } = useNodeExecution(nodeId);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (nodeId !== prevNodeIdRef.current) {
+      nodePromptCache.set(prevNodeIdRef.current, prompt);
+      setPrompt(nodePromptCache.get(nodeId) ?? "");
+      prevNodeIdRef.current = nodeId;
+    }
+  }, [nodeId, prompt]);
+
+  useEffect(() => {
+    nodePromptCache.set(nodeId, prompt);
+  }, [nodeId, prompt]);
+
+  useEffect(() => {
+    textareaRef.current?.focus();
+  }, [nodeId]);
+
+  const isExecuting = execStatus === "queued" || execStatus === "running";
+
+  const skillForNodeType = (type: string | null) => {
+    switch (type) {
+      case "image": return "visual.generate_image";
+      case "video": return "video.generate_video";
+      case "text": return "text.generate";
+      default: return "visual.generate_image";
+    }
+  };
 
   const handleSend = useCallback(async () => {
-    if (quotaExceeded || sending) return;
+    if (isExecuting) return;
     const combined = [prompt, finalPrompt].filter(Boolean).join("\n\n");
     if (!combined.trim()) return;
 
-    setSending(true);
-    try {
-      await skillsApi.invoke({
-        skill_name: "visual.generate_image",
-        params: {
-          prompt: combined,
-          reference_images: upstreamImages,
-        },
-        project_id: projectId ?? undefined,
-        canvas_id: canvasId ?? undefined,
-        node_id: nodeId,
-        idempotency_key: `${nodeId}_${Date.now()}`,
-      });
-    } finally {
-      setSending(false);
+    const skillName = skillForNodeType(focusedNodeType);
+    const params: Record<string, unknown> = { prompt: combined };
+    if (upstreamImages.length > 0) {
+      params.reference_images = upstreamImages;
     }
-  }, [prompt, finalPrompt, upstreamImages, quotaExceeded, sending, nodeId, canvasId, projectId]);
+
+    await execute(skillName, params);
+    setPrompt("");
+    nodePromptCache.delete(nodeId);
+  }, [prompt, finalPrompt, upstreamImages, isExecuting, nodeId, focusedNodeType, execute]);
+
+  const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !canvasId) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("canvas_id", canvasId);
+    formData.append("node_id", nodeId);
+
+    try {
+      const { canvasApi } = await import("@/lib/api");
+      const url = URL.createObjectURL(file);
+      await canvasApi.updateNode(nodeId, { result_url: url, status: "completed" });
+    } catch (err) {
+      console.warn("[AIGeneratePanel] upload failed:", err);
+    }
+    e.target.value = "";
+  }, [canvasId, nodeId]);
+
+  const placeholderByType: Record<string, string> = {
+    text: "描述你想要生成的文本内容，Ctrl+Enter 发送",
+    image: "描述你想要生成的画面内容，Ctrl+Enter 发送",
+    video: "描述你想要生成的视频内容，Ctrl+Enter 发送",
+    audio: "描述你想要生成的音频内容，Ctrl+Enter 发送",
+  };
 
   return (
     <div
@@ -65,41 +106,28 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
         boxShadow: "var(--cv4-shadow-lg)",
       }}
     >
-      {/* Tags row */}
-      <div className="flex items-center gap-2" style={{ padding: "12px 16px 8px 16px" }}>
-        {TAGS.map(({ icon: Icon, label }) => (
-          <button
-            key={label}
-            className="flex items-center gap-1 cursor-pointer"
-            style={{
-              padding: "8px 12px",
-              background: "var(--cv4-surface-primary)",
-              borderRadius: "var(--cv4-radius-tag)",
-            }}
-          >
-            <Icon size={14} style={{ color: "var(--cv4-text-secondary)" }} />
-            <span
-              style={{
-                fontFamily: "Manrope, sans-serif",
-                fontSize: 12,
-                color: "var(--cv4-text-secondary)",
-              }}
-            >
-              {label}
-            </span>
-          </button>
-        ))}
-        <span className="flex-1" />
-        <Maximize2 size={16} style={{ color: "var(--cv4-text-disabled)", cursor: "pointer" }} />
-      </div>
+      {execStatus !== "idle" && execStatus !== "completed" && (
+        <div
+          className="flex items-center gap-2"
+          style={{
+            padding: "8px 16px",
+            borderBottom: "1px solid var(--cv4-border-subtle)",
+            fontSize: 12,
+            fontFamily: "Manrope, sans-serif",
+            color: execStatus === "failed" ? "#EF4444" : "var(--cv4-text-secondary)",
+          }}
+        >
+          {isExecuting && <Loader2 size={12} className="animate-spin" />}
+          <span>{execMessage || execStatus}</span>
+        </div>
+      )}
 
-      {/* Input area */}
       <div style={{ padding: "8px 16px 12px 16px" }}>
         <textarea
           ref={textareaRef}
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          placeholder="描述你想要生成的画面内容，按/呼出指令，@引用素材"
+          placeholder={placeholderByType[focusedNodeType ?? "image"]}
           rows={3}
           onKeyDown={(e) => {
             if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -122,9 +150,7 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
         />
       </div>
 
-      {/* Bottom bar */}
       <div className="flex items-center gap-2" style={{ padding: "8px 16px 12px 16px" }}>
-        {/* Model selector pill */}
         <button
           className="flex items-center gap-1 cursor-pointer"
           style={{
@@ -140,58 +166,51 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
           <ChevronDown size={10} style={{ color: "var(--cv4-text-disabled)" }} />
         </button>
 
-        {/* Aspect ratio pill */}
-        <button
-          className="flex items-center gap-1 cursor-pointer"
-          style={{
-            padding: "8px 12px",
-            background: "var(--cv4-surface-primary)",
-            borderRadius: "var(--cv4-radius-tag)",
-          }}
-        >
-          <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)" }}>
-            16:9 · 2K
-          </span>
-        </button>
-
         <span className="flex-1" />
 
-        {/* Count selector */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={focusedNodeType === "video" ? "video/*" : focusedNodeType === "audio" ? "audio/*" : "image/*"}
+          onChange={handleFileUpload}
+          className="hidden"
+        />
         <button
-          className="flex items-center gap-1 cursor-pointer"
-          style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)" }}
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center justify-center cursor-pointer"
+          title="上传文件"
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: "var(--cv4-radius-button)",
+            background: "var(--cv4-surface-primary)",
+          }}
         >
-          1张
-          <ChevronDown size={10} style={{ color: "var(--cv4-text-disabled)" }} />
+          <Upload size={14} style={{ color: "var(--cv4-text-secondary)" }} />
         </button>
 
-        {/* Divider */}
         <div style={{ width: 1, height: 16, background: "var(--cv4-border-divider)" }} />
 
-        {/* Quota indicator */}
-        <Zap
-          size={12}
-          style={{ color: quotaExceeded ? "#EF4444" : "var(--cv4-text-disabled)" }}
-        />
-        <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 12, color: "var(--cv4-text-disabled)" }}>
-          14
-        </span>
+        <Zap size={12} style={{ color: "var(--cv4-text-disabled)" }} />
 
-        {/* Send button */}
         <button
           onClick={handleSend}
-          disabled={quotaExceeded || sending}
-          title={quotaExceeded ? "额度已用完 — 升级计划或联系管理员" : "发送"}
+          disabled={isExecuting}
+          title={isExecuting ? "执行中..." : "发送 (Ctrl+Enter)"}
           className="flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
           style={{
             width: 30,
             height: 30,
             borderRadius: "var(--cv4-radius-button)",
             background: "var(--cv4-btn-primary)",
-            opacity: quotaExceeded ? 0.5 : 1,
+            opacity: isExecuting ? 0.5 : 1,
           }}
         >
-          <ArrowUp size={16} style={{ color: "var(--cv4-btn-primary-text)" }} />
+          {isExecuting ? (
+            <Loader2 size={16} className="animate-spin" style={{ color: "var(--cv4-btn-primary-text)" }} />
+          ) : (
+            <ArrowUp size={16} style={{ color: "var(--cv4-btn-primary-text)" }} />
+          )}
         </button>
       </div>
     </div>

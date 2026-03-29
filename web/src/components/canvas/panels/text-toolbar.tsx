@@ -1,56 +1,45 @@
 "use client";
-import { useState, useCallback } from "react";
-import { Pilcrow, List, ListOrdered, Minus, Copy, Maximize2 } from "lucide-react";
+import { useCallback } from "react";
+import { useReactFlow } from "@xyflow/react";
+import { Copy, Trash2, Maximize2 } from "lucide-react";
+import { useCanvasStore } from "@/stores/canvas-store";
 
 interface TextToolbarProps {
   nodeId: string;
 }
 
-type FormatKey = "h1" | "h2" | "h3" | "paragraph" | "bold" | "italic" | "list" | "listOrdered" | "hr" | "copy" | "expand";
+export function TextToolbar({ nodeId }: TextToolbarProps) {
+  const { getNodes } = useReactFlow();
+  const { clearFocus } = useCanvasStore();
 
-interface ToolbarButton {
-  key: FormatKey;
-  type: "text" | "icon" | "divider";
-  label?: string;
-  icon?: React.ComponentType<{ size: number; style?: React.CSSProperties }>;
-  toggleable?: boolean;
-}
+  const getNodeText = useCallback(() => {
+    const node = getNodes().find((n) => n.id === nodeId);
+    if (!node) return "";
+    const d = node.data as Record<string, unknown>;
+    return (d.result_text as string) || (d.text as string) || "";
+  }, [nodeId, getNodes]);
 
-const TOOLBAR_BUTTONS: ToolbarButton[] = [
-  { key: "h1", type: "text", label: "H1", toggleable: true },
-  { key: "h2", type: "text", label: "H2", toggleable: true },
-  { key: "h3", type: "text", label: "H3", toggleable: true },
-  { key: "paragraph", type: "icon", icon: Pilcrow, toggleable: true },
-  { key: "bold", type: "text", label: "B", toggleable: true },
-  { key: "italic", type: "text", label: "I", toggleable: true },
-  { key: "list", type: "divider" },
-  { key: "list", type: "icon", icon: List, toggleable: true },
-  { key: "listOrdered", type: "icon", icon: ListOrdered, toggleable: true },
-  { key: "hr", type: "divider" },
-  { key: "hr", type: "icon", icon: Minus },
-  { key: "copy", type: "icon", icon: Copy },
-  { key: "expand", type: "icon", icon: Maximize2 },
-];
+  const handleCopy = useCallback(async () => {
+    const text = getNodeText();
+    if (text) {
+      await navigator.clipboard.writeText(text);
+    }
+  }, [getNodeText]);
 
-export function TextToolbar({ nodeId: _nodeId }: TextToolbarProps) {
-  const [active, setActive] = useState<Set<FormatKey>>(new Set());
+  const handleClear = useCallback(() => {
+    const { canvasApi } = require("@/lib/api");
+    canvasApi.updateNode(nodeId, { result_text: "", config: { text: "" } }).catch(() => {});
+  }, [nodeId]);
 
-  const toggle = useCallback((key: FormatKey) => {
-    setActive((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  }, []);
-
-  let dividerIdx = 0;
+  const buttons = [
+    { key: "copy", icon: Copy, label: "复制", onClick: handleCopy },
+    { key: "clear", icon: Trash2, label: "清空", onClick: handleClear },
+  ];
 
   return (
     <div
       className="flex items-center gap-1"
       style={{
-        width: 310,
         height: 36,
         padding: "4px 8px",
         background: "var(--cv4-surface-primary)",
@@ -59,63 +48,27 @@ export function TextToolbar({ nodeId: _nodeId }: TextToolbarProps) {
         boxShadow: "var(--cv4-shadow-sm)",
       }}
     >
-      {TOOLBAR_BUTTONS.map((btn) => {
-        if (btn.type === "divider") {
-          dividerIdx++;
-          return (
-            <div
-              key={`divider-${dividerIdx}`}
-              style={{
-                width: 1,
-                height: 16,
-                background: "var(--cv4-border-divider)",
-                flexShrink: 0,
-              }}
-            />
-          );
-        }
-
-        const isActive = active.has(btn.key);
-        const color = isActive ? "var(--cv4-text-primary)" : "var(--cv4-text-secondary)";
-        const bg = isActive ? "var(--cv4-active-highlight)" : "transparent";
-
-        return (
-          <button
-            key={btn.key + (btn.label ?? "")}
-            onClick={() => btn.toggleable && toggle(btn.key)}
-            className="flex items-center justify-center cursor-pointer shrink-0"
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              background: bg,
-              transition: "background 100ms",
-            }}
-            onMouseEnter={(e) => {
-              if (!isActive) e.currentTarget.style.background = "var(--cv4-hover-highlight)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = isActive ? "var(--cv4-active-highlight)" : "transparent";
-            }}
-          >
-            {btn.type === "text" ? (
-              <span
-                style={{
-                  fontFamily: "Space Grotesk, sans-serif",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color,
-                  fontStyle: btn.label === "I" ? "italic" : "normal",
-                }}
-              >
-                {btn.label}
-              </span>
-            ) : btn.icon ? (
-              <btn.icon size={14} style={{ color }} />
-            ) : null}
-          </button>
-        );
-      })}
+      {buttons.map(({ key, icon: Icon, label, onClick }) => (
+        <button
+          key={key}
+          onClick={onClick}
+          className="flex items-center gap-1 cursor-pointer shrink-0"
+          title={label}
+          style={{
+            padding: "4px 8px",
+            borderRadius: 6,
+            background: "transparent",
+            transition: "background 100ms",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "var(--cv4-hover-highlight)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+        >
+          <Icon size={14} style={{ color: "var(--cv4-text-secondary)" }} />
+          <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 11, color: "var(--cv4-text-secondary)" }}>
+            {label}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }

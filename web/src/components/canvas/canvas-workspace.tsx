@@ -16,6 +16,7 @@ import {
   type Node,
   type Edge,
   type EdgeChange,
+  type NodeChange,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
@@ -116,7 +117,8 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const { getViewport } = useReactFlow();
   const { setCanvas, setSaving } = useCanvasStore();
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { handlePaneClick } = useNodeFocus();
+  const { handlePaneClick, focusedNodeId } = useNodeFocus();
+  const { clearFocus } = useCanvasStore();
   const [showAssets, setShowAssets] = useState(false);
 
   useEffect(() => {
@@ -132,6 +134,21 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
       canvasApi.update(canvasId, { viewport: vp }).catch(() => {});
     }, 500);
   }, [canvasId, getViewport]);
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      onNodesChange(changes);
+      for (const change of changes) {
+        if (change.type === "remove") {
+          if (focusedNodeId === change.id) clearFocus();
+          canvasApi.deleteNode(change.id).catch((err) => {
+            console.warn("[canvas] node deletion sync failed:", err);
+          });
+        }
+      }
+    },
+    [onNodesChange, focusedNodeId, clearFocus],
+  );
 
   const handleConnect = useCallback(
     (connection: Connection) => {
@@ -205,7 +222,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={handleConnect}
         onNodeDragStop={handleNodeDragStop}

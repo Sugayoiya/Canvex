@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useReactFlow } from "@xyflow/react";
 import { skillsApi, canvasApi } from "@/lib/api";
 import { useCanvasStore } from "@/stores/canvas-store";
 
@@ -40,6 +41,20 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
   const isMountedRef = useRef(true);
 
   const { canvasId, projectId } = useCanvasStore();
+  const { setNodes } = useReactFlow();
+
+  const updateLocalNode = useCallback(
+    (patch: Record<string, unknown>) => {
+      setNodes((nds) =>
+        nds.map((n) =>
+          n.id === nodeId
+            ? { ...n, data: { ...n.data, ...patch } }
+            : n,
+        ),
+      );
+    },
+    [nodeId, setNodes],
+  );
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -60,10 +75,9 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
         status: "timeout",
         message: "轮询超时，请重试",
       }));
-      canvasApi.updateNode(nodeId, {
-        status: "timeout",
-        error_message: "轮询超时",
-      }).catch(() => {});
+      const timeoutPatch = { status: "timeout", error_message: "轮询超时" };
+      updateLocalNode(timeoutPatch);
+      canvasApi.updateNode(nodeId, timeoutPatch).catch(() => {});
       return;
     }
 
@@ -73,6 +87,8 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
       const { status, data, message, progress } = res.data;
 
       if (status === "completed") {
+        const resultText = typeof data === "string" ? data : (data?.text ?? data?.result ?? null);
+        const resultUrl = data?.url ?? data?.result_url ?? null;
         setState({
           status: "completed",
           data,
@@ -80,11 +96,9 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
           progress: 1,
           idempotencyKey: null,
         });
-        canvasApi.updateNode(nodeId, {
-          status: "completed",
-          result_text: typeof data === "string" ? data : (data?.text ?? data?.result ?? null),
-          result_url: data?.url ?? data?.result_url ?? null,
-        }).catch((err) => {
+        const completedPatch = { status: "completed", result_text: resultText, result_url: resultUrl };
+        updateLocalNode(completedPatch);
+        canvasApi.updateNode(nodeId, completedPatch).catch((err) => {
           console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
         });
         onComplete?.(data);
@@ -98,10 +112,9 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
           progress: 0,
           idempotencyKey: null,
         });
-        canvasApi.updateNode(nodeId, {
-          status: "failed",
-          error_message: message ?? "execution failed",
-        }).catch((err) => {
+        const failedPatch = { status: "failed", error_message: message ?? "execution failed" };
+        updateLocalNode(failedPatch);
+        canvasApi.updateNode(nodeId, failedPatch).catch((err) => {
           console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
         });
         return;
@@ -114,10 +127,9 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
           progress: 0,
           idempotencyKey: null,
         });
-        canvasApi.updateNode(nodeId, {
-          status: "blocked",
-          error_message: message || "内容安全策略拦截",
-        }).catch((err) => {
+        const blockedPatch = { status: "blocked", error_message: message || "内容安全策略拦截" };
+        updateLocalNode(blockedPatch);
+        canvasApi.updateNode(nodeId, blockedPatch).catch((err) => {
           console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
         });
         return;
@@ -176,47 +188,27 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
         const { status, data, message, task_id } = res.data;
 
         if (status === "completed") {
-          setState((prev) => ({
-            ...prev,
-            status: "completed",
-            data,
-            message: message ?? "",
-            progress: 1,
-          }));
-          canvasApi.updateNode(nodeId, {
-            status: "completed",
-            result_text: typeof data === "string" ? data : (data?.text ?? data?.result ?? null),
-            result_url: data?.url ?? data?.result_url ?? null,
-          }).catch((err) => {
+          const rt = typeof data === "string" ? data : (data?.text ?? data?.result ?? null);
+          const ru = data?.url ?? data?.result_url ?? null;
+          setState((prev) => ({ ...prev, status: "completed", data, message: message ?? "", progress: 1 }));
+          const patch = { status: "completed", result_text: rt, result_url: ru };
+          updateLocalNode(patch);
+          canvasApi.updateNode(nodeId, patch).catch((err) => {
             console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
           });
           onComplete?.(data);
         } else if (status === "failed") {
-          setState((prev) => ({
-            ...prev,
-            status: "failed",
-            data,
-            message: message ?? "",
-            progress: 0,
-          }));
-          canvasApi.updateNode(nodeId, {
-            status: "failed",
-            error_message: message ?? "execution failed",
-          }).catch((err) => {
+          setState((prev) => ({ ...prev, status: "failed", data, message: message ?? "", progress: 0 }));
+          const patch = { status: "failed", error_message: message ?? "execution failed" };
+          updateLocalNode(patch);
+          canvasApi.updateNode(nodeId, patch).catch((err) => {
             console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
           });
         } else if (status === "blocked") {
-          setState((prev) => ({
-            ...prev,
-            status: "blocked",
-            data,
-            message: message || "内容安全策略拦截",
-            progress: 0,
-          }));
-          canvasApi.updateNode(nodeId, {
-            status: "blocked",
-            error_message: message || "内容安全策略拦截",
-          }).catch((err) => {
+          setState((prev) => ({ ...prev, status: "blocked", data, message: message || "内容安全策略拦截", progress: 0 }));
+          const patch = { status: "blocked", error_message: message || "内容安全策略拦截" };
+          updateLocalNode(patch);
+          canvasApi.updateNode(nodeId, patch).catch((err) => {
             console.warn(`[useNodeExecution] writeback failed for node ${nodeId}:`, err);
           });
         } else if (task_id) {
@@ -241,7 +233,7 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
         });
       }
     },
-    [nodeId, canvasId, projectId, pollResult, state.status, onComplete],
+    [nodeId, canvasId, projectId, pollResult, updateLocalNode, state.status, onComplete],
   );
 
   const reset = useCallback(() => {
