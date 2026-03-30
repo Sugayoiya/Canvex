@@ -40,7 +40,7 @@ class Base(DeclarativeBase):
 async def init_db():
     """Create all tables and seed defaults."""
     from app.models.user import User  # noqa
-    from app.models.team import Team, TeamMember, TeamInvitation  # noqa
+    from app.models.team import Team, TeamMember, TeamInvitation, Group, GroupMember, GroupProject  # noqa
     from app.models.project import Project  # noqa
     from app.models.skill_execution_log import SkillExecutionLog  # noqa
     from app.models.ai_call_log import AICallLog  # noqa
@@ -48,6 +48,8 @@ async def init_db():
     from app.models.model_pricing import ModelPricing  # noqa
     from app.models.agent_session import AgentSession, AgentMessage  # noqa
     from app.models.quota import UserQuota, TeamQuota, QuotaUsageLog  # noqa
+    from app.models.oauth_account import OAuthAccount  # noqa
+    from app.models.ai_provider_config import AIProviderConfig, AIProviderKey, AIModelConfig, AIModelProviderMapping  # noqa
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
