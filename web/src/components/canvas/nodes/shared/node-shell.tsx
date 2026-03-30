@@ -27,32 +27,45 @@ export function NodeShell({ nodeId, nodeType, hasContent, status, isFocused, chi
   return (
     <div
       className="relative transition-shadow duration-[120ms]"
-      style={{
-        width,
-        borderRadius: "var(--cv4-radius-node)",
-        boxShadow: isFocused ? "var(--cv4-shadow-lg)" : "var(--cv4-shadow-md)",
-      }}
+      style={{ width, overflow: "visible" }}
     >
-      {/* Visual card — clips child content to rounded corners */}
+      {/* V5: External label — above-left of card */}
       <div
+        className="absolute flex items-center pointer-events-none"
+        style={{ top: -24, left: 0, gap: 8 }}
+      >
+        <Icon size={14} style={{ color: "var(--cv4-text-muted)" }} />
+        <span
+          style={{
+            fontFamily: "Space Grotesk",
+            fontSize: 13,
+            color: "var(--cv4-text-muted)",
+            lineHeight: 1,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {label} {idSuffix}
+        </span>
+        <StatusIndicator status={status} />
+      </div>
+
+      {/* V5: Card body — no header row inside */}
+      <div
+        className="node-card-body"
         style={{
           overflow: "hidden",
           background: "var(--cv4-surface-primary)",
           borderRadius: "var(--cv4-radius-node)",
-          border: isFocused ? "1.5px solid var(--cv4-border-focused)" : "1px solid var(--cv4-border-default)",
+          border: isFocused
+            ? "1.5px solid var(--cv4-border-focused)"
+            : "1px solid var(--cv4-border-default)",
+          boxShadow: isFocused ? "var(--cv4-shadow-lg)" : "var(--cv4-shadow-md)",
+          cursor: "grab",
         }}
       >
-        <div className="flex items-center gap-2" style={{ padding: "12px 16px" }}>
-          <Icon size={14} style={{ color: "var(--cv4-text-muted)" }} />
-          <span style={{ fontFamily: "Space Grotesk", fontSize: 12, color: "var(--cv4-text-secondary)" }}>
-            {label} {idSuffix}
-          </span>
-          <span className="flex-1" />
-          <StatusIndicator status={status} />
-        </div>
         {children}
       </div>
-      {/* Handles rendered last so they sit on top of the card visually */}
+
       <Handle type="target" position={Position.Left} id="input" style={{ zIndex: 10 }} />
       <Handle type="source" position={Position.Right} id="output" style={{ zIndex: 10 }} />
     </div>

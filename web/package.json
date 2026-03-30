@@ -15,13 +15,16 @@
     "@tiptap/pm": "^3.21.0",
     "@tiptap/react": "^3.21.0",
     "@tiptap/starter-kit": "^3.21.0",
+    "@wavesurfer/react": "^1.0.12",
     "@xyflow/react": "^12.10.1",
     "axios": "^1.13.6",
     "lucide-react": "^1.7.0",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "recharts": "^3.8.1",
     "tiptap-markdown": "^0.9.0",
+    "wavesurfer.js": "^7.12.5",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
