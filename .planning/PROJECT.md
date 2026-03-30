@@ -24,7 +24,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - [x] Phase 3 agent tool-calling orchestration (complete)
 - [x] Phase 3.1 agent chat + canvas quality fix (complete)
 - [x] Phase 4 media/slash skills + quota controls (complete)
-- [ ] Phase 5 canvas/video polish + billing dashboard
+- [x] Phase 5 canvas/video polish + billing dashboard (complete)
 - [ ] Phase 6 collaboration/versioning/production hardening
 
 ### Out of Scope

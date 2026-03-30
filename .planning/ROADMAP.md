@@ -6,7 +6,7 @@
 - [x] **Phase 02: Full Skill Migration + Base Canvas + Billing Baseline** (completed 2026-03-27)
 - [x] **Phase 03: Agent System + Tool Calling + Pipeline Orchestration** (completed 2026-03-28)
 - [x] **Phase 04: Media/Slash Skills + Quota Controls** (completed 2026-03-29)
-- [ ] **Phase 05: Canvas/Video Experience + Billing Dashboard**
+- [x] **Phase 05: Canvas/Video Experience + Billing Dashboard** (completed 2026-03-30)
 - [ ] **Phase 06: Collaboration + Versioning + Production Hardening**
 
 ### Phase 01: Foundation + SkillRegistry + Celery + Logging
@@ -99,7 +99,7 @@ Plans:
 **Depends on**: Phase 04
 **UI hint**: yes
 **Requirements:** [REQ-09, REQ-10]
-**Plans:** 5/6 plans executed
+**Plans:** 6/6 plans complete
 
 Plans:
 - [x] 05-01-PLAN.md — [W1] Backend APIs: batch execution (topo sort) + billing timeseries + task monitoring + node history
@@ -107,7 +107,7 @@ Plans:
 - [x] 05-03-PLAN.md — [W2] V5 Node Toolbars (Image/Video/Audio) + AudioNode WaveSurfer rewrite
 - [x] 05-04-PLAN.md — [W2] Batch Execution Frontend: useBatchExecution + BatchExecutionBar + workspace integration
 - [x] 05-05-PLAN.md — [W2] Billing Dashboard: KPI cards + Recharts charts + usage table + project view
-- [ ] 05-06-PLAN.md — [W2] Task Monitoring Page + Node Execution History popover
+- [x] 05-06-PLAN.md — [W2] Task Monitoring Page + Node Execution History popover
 
 **Success Criteria**:
 1. Canvas interactions and video composition flow are usable.
