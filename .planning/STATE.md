@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 05-03-PLAN.md
-last_updated: "2026-03-30T07:06:06.572Z"
+stopped_at: Completed 05-05-PLAN.md
+last_updated: "2026-03-30T07:09:12.353Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 32
-  completed_plans: 30
+  completed_plans: 31
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 05 (interaction-video) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -112,6 +112,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 05]: All ImageToolbar template skills disabled with opacity 0.4 + 即将上线 tooltip until skill registry wired
 - [Phase 05]: WaveSurfer loaded via next/dynamic with ssr:false — prevents hydration mismatch from AudioContext/Canvas
 - [Phase 05]: AudioNode memo() wrapper matching other node component patterns for re-render optimization
+- [Phase 05]: UTC date normalization via toUTCDateString() for all billing API params — prevents timezone boundary aggregation bugs
+- [Phase 05]: Deterministic index-based fallback color palette for unknown providers — no code changes needed when new providers added
+- [Phase 05]: ProjectUsageView as separate component with independent queries — cleaner separation of global vs project billing views
 
 ### Pending Todos
 
@@ -130,6 +133,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-30T07:06:06.564Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-03-30T07:09:12.349Z
+Stopped at: Completed 05-05-PLAN.md
 Resume file: None
