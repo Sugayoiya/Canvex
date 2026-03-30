@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 import { skillsApi } from "@/lib/api";
+import { Sidebar } from "@/components/layout/sidebar";
 
 interface SkillInfo {
   name: string;
@@ -47,27 +48,26 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-        <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-4">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            Canvas Studio
-          </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500">
-              {user?.nickname || user?.email}
-            </span>
-            <button
-              onClick={logout}
-              className="text-sm text-gray-500 hover:text-red-500 transition-colors"
-            >
-              退出
-            </button>
+    <div className="min-h-screen flex">
+      <Sidebar />
+      <div className="flex-1 flex flex-col min-h-screen">
+        <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="flex items-center justify-end px-6 py-4">
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-500">
+                {user?.nickname || user?.email}
+              </span>
+              <button
+                onClick={logout}
+                className="text-sm text-gray-500 hover:text-red-500 transition-colors"
+              >
+                退出
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <main className="mx-auto max-w-6xl px-6 py-8">
+        <main className="px-6 py-8 flex-1">
         <div className="mb-8">
           <h2 className="text-2xl font-bold">工作台</h2>
           <p className="mt-1 text-gray-500">
@@ -114,6 +114,7 @@ export default function ProjectsPage() {
           )}
         </section>
       </main>
+      </div>
     </div>
   );
 }
