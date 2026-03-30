@@ -22,12 +22,18 @@ class RefreshRequest(BaseModel):
     refresh_token: str
 
 
+class OAuthCallbackParams(BaseModel):
+    code: str
+    state: str
+
+
 class UserResponse(BaseModel):
     id: str
     email: str
     nickname: str
     avatar: str | None = None
     is_admin: bool = False
+    teams: list[dict] | None = None
 
     class Config:
         from_attributes = True
