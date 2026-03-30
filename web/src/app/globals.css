@@ -25,6 +25,42 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* === Phase 06 Obsidian Lens Design Tokens === */
+:root, .theme-dark {
+  --ob-surface-base: #0E0E0E;
+  --ob-surface-lowest: #080808;
+  --ob-surface-low: #111111;
+  --ob-surface-mid: #141414;
+  --ob-surface-high: #1A1A1A;
+  --ob-surface-highest: #222222;
+  --ob-surface-bright: #2A2A2A;
+
+  --ob-primary: #00D1FF;
+  --ob-primary-dark: #0087A3;
+  --ob-primary-glow: rgba(0,209,255,0.3);
+  --ob-tertiary: #FFD59C;
+  --ob-error: #FFB4AB;
+  --ob-success: #4CAF50;
+
+  --ob-text-primary: #E5E2E1;
+  --ob-text-secondary: #BBC9CF;
+  --ob-text-muted: #8E9192;
+  --ob-text-on-primary: #000000;
+
+  --ob-glass-bg: rgba(18,18,18,0.8);
+  --ob-glass-border: rgba(255,255,255,0.08);
+  --ob-glass-hover: rgba(22,22,22,0.9);
+  --ob-glass-hover-border: rgba(0,209,255,0.3);
+
+  --ob-glow-sm: 0 0 8px #00D1FF;
+  --ob-glow-lg: 0 0 32px rgba(0,209,255,0.3);
+  --ob-glow-card: 0 0 40px -10px rgba(0,209,255,0.15);
+
+  --ob-gradient-primary: linear-gradient(135deg, #00D1FF 0%, #0087A3 100%);
+  --ob-dot-grid: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 0);
+  --ob-dot-grid-size: 24px 24px;
+}
+
 /* === Phase 04 Canvas V4 Design Tokens === */
 :root, .theme-dark {
   --cv4-canvas-bg: #131313;
