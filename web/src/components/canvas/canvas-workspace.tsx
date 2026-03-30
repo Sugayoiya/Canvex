@@ -27,7 +27,7 @@ import { LeftFloatingMenu } from "./canvas-floating-toolbar";
 import { PanelHost } from "./panels/panel-host";
 import { AssetPanel } from "./canvas-asset-panel";
 import { NodeCreationMenu } from "./canvas-node-creation-menu";
-import { PaneContextMenu } from "./canvas-context-menu";
+import { PaneContextMenu, NodeContextMenu } from "./canvas-context-menu";
 import { useNodeFocus } from "./hooks/use-node-focus";
 import { useBatchExecution } from "./hooks/use-batch-execution";
 import { BatchExecutionBar } from "./batch-execution-bar";
@@ -148,6 +148,10 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const [contextMenu, setContextMenu] = useState<{
     screenPos: { x: number; y: number };
     flowPos: { x: number; y: number };
+  } | null>(null);
+  const [nodeContextMenu, setNodeContextMenu] = useState<{
+    screenPos: { x: number; y: number };
+    nodeId: string;
   } | null>(null);
 
   useEffect(() => {
@@ -356,6 +360,30 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
     [screenToFlowPosition],
   );
 
+  const handleNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      event.preventDefault();
+      setCreationMenu(null);
+      setContextMenu(null);
+      setNodeContextMenu({
+        screenPos: { x: event.clientX, y: event.clientY },
+        nodeId: node.id,
+      });
+    },
+    [],
+  );
+
+  const handleNodeContextMenuDelete = useCallback(() => {
+    if (!nodeContextMenu) return;
+    const nodeId = nodeContextMenu.nodeId;
+    setNodes((nds) => nds.filter((n) => n.id !== nodeId));
+    if (focusedNodeId === nodeId) clearFocus();
+    canvasApi.deleteNode(nodeId).catch((err) => {
+      console.warn("[canvas] node deletion sync failed:", err);
+    });
+    setNodeContextMenu(null);
+  }, [nodeContextMenu, setNodes, focusedNodeId, clearFocus]);
+
   const handleContextMenuAddNode = useCallback(
     (nodeType: string) => {
       if (!contextMenu) return;
@@ -392,8 +420,9 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         onConnectEnd={handleConnectEnd}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={persistViewport}
-        onPaneClick={() => { handlePaneClick(); setCreationMenu(null); setContextMenu(null); }}
+        onPaneClick={() => { handlePaneClick(); setCreationMenu(null); setContextMenu(null); setNodeContextMenu(null); }}
         onPaneContextMenu={handlePaneContextMenu}
+        onNodeContextMenu={handleNodeContextMenu}
         nodeTypes={nodeTypes}
         selectionOnDrag
         isValidConnection={(conn) => isValidConnection(conn, nodes)}
