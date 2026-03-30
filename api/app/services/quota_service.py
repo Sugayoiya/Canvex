@@ -5,7 +5,7 @@ from decimal import Decimal
 from sqlalchemy import select
 
 from app.core.database import AsyncSessionLocal
-from app.models.quota import UserQuota, TeamQuota, QuotaUsageLog
+from app.models.quota import UserQuota, TeamQuota, TeamMemberQuota, QuotaUsageLog
 from app.schemas.quota import QuotaCheckResult
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,29 @@ class QuotaService:
                                 error_code="TEAM_DAILY_QUOTA_EXCEEDED",
                             )
 
+                    # D-19: team→member allocation enforcement
+                    tmq_stmt = select(TeamMemberQuota).where(
+                        TeamMemberQuota.team_id == team_id,
+                        TeamMemberQuota.user_id == user_id,
+                    ).with_for_update()
+                    tmq = (await session.execute(tmq_stmt)).scalar_one_or_none()
+                    if tmq:
+                        QuotaService._lazy_reset(tmq, now)
+                        if tmq.monthly_credit_limit is not None and tmq.current_month_usage >= tmq.monthly_credit_limit:
+                            return QuotaCheckResult(
+                                allowed=False,
+                                reason="团队成员个人月度额度已用完",
+                                error_code="TEAM_MEMBER_MONTHLY_QUOTA_EXCEEDED",
+                                current_usage=tmq.current_month_usage,
+                                limit=tmq.monthly_credit_limit,
+                            )
+                        if tmq.daily_call_limit is not None and tmq.current_day_calls >= tmq.daily_call_limit:
+                            return QuotaCheckResult(
+                                allowed=False,
+                                reason="团队成员每日调用次数已达上限",
+                                error_code="TEAM_MEMBER_DAILY_QUOTA_EXCEEDED",
+                            )
+
                 await session.commit()
                 return QuotaCheckResult(allowed=True)
         except Exception:
@@ -107,6 +130,18 @@ class QuotaService:
                         tq.current_day_calls += 1
                         tq.updated_at = now
 
+                    # D-19: increment team→member allocation counters
+                    tmq_stmt = select(TeamMemberQuota).where(
+                        TeamMemberQuota.team_id == team_id,
+                        TeamMemberQuota.user_id == user_id,
+                    ).with_for_update()
+                    tmq = (await session.execute(tmq_stmt)).scalar_one_or_none()
+                    if tmq:
+                        QuotaService._lazy_reset(tmq, now)
+                        tmq.current_month_usage += credit_amount
+                        tmq.current_day_calls += 1
+                        tmq.updated_at = now
+
                 session.add(QuotaUsageLog(
                     user_id=user_id,
                     team_id=team_id,
@@ -122,7 +157,7 @@ class QuotaService:
             return False
 
     @staticmethod
-    def _lazy_reset(quota: UserQuota | TeamQuota, now: datetime) -> None:
+    def _lazy_reset(quota: UserQuota | TeamQuota | TeamMemberQuota, now: datetime) -> None:
         """Reset counters if month/day has rolled over since last reset."""
         if quota.last_month_reset.month != now.month or quota.last_month_reset.year != now.year:
             quota.current_month_usage = Decimal("0")
