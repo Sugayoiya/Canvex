@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 05-04-PLAN.md
-last_updated: "2026-03-30T07:05:10.100Z"
+stopped_at: Completed 05-03-PLAN.md
+last_updated: "2026-03-30T07:06:06.572Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 32
-  completed_plans: 29
+  completed_plans: 30
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 05 (interaction-video) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -109,6 +109,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 05]: Dual SQLite/PG date grouping pattern for time-series billing
 - [Phase 05]: Shallow-equality ref guard for useOnSelectionChange — avoids infinite re-render loops
 - [Phase 05]: Exponential backoff (3s-30s cap) on batch poll errors — prevents server hammering
+- [Phase 05]: All ImageToolbar template skills disabled with opacity 0.4 + 即将上线 tooltip until skill registry wired
+- [Phase 05]: WaveSurfer loaded via next/dynamic with ssr:false — prevents hydration mismatch from AudioContext/Canvas
+- [Phase 05]: AudioNode memo() wrapper matching other node component patterns for re-render optimization
 
 ### Pending Todos
 
@@ -127,6 +130,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-30T07:05:10.097Z
-Stopped at: Completed 05-04-PLAN.md
+Last session: 2026-03-30T07:06:06.564Z
+Stopped at: Completed 05-03-PLAN.md
 Resume file: None
