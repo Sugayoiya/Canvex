@@ -119,12 +119,12 @@ Plans:
 **Depends on**: Phase 05
 **UI hint**: yes
 **Requirements:** [REQ-11, REQ-12]
-**Plans:** 7 plans
+**Plans:** 1/7 plans executed
 
 Plans:
 - [ ] 06-01-PLAN.md — [W1] Backend Models: Org hierarchy (Group/GroupMember/GroupProject) + OAuthAccount + AI Provider DB models + deps extension
 - [ ] 06-02-PLAN.md — [W2] ProviderManager DB rewrite (KeyRotator, credential chain, env seeding) + AICallLog dimension enrichment
-- [ ] 06-03-PLAN.md — [W1] Frontend Infra: Obsidian Lens tokens + AuthGuard + auth-store extension + API client
+- [x] 06-03-PLAN.md — [W1] Frontend Infra: Obsidian Lens tokens + AuthGuard + auth-store extension + API client
 - [ ] 06-04-PLAN.md — [W2] Backend API: OAuth (Google+GitHub) + Team/Group/Invitation CRUD + schemas
 - [ ] 06-05-PLAN.md — [W3] Backend API: Project CRUD + User search + AI Provider admin + route registration
 - [ ] 06-06-PLAN.md — [W2] Frontend: Login page (Obsidian Lens+OAuth) + AppShell layout (Sidebar+Topbar)

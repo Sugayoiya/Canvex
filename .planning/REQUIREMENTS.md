@@ -32,7 +32,7 @@
 
 ### Collaboration & Production
 
-- [ ] **REQ-11**: Multi-role collaboration and version history are implemented.
+- [x] **REQ-11**: Multi-role collaboration and version history are implemented.
 - [ ] **REQ-12**: Production deployment/ops baseline (beat/monitoring/retention/export) is complete.
 
 ## v2 Requirements
@@ -63,7 +63,7 @@
 | REQ-08 | Phase 4 | Complete |
 | REQ-09 | Phase 5 | Complete |
 | REQ-10 | Phase 5 | Complete |
-| REQ-11 | Phase 6 | Pending |
+| REQ-11 | Phase 6 | Complete |
 | REQ-12 | Phase 6 | Pending |
 
 **Coverage:**

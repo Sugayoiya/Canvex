@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
-status: All plans executed
-stopped_at: Phase 06 context gathered
-last_updated: "2026-03-30T08:19:12.882Z"
+status: executing
+stopped_at: Completed 06-03-PLAN.md
+last_updated: "2026-03-30T14:49:12.510Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 32
-  completed_plans: 32
+  total_plans: 39
+  completed_plans: 33
   percent: 100
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 05 — interaction-video (COMPLETE)
+**Current focus:** Phase 06 — collaboration-prod
 
 ## Current Position
 
-Phase: 06
-Plan: Not started
-Status: All plans executed
+Phase: 06 (collaboration-prod) — EXECUTING
+Plan: 2 of 7
+Status: Ready to execute
 Last activity: 2026-03-30
 
 Progress: [██████████] 100%
@@ -115,6 +115,8 @@ Progress: [██████████] 100%
 - [Phase 05]: UTC date normalization via toUTCDateString() for all billing API params — prevents timezone boundary aggregation bugs
 - [Phase 05]: Deterministic index-based fallback color palette for unknown providers — no code changes needed when new providers added
 - [Phase 05]: ProjectUsageView as separate component with independent queries — cleaner separation of global vs project billing views
+- [Phase 06]: Obsidian Lens --ob-* tokens coexist with --cv4-* Phase 04 tokens; Space Grotesk+Manrope replace Geist
+- [Phase 06]: AuthGuard inside QueryClientProvider; SpaceContext discriminated union for personal/team switching
 
 ### Pending Todos
 
@@ -133,6 +135,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-30T08:19:12.870Z
-Stopped at: Phase 06 context gathered
-Resume file: .planning/phases/06-collaboration-prod/06-CONTEXT.md
+Last session: 2026-03-30T14:49:12.507Z
+Stopped at: Completed 06-03-PLAN.md
+Resume file: None
