@@ -4,6 +4,10 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { billingApi } from "@/lib/api";
 import { KPICards } from "./kpi-cards";
+import { UsageChart } from "./usage-chart";
+import { ProviderPieChart } from "./provider-pie-chart";
+import { UsageTable } from "./usage-table";
+import { ProjectUsageView } from "./project-usage-view";
 import { RefreshCw } from "lucide-react";
 
 type ViewMode = "global" | "project";
@@ -71,10 +75,7 @@ export function BillingDashboard() {
   const [granularity, setGranularity] = useState<Granularity>("day");
   const [datePreset, setDatePreset] = useState<DatePreset>("30d");
   const [dateRange, setDateRange] = useState(getPresetRange("30d"));
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [showCustomDates, setShowCustomDates] = useState(false);
-
-  const effectiveProjectId = viewMode === "project" ? selectedProjectId : null;
 
   const {
     data: statsData,
@@ -82,31 +83,31 @@ export function BillingDashboard() {
     error: statsError,
     refetch: refetchStats,
   } = useQuery<UsageStatRow[]>({
-    queryKey: ["billing-stats", dateRange, effectiveProjectId],
+    queryKey: ["billing-stats", dateRange],
     queryFn: () =>
       billingApi
         .usageStats({
           start_date: dateRange.start,
           end_date: dateRange.end,
-          project_id: effectiveProjectId ?? undefined,
         })
         .then((r) => r.data),
+    enabled: viewMode === "global",
   });
 
-  const {
-    data: timeseriesData,
-    isLoading: tsLoading,
-  } = useQuery<{ granularity: string; points: Array<{ period: string; calls: number; cost: number; tokens: number }> }>({
-    queryKey: ["billing-timeseries", dateRange, granularity, effectiveProjectId],
+  const { data: timeseriesData } = useQuery<{
+    granularity: string;
+    points: Array<{ period: string; calls: number; cost: number; tokens: number }>;
+  }>({
+    queryKey: ["billing-timeseries", dateRange, granularity],
     queryFn: () =>
       billingApi
         .usageTimeseries({
           start_date: dateRange.start,
           end_date: dateRange.end,
           granularity,
-          project_id: effectiveProjectId ?? undefined,
         })
         .then((r) => r.data),
+    enabled: viewMode === "global",
   });
 
   const { totalCost, totalCalls, totalTokens } = useMemo(() => {
@@ -335,31 +336,6 @@ export function BillingDashboard() {
         </div>
       )}
 
-      {/* Project selector (when in project view) */}
-      {viewMode === "project" && (
-        <div style={{ marginBottom: 16 }}>
-          <input
-            type="text"
-            placeholder="输入项目 ID 筛选"
-            value={selectedProjectId ?? ""}
-            onChange={(e) =>
-              setSelectedProjectId(e.target.value || null)
-            }
-            style={{
-              height: 36,
-              padding: "0 12px",
-              borderRadius: 8,
-              border: "1px solid var(--cv4-border-default)",
-              background: "var(--cv4-surface-primary)",
-              color: "var(--cv4-text-primary)",
-              fontSize: 13,
-              fontFamily: "Manrope, sans-serif",
-              width: 280,
-            }}
-          />
-        </div>
-      )}
-
       {/* Loading */}
       {statsLoading ? (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
@@ -378,6 +354,12 @@ export function BillingDashboard() {
             />
           ))}
         </div>
+      ) : viewMode === "project" ? (
+        <ProjectUsageView
+          dateRange={dateRange}
+          granularity={granularity}
+          onGranularityChange={setGranularity}
+        />
       ) : statsData && statsData.length === 0 ? (
         /* Empty state */
         <div
@@ -412,7 +394,7 @@ export function BillingDashboard() {
           </p>
         </div>
       ) : (
-        /* Dashboard content */
+        /* Dashboard content — global view */
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <KPICards
             totalCost={totalCost}
@@ -422,51 +404,15 @@ export function BillingDashboard() {
 
           {/* Charts row: 2fr line chart + 1fr pie chart */}
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 16 }}>
-            <div
-              id="usage-chart-slot"
-              style={{
-                background: "var(--cv4-surface-primary)",
-                border: "1px solid var(--cv4-border-default)",
-                borderRadius: 12,
-                padding: "20px 24px",
-                minHeight: 340,
-              }}
-            >
-              <span style={{ fontSize: 13, color: "var(--cv4-text-muted)" }}>
-                {tsLoading ? "加载中..." : "使用趋势"}
-              </span>
-            </div>
-            <div
-              id="pie-chart-slot"
-              style={{
-                background: "var(--cv4-surface-primary)",
-                border: "1px solid var(--cv4-border-default)",
-                borderRadius: 12,
-                padding: "20px 24px",
-                minHeight: 340,
-              }}
-            >
-              <span style={{ fontSize: 13, color: "var(--cv4-text-muted)" }}>
-                Provider 分布
-              </span>
-            </div>
+            <UsageChart
+              data={timeseriesData?.points ?? []}
+              granularity={granularity}
+              onGranularityChange={setGranularity}
+            />
+            <ProviderPieChart data={statsData ?? []} />
           </div>
 
-          {/* Table */}
-          <div
-            id="usage-table-slot"
-            style={{
-              background: "var(--cv4-surface-primary)",
-              border: "1px solid var(--cv4-border-default)",
-              borderRadius: 12,
-              padding: "20px 24px",
-              minHeight: 200,
-            }}
-          >
-            <span style={{ fontSize: 13, color: "var(--cv4-text-muted)" }}>
-              使用明细
-            </span>
-          </div>
+          <UsageTable data={statsData ?? []} />
         </div>
       )}
     </div>
