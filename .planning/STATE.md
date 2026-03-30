@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-03-30T14:51:03.826Z"
+stopped_at: Completed 06-06-PLAN.md
+last_updated: "2026-03-30T14:57:31.385Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 39
-  completed_plans: 34
+  completed_plans: 37
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 06 (collaboration-prod) — EXECUTING
-Plan: 3 of 7
+Plan: 5 of 7
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -119,6 +119,9 @@ Progress: [██████████] 100%
 - [Phase 06]: AuthGuard inside QueryClientProvider; SpaceContext discriminated union for personal/team switching
 - [Phase 06]: TeamMember default role migrated from editor to member with legacy backward compat
 - [Phase 06]: resolve_project_access: team_admin bypasses group check, members need group editor+ for writes
+- [Phase 06]: Suspense boundary wrapping LoginContent for useSearchParams SSR safety in Next.js 16
+- [Phase 06]: Inline styles with CSS custom properties (--ob-*) matching Obsidian Lens spec for design fidelity
+- [Phase 06]: OAuth callback via URL params with history.replaceState cleanup
 
 ### Pending Todos
 
@@ -137,6 +140,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-30T14:51:03.824Z
-Stopped at: Completed 06-01-PLAN.md
+Last session: 2026-03-30T14:57:24.579Z
+Stopped at: Completed 06-06-PLAN.md
 Resume file: None
