@@ -27,6 +27,7 @@ import { LeftFloatingMenu } from "./canvas-floating-toolbar";
 import { PanelHost } from "./panels/panel-host";
 import { AssetPanel } from "./canvas-asset-panel";
 import { NodeCreationMenu } from "./canvas-node-creation-menu";
+import { PaneContextMenu } from "./canvas-context-menu";
 import { useNodeFocus } from "./hooks/use-node-focus";
 import { nodeTypes } from "./nodes";
 
@@ -124,11 +125,16 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const { screenToFlowPosition } = useReactFlow();
 
   const connectStartRef = useRef<{ nodeId: string; nodeType: string } | null>(null);
+  const connectSucceededRef = useRef(false);
   const [creationMenu, setCreationMenu] = useState<{
     screenPos: { x: number; y: number };
     flowPos: { x: number; y: number };
     sourceNodeType: string;
     sourceNodeId: string;
+  } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    screenPos: { x: number; y: number };
+    flowPos: { x: number; y: number };
   } | null>(null);
 
   useEffect(() => {
@@ -162,6 +168,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
 
   const handleConnect = useCallback(
     (connection: Connection) => {
+      connectSucceededRef.current = true;
       if (!isValidConnection(connection, nodes)) return;
       setEdges((eds) => addEdge(connection, eds));
       canvasApi
@@ -218,24 +225,41 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
 
   const handleConnectEnd = useCallback(
     (event: MouseEvent | TouchEvent) => {
+      const startInfo = connectStartRef.current;
+      connectStartRef.current = null;
+
+      if (!startInfo) {
+        connectSucceededRef.current = false;
+        return;
+      }
+
       const target = (event as MouseEvent).target as HTMLElement;
-      const isDropOnPane = target?.classList?.contains("react-flow__pane");
-      if (!isDropOnPane || !connectStartRef.current) {
-        connectStartRef.current = null;
+      const isOnCanvas =
+        target?.closest(".react-flow__pane") ||
+        target?.closest(".react-flow__background");
+
+      if (!isOnCanvas) {
+        connectSucceededRef.current = false;
         return;
       }
 
       const clientX = (event as MouseEvent).clientX;
       const clientY = (event as MouseEvent).clientY;
-      const flowPos = screenToFlowPosition({ x: clientX, y: clientY });
 
-      setCreationMenu({
-        screenPos: { x: clientX, y: clientY },
-        flowPos,
-        sourceNodeType: connectStartRef.current.nodeType,
-        sourceNodeId: connectStartRef.current.nodeId,
+      requestAnimationFrame(() => {
+        if (connectSucceededRef.current) {
+          connectSucceededRef.current = false;
+          return;
+        }
+
+        const flowPos = screenToFlowPosition({ x: clientX, y: clientY });
+        setCreationMenu({
+          screenPos: { x: clientX, y: clientY },
+          flowPos,
+          sourceNodeType: startInfo.nodeType,
+          sourceNodeId: startInfo.nodeId,
+        });
       });
-      connectStartRef.current = null;
     },
     [screenToFlowPosition],
   );
@@ -304,6 +328,45 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
     [canvasId, getViewport, setNodes, setSaving],
   );
 
+  const handlePaneContextMenu = useCallback(
+    (event: MouseEvent | React.MouseEvent) => {
+      event.preventDefault();
+      const clientX = event.clientX;
+      const clientY = event.clientY;
+      const flowPos = screenToFlowPosition({ x: clientX, y: clientY });
+      setCreationMenu(null);
+      setContextMenu({
+        screenPos: { x: clientX, y: clientY },
+        flowPos,
+      });
+    },
+    [screenToFlowPosition],
+  );
+
+  const handleContextMenuAddNode = useCallback(
+    (nodeType: string) => {
+      if (!contextMenu) return;
+      const { flowPos } = contextMenu;
+
+      setSaving(true);
+      canvasApi
+        .createNode({
+          canvas_id: canvasId,
+          node_type: nodeType,
+          position_x: flowPos.x,
+          position_y: flowPos.y,
+        })
+        .then((res) => {
+          const created = res.data as BackendNode;
+          setNodes((nds) => [...nds, toFlowNode(created)]);
+        })
+        .finally(() => setSaving(false));
+
+      setContextMenu(null);
+    },
+    [canvasId, contextMenu, setNodes, setSaving],
+  );
+
   return (
     <div className="relative h-full w-full" style={{ background: "var(--cv4-canvas-bg)" }}>
       <ReactFlow
@@ -316,7 +379,8 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         onConnectEnd={handleConnectEnd}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={persistViewport}
-        onPaneClick={() => { handlePaneClick(); setCreationMenu(null); }}
+        onPaneClick={() => { handlePaneClick(); setCreationMenu(null); setContextMenu(null); }}
+        onPaneContextMenu={handlePaneContextMenu}
         nodeTypes={nodeTypes}
         isValidConnection={(conn) => isValidConnection(conn, nodes)}
         deleteKeyCode={["Backspace", "Delete"]}
@@ -356,6 +420,13 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
           sourceNodeType={creationMenu.sourceNodeType}
           onSelect={handleCreationMenuSelect}
           onClose={() => setCreationMenu(null)}
+        />
+      )}
+      {contextMenu && (
+        <PaneContextMenu
+          position={contextMenu.screenPos}
+          onAddNode={handleContextMenuAddNode}
+          onClose={() => setContextMenu(null)}
         />
       )}
     </div>

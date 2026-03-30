@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { FileText, Image, PlayCircle, Music } from "lucide-react";
 import { getCompatibleTargetTypes, type MaterialType } from "@/lib/connection-rules";
 
@@ -18,12 +18,26 @@ const NODE_META: Record<MaterialType, { label: string; icon: typeof FileText }> 
 };
 
 export function NodeCreationMenu({ position, sourceNodeType, onSelect, onClose }: NodeCreationMenuProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const focusIndexRef = useRef(0);
   const compatibleTypes = getCompatibleTargetTypes(sourceNodeType as MaterialType);
+
+  const focusItem = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(index, compatibleTypes.length - 1));
+    focusIndexRef.current = clamped;
+    itemRefs.current[clamped]?.focus();
+  }, [compatibleTypes.length]);
+
+  useEffect(() => {
+    if (compatibleTypes.length > 0) {
+      requestAnimationFrame(() => focusItem(0));
+    }
+  }, [focusItem, compatibleTypes.length]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         onClose();
       }
     };
@@ -31,19 +45,43 @@ export function NodeCreationMenu({ position, sourceNodeType, onSelect, onClose }
     return () => document.removeEventListener("mousedown", handler);
   }, [onClose]);
 
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          focusItem(focusIndexRef.current + 1);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          focusItem(focusIndexRef.current - 1);
+          break;
+        case "Home":
+          e.preventDefault();
+          focusItem(0);
+          break;
+        case "End":
+          e.preventDefault();
+          focusItem(compatibleTypes.length - 1);
+          break;
+        case "Escape":
+        case "Tab":
+          e.preventDefault();
+          onClose();
+          break;
+      }
+    },
+    [onClose, focusItem, compatibleTypes.length],
+  );
 
   if (compatibleTypes.length === 0) return null;
 
   return (
     <div
-      ref={ref}
+      ref={menuRef}
+      role="menu"
+      aria-label="选择节点类型"
+      onKeyDown={handleKeyDown}
       className="fixed flex flex-col gap-1"
       style={{
         left: position.x,
@@ -58,13 +96,17 @@ export function NodeCreationMenu({ position, sourceNodeType, onSelect, onClose }
         animation: "cv4-panel-enter 150ms ease-out",
       }}
     >
-      {compatibleTypes.map((type) => {
+      {compatibleTypes.map((type, i) => {
         const meta = NODE_META[type];
         if (!meta) return null;
         const Icon = meta.icon;
         return (
           <button
             key={type}
+            ref={(el) => { itemRefs.current[i] = el; }}
+            role="menuitem"
+            type="button"
+            tabIndex={-1}
             onClick={() => {
               onSelect(type);
               onClose();
@@ -75,12 +117,20 @@ export function NodeCreationMenu({ position, sourceNodeType, onSelect, onClose }
               borderRadius: 8,
               background: "transparent",
               border: "none",
+              outline: "none",
               transition: "background 100ms",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = "var(--cv4-hover-highlight)";
+              focusItem(i);
             }}
             onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.background = "var(--cv4-hover-highlight)";
+            }}
+            onBlur={(e) => {
               e.currentTarget.style.background = "transparent";
             }}
           >
