@@ -28,7 +28,7 @@
 ### Production Experience
 
 - [x] **REQ-09**: Canvas interactions and video composition workflow meet target UX.
-- [ ] **REQ-10**: Billing dashboards and monthly usage outputs are available.
+- [x] **REQ-10**: Billing dashboards and monthly usage outputs are available.
 
 ### Collaboration & Production
 
@@ -62,7 +62,7 @@
 | REQ-07 | Phase 4 | Complete |
 | REQ-08 | Phase 4 | Complete |
 | REQ-09 | Phase 5 | Complete |
-| REQ-10 | Phase 5 | Pending |
+| REQ-10 | Phase 5 | Complete |
 | REQ-11 | Phase 6 | Pending |
 | REQ-12 | Phase 6 | Pending |
 

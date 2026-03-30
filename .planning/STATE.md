@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 05-02-PLAN.md
-last_updated: "2026-03-30T06:59:21.908Z"
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-30T07:00:16.333Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 32
-  completed_plans: 27
+  completed_plans: 28
   percent: 33
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 05 (interaction-video) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -105,6 +105,8 @@ Progress: [███░░░░░░░] 33%
 - [Phase 05]: V5 external node label at top:-24 with pointer-events-none and overflow:visible
 - [Phase 05]: Type-specific panel routing: image-toolbar/video-toolbar/audio-toolbar replace template-menu
 - [Phase 05]: MediaToolbarPlaceholder shared for all 3 media types until Plan 03
+- [Phase 05]: DB-backed BatchExecution model replaces in-memory store for restart survivability
+- [Phase 05]: Dual SQLite/PG date grouping pattern for time-series billing
 
 ### Pending Todos
 
@@ -123,6 +125,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-30T06:59:21.905Z
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-03-30T07:00:16.330Z
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None

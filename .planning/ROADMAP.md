@@ -99,10 +99,10 @@ Plans:
 **Depends on**: Phase 04
 **UI hint**: yes
 **Requirements:** [REQ-09, REQ-10]
-**Plans:** 1/6 plans executed
+**Plans:** 2/6 plans executed
 
 Plans:
-- [ ] 05-01-PLAN.md — [W1] Backend APIs: batch execution (topo sort) + billing timeseries + task monitoring + node history
+- [x] 05-01-PLAN.md — [W1] Backend APIs: batch execution (topo sort) + billing timeseries + task monitoring + node history
 - [x] 05-02-PLAN.md — [W1] Frontend Infra: npm deps + CSS --cv5-* tokens + NodeShell V5 + PanelHost V5 routing
 - [ ] 05-03-PLAN.md — [W2] V5 Node Toolbars (Image/Video/Audio) + AudioNode WaveSurfer rewrite
 - [ ] 05-04-PLAN.md — [W2] Batch Execution Frontend: useBatchExecution + BatchExecutionBar + workspace integration
