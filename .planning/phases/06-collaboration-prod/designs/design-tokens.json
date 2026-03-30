@@ -1,0 +1,308 @@
+{
+  "$schema": "design-tokens-v1",
+  "description": "Phase 06 Collaboration & Production — Unified Design Tokens (extends Canvas V4/V5)",
+  "source": "Stitch project 13144963552008146136 (Refined screens) + Phase 04/05 tokens",
+  "brandName": "Obsidian Lens",
+  "brandTagline": "Cinematic Production Suite",
+
+  "themes": {
+    "dark": {
+      "canvas": {
+        "background": "#0E0E0E",
+        "gridDot": "#FFFFFF0D",
+        "gridSpacing": 24
+      },
+      "surface": {
+        "base": "#0E0E0E",
+        "containerLowest": "#080808",
+        "containerLow": "#111111",
+        "container": "#141414",
+        "containerHigh": "#1A1A1A",
+        "containerHighest": "#222222",
+        "bright": "#2A2A2A",
+        "primary": "#2A2A2A",
+        "secondary": "#353534",
+        "elevated": "#201F1F",
+        "overlay": "#1C1B1BDD",
+        "popup": "#1C1B1B",
+        "code": "#0E0E0E"
+      },
+      "text": {
+        "primary": "#E5E2E1",
+        "secondary": "#BBC9CF",
+        "muted": "#8E9192",
+        "placeholder": "#A1A1AA40",
+        "disabled": "#A1A1AA60",
+        "onPrimary": "#000000",
+        "onPrimaryContainer": "#00566A",
+        "link": "#00D1FF"
+      },
+      "accent": {
+        "primary": "#00D1FF",
+        "primaryContainer": "#00D1FF",
+        "primaryFixed": "#B7EAFF",
+        "primaryFixedDim": "#4CD6FF",
+        "primaryGlow": "rgba(0, 209, 255, 0.3)",
+        "primaryGradient": "linear-gradient(135deg, #00D1FF 0%, #0087A3 100%)",
+        "secondary": "#9CCEE2",
+        "secondaryContainer": "#184F60",
+        "tertiary": "#FFD59C",
+        "tertiaryContainer": "#FEB127",
+        "error": "#FFB4AB",
+        "errorContainer": "#93000A",
+        "inversePrimary": "#00677F"
+      },
+      "border": {
+        "default": "#FFFFFF14",
+        "subtle": "#FFFFFF0A",
+        "faint": "#FFFFFF08",
+        "focused": "#00D1FF40",
+        "divider": "#FFFFFF10",
+        "ghostBorder": "#2A2A2A26",
+        "outlineVariant": "#2A2A2A",
+        "outline": "#444444"
+      },
+      "interactive": {
+        "buttonPrimary": "#00D1FF",
+        "buttonPrimaryText": "#000000",
+        "buttonPrimaryGradient": "linear-gradient(135deg, #00D1FF 0%, #0087A3 100%)",
+        "buttonSecondary": "#1A1A1A66",
+        "buttonSecondaryText": "#E5E2E1",
+        "buttonSecondaryBorder": "#FFFFFF14",
+        "buttonGhost": "transparent",
+        "buttonGhostText": "#BBC9CF",
+        "activeHighlight": "#00D1FF15",
+        "hoverHighlight": "#00D1FF0A",
+        "focusRing": "#00D1FF66"
+      },
+      "semantic": {
+        "success": "#4ADE80",
+        "warning": "#FEB127",
+        "error": "#FFB4AB",
+        "info": "#00D1FF",
+        "active": "#00D1FF",
+        "inactive": "#444444"
+      },
+      "glass": {
+        "card": "rgba(18, 18, 18, 0.8)",
+        "cardBorder": "rgba(255, 255, 255, 0.08)",
+        "cardHoverBorder": "rgba(0, 209, 255, 0.3)",
+        "loginCard": "rgba(18, 18, 18, 0.80)",
+        "blurRadius": 12,
+        "heavyBlurRadius": 24
+      },
+      "shadow": {
+        "sm": { "blur": 10, "color": "#00000040", "offsetY": 2 },
+        "md": { "blur": 20, "color": "#00000040", "offsetY": 4 },
+        "lg": { "blur": 30, "color": "#00000050", "offsetY": 6 },
+        "xl": { "blur": 60, "color": "#00000060", "offsetY": 12 },
+        "primaryGlow": { "blur": 32, "color": "rgba(0,209,255,0.3)", "offsetY": 0 },
+        "loginGlow": { "blur": 40, "spread": -10, "color": "rgba(0,209,255,0.15)", "offsetY": 0 },
+        "buttonGlow": { "blur": 20, "spread": -2, "color": "rgba(0,209,255,0.5)", "offsetY": 4 }
+      }
+    },
+
+    "light": {
+      "canvas": {
+        "background": "#F5F5F5",
+        "gridDot": "#D0D0D0",
+        "gridSpacing": 24
+      },
+      "surface": {
+        "base": "#F5F5F5",
+        "containerLowest": "#FFFFFF",
+        "containerLow": "#F0F0F0",
+        "container": "#EBEBEB",
+        "containerHigh": "#E0E0E0",
+        "containerHighest": "#D5D5D5",
+        "bright": "#FFFFFF",
+        "primary": "#FFFFFF",
+        "secondary": "#EBEBEB",
+        "elevated": "#FFFFFF",
+        "overlay": "#FFFFFFEE",
+        "popup": "#FFFFFF",
+        "code": "#F0F0F0"
+      },
+      "text": {
+        "primary": "#1A1A1A",
+        "secondary": "#4A5A62",
+        "muted": "#7A8A92",
+        "placeholder": "#9AA5AD40",
+        "disabled": "#9AA5AD80",
+        "onPrimary": "#FFFFFF",
+        "onPrimaryContainer": "#003543",
+        "link": "#00677F"
+      },
+      "accent": {
+        "primary": "#00677F",
+        "primaryContainer": "#B7EAFF",
+        "primaryFixed": "#B7EAFF",
+        "primaryFixedDim": "#4CD6FF",
+        "primaryGlow": "rgba(0, 103, 127, 0.15)",
+        "primaryGradient": "linear-gradient(135deg, #00677F 0%, #004E60 100%)",
+        "secondary": "#154D5D",
+        "secondaryContainer": "#B8EAFE",
+        "tertiary": "#624000",
+        "tertiaryContainer": "#FFDDB1",
+        "error": "#BA1A1A",
+        "errorContainer": "#FFDAD6",
+        "inversePrimary": "#4CD6FF"
+      },
+      "border": {
+        "default": "#D0D0D040",
+        "subtle": "#D0D0D030",
+        "faint": "#D0D0D020",
+        "focused": "#00677F30",
+        "divider": "#D0D0D060",
+        "ghostBorder": "#D0D0D015",
+        "outlineVariant": "#C4C4C4",
+        "outline": "#7A8A92"
+      },
+      "interactive": {
+        "buttonPrimary": "#00677F",
+        "buttonPrimaryText": "#FFFFFF",
+        "buttonPrimaryGradient": "linear-gradient(135deg, #00677F 0%, #004E60 100%)",
+        "buttonSecondary": "#F0F0F0",
+        "buttonSecondaryText": "#4A5A62",
+        "buttonSecondaryBorder": "#D0D0D040",
+        "buttonGhost": "transparent",
+        "buttonGhostText": "#4A5A62",
+        "activeHighlight": "#00677F08",
+        "hoverHighlight": "#00677F05",
+        "focusRing": "#00677F40"
+      },
+      "semantic": {
+        "success": "#16A34A",
+        "warning": "#D97706",
+        "error": "#DC2626",
+        "info": "#00677F",
+        "active": "#00677F",
+        "inactive": "#9AA5AD"
+      },
+      "glass": {
+        "card": "rgba(255, 255, 255, 0.9)",
+        "cardBorder": "rgba(0, 0, 0, 0.08)",
+        "cardHoverBorder": "rgba(0, 103, 127, 0.3)",
+        "loginCard": "rgba(255, 255, 255, 0.90)",
+        "blurRadius": 12,
+        "heavyBlurRadius": 24
+      },
+      "shadow": {
+        "sm": { "blur": 8, "color": "#00000010", "offsetY": 1 },
+        "md": { "blur": 12, "color": "#00000010", "offsetY": 2 },
+        "lg": { "blur": 16, "color": "#00000012", "offsetY": 3 },
+        "xl": { "blur": 30, "color": "#00000015", "offsetY": 6 },
+        "primaryGlow": { "blur": 32, "color": "rgba(0,103,127,0.15)", "offsetY": 0 },
+        "loginGlow": { "blur": 40, "spread": -10, "color": "rgba(0,103,127,0.08)", "offsetY": 0 },
+        "buttonGlow": { "blur": 20, "spread": -2, "color": "rgba(0,103,127,0.2)", "offsetY": 4 }
+      }
+    }
+  },
+
+  "typography": {
+    "fontFamily": {
+      "headline": "Space Grotesk",
+      "body": "Manrope",
+      "label": "Manrope",
+      "mono": "Space Grotesk"
+    },
+    "scale": {
+      "displayLg": { "size": 44, "weight": "700", "font": "Space Grotesk", "tracking": "-0.02em" },
+      "displayMd": { "size": 36, "weight": "700", "font": "Space Grotesk", "tracking": "-0.02em" },
+      "headlineLg": { "size": 28, "weight": "700", "font": "Space Grotesk", "tracking": "-0.01em" },
+      "headlineMd": { "size": 24, "weight": "700", "font": "Space Grotesk" },
+      "headlineSm": { "size": 20, "weight": "700", "font": "Space Grotesk" },
+      "titleLg": { "size": 18, "weight": "600", "font": "Manrope" },
+      "titleMd": { "size": 16, "weight": "600", "font": "Manrope" },
+      "titleSm": { "size": 14, "weight": "600", "font": "Manrope" },
+      "bodyLg": { "size": 14, "weight": "400", "font": "Manrope", "lineHeight": 1.6 },
+      "bodyMd": { "size": 13, "weight": "400", "font": "Manrope", "lineHeight": 1.5 },
+      "bodySm": { "size": 12, "weight": "400", "font": "Manrope", "lineHeight": 1.5 },
+      "labelLg": { "size": 12, "weight": "700", "font": "Manrope", "tracking": "0.1em", "transform": "uppercase" },
+      "labelMd": { "size": 10, "weight": "700", "font": "Space Grotesk", "tracking": "0.2em", "transform": "uppercase" },
+      "labelSm": { "size": 9, "weight": "700", "font": "Space Grotesk", "tracking": "0.2em", "transform": "uppercase" },
+      "metadata": { "size": 9, "weight": "400", "font": "Space Grotesk", "tracking": "0.1em" },
+      "code": { "size": 12, "weight": "400", "font": "Space Grotesk", "lineHeight": 1.5 }
+    }
+  },
+
+  "spacing": {
+    "page": { "paddingX": 40, "paddingY": 40 },
+    "card": { "padding": [24, 32] },
+    "section": { "gap": 32 },
+    "sidebarWidth": 256,
+    "topBarHeight": 64,
+    "gap": {
+      "xs": 4,
+      "sm": 8,
+      "md": 16,
+      "lg": 24,
+      "xl": 32,
+      "xxl": 48
+    }
+  },
+
+  "radii": {
+    "none": 0,
+    "sm": 4,
+    "default": 6,
+    "md": 8,
+    "lg": 12,
+    "xl": 16,
+    "xxl": 20,
+    "full": 9999
+  },
+
+  "iconography": {
+    "library": "material-symbols-outlined",
+    "variationSettings": "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24",
+    "sidebarIcons": {
+      "workspace": "grid_view",
+      "productions": "movie_filter",
+      "team": "group",
+      "aiEngine": "psychology",
+      "archive": "inventory_2",
+      "support": "help_outline",
+      "settings": "tune"
+    },
+    "actionIcons": {
+      "add": "add",
+      "addCircle": "add_circle",
+      "search": "search",
+      "notifications": "notifications",
+      "more": "more_horiz",
+      "copy": "content_copy",
+      "bolt": "bolt",
+      "expandMore": "expand_more",
+      "arrowForward": "arrow_forward",
+      "edit": "edit",
+      "delete": "delete",
+      "link": "link",
+      "verified": "verified_user",
+      "layers": "layers",
+      "sync": "sync",
+      "upload": "arrow_upward"
+    },
+    "statusIcons": {
+      "autoAwesome": "auto_awesome",
+      "circle": "circle",
+      "checkCircle": "check_circle",
+      "warning": "warning",
+      "error": "error"
+    }
+  },
+
+  "motion": {
+    "transitionFast": "150ms ease",
+    "transitionDefault": "300ms ease",
+    "transitionSlow": "500ms ease",
+    "transitionVerySlow": "700ms ease",
+    "hoverScale": 1.1,
+    "activeScale": 0.98
+  },
+
+  "compatibility": {
+    "phase04MappingNote": "Phase 04/05 canvas tokens remain valid for canvas workspace. Phase 06 extends them for dashboard/management pages. Key bridging: surface.primary=#2A2A2A maps to surface.containerHigh=#1A1A1A; text.primary=#E5E2E1 shared; typography fonts shared.",
+    "canvasTokensPath": "../04-media-tools/designs/design-tokens.json"
+  }
+}
