@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
-status: verifying
-stopped_at: Completed 04-07-PLAN.md
-last_updated: "2026-03-30T12:00:00.000Z"
+status: executing
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-03-30T06:59:21.908Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 5
-  total_plans: 26
-  completed_plans: 26
+  total_plans: 32
+  completed_plans: 27
   percent: 33
 ---
 
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 05 — Canvas/Video Experience + Billing Dashboard
+**Current focus:** Phase 05 — interaction-video
 
 ## Current Position
 
-Phase: 05
-Plan: Not started — context gathered, ready for planning
-Status: Discussion complete → next: /gsd-plan-phase 05
+Phase: 05 (interaction-video) — EXECUTING
+Plan: 2 of 6
+Status: Ready to execute
 Last activity: 2026-03-30
 
 Progress: [███░░░░░░░] 33%
@@ -102,6 +102,9 @@ Progress: [███░░░░░░░] 33%
 - [Phase 04]: canvas_assets router registered before canvas router for correct prefix matching
 - [Phase 04]: AssetPanel uses open/onClose props (store-based projectId) — adapted integration to match actual component API
 - [Phase 04]: Incremental 8-edit workspace integration preserved original InnerWorkspace structure
+- [Phase 05]: V5 external node label at top:-24 with pointer-events-none and overflow:visible
+- [Phase 05]: Type-specific panel routing: image-toolbar/video-toolbar/audio-toolbar replace template-menu
+- [Phase 05]: MediaToolbarPlaceholder shared for all 3 media types until Plan 03
 
 ### Pending Todos
 
@@ -120,6 +123,6 @@ Progress: [███░░░░░░░] 33%
 
 ## Session Continuity
 
-Last session: 2026-03-30
-Stopped at: Phase 05 discussion complete, CONTEXT.md written
-Resume file: .planning/phases/05-interaction-video/05-CONTEXT.md
+Last session: 2026-03-30T06:59:21.905Z
+Stopped at: Completed 05-02-PLAN.md
+Resume file: None
