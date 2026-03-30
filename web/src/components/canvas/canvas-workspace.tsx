@@ -425,6 +425,10 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         onNodeContextMenu={handleNodeContextMenu}
         nodeTypes={nodeTypes}
         selectionOnDrag
+        panOnDrag={[1]}
+        panOnScroll
+        zoomOnScroll={false}
+        zoomOnPinch
         isValidConnection={(conn) => isValidConnection(conn, nodes)}
         deleteKeyCode={["Backspace", "Delete"]}
         minZoom={0.2}
