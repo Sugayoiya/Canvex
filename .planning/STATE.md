@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 06-04-PLAN.md
-last_updated: "2026-03-30T14:57:39.786Z"
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-30T14:58:09.830Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 06 (collaboration-prod) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -125,6 +125,7 @@ Progress: [██████████] 100%
 - [Phase 06]: OAuth state uses JWT-signed nonce with 10min expiry for CSRF protection
 - [Phase 06]: GitHub email fallback to /user/emails API for null primary emails
 - [Phase 06]: Group member add validates team membership first; last team_admin guard prevents removing sole admin
+- [Phase 06]: Fernet key derived from SHA-256 of SECRET_KEY; sync get_provider_sync preserved for backward compat; env fallback in credential chain
 
 ### Pending Todos
 
@@ -143,6 +144,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-30T14:57:39.784Z
-Stopped at: Completed 06-04-PLAN.md
+Last session: 2026-03-30T14:58:09.827Z
+Stopped at: Completed 06-02-PLAN.md
 Resume file: None
