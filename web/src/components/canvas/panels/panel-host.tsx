@@ -4,13 +4,9 @@ import { useReactFlow, useViewport } from "@xyflow/react";
 import { useNodeFocus } from "../hooks/use-node-focus";
 import { AIGeneratePanel } from "./ai-generate-panel";
 import { TextToolbar } from "./text-toolbar";
-function MediaToolbarPlaceholder({ nodeId }: { nodeId: string }) {
-  return (
-    <div style={{ height: 36, display: "flex", alignItems: "center", padding: "0 8px", background: "var(--cv4-surface-elevated)", borderRadius: 10, border: "1px solid var(--cv4-border-default)" }}>
-      <span style={{ fontSize: 11, color: "var(--cv4-text-muted)" }}>Toolbar (Plan 03)</span>
-    </div>
-  );
-}
+import { ImageToolbar } from "./image-toolbar";
+import { VideoToolbar } from "./video-toolbar";
+import { AudioToolbar } from "./audio-toolbar";
 
 const PANEL_GAPS = {
   "ai-generate": 12,
@@ -96,9 +92,9 @@ export function PanelHost() {
     >
       {panelType === "ai-generate" && <AIGeneratePanel nodeId={focusedNodeId} />}
       {panelType === "text-toolbar" && <TextToolbar nodeId={focusedNodeId} />}
-      {panelType === "image-toolbar" && <MediaToolbarPlaceholder nodeId={focusedNodeId} />}
-      {panelType === "video-toolbar" && <MediaToolbarPlaceholder nodeId={focusedNodeId} />}
-      {panelType === "audio-toolbar" && <MediaToolbarPlaceholder nodeId={focusedNodeId} />}
+      {panelType === "image-toolbar" && <ImageToolbar nodeId={focusedNodeId} />}
+      {panelType === "video-toolbar" && <VideoToolbar nodeId={focusedNodeId} />}
+      {panelType === "audio-toolbar" && <AudioToolbar nodeId={focusedNodeId} />}
     </div>
   );
 }
