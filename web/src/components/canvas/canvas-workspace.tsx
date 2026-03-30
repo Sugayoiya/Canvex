@@ -316,7 +316,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         onConnectEnd={handleConnectEnd}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={persistViewport}
-        onPaneClick={(e) => { handlePaneClick(e); setCreationMenu(null); }}
+        onPaneClick={() => { handlePaneClick(); setCreationMenu(null); }}
         nodeTypes={nodeTypes}
         isValidConnection={(conn) => isValidConnection(conn, nodes)}
         deleteKeyCode={["Backspace", "Delete"]}

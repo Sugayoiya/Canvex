@@ -103,3 +103,80 @@ body {
   --cv4-shadow-lg: 0 3px 16px #00000012;
   --cv4-shadow-xl: 0 6px 30px #00000015;
 }
+
+/* === TipTap / ProseMirror editor inside canvas nodes === */
+.cv4-md-editor {
+  font-family: Manrope, sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--cv4-text-primary);
+  padding: 8px 16px 12px;
+  min-height: 48px;
+  max-height: 320px;
+  overflow-y: auto;
+  cursor: text;
+}
+.cv4-md-editor p { margin: 0 0 0.35em; }
+.cv4-md-editor h1 {
+  font-size: 20px; font-weight: 700; margin: 0 0 0.3em;
+  line-height: 1.3; color: var(--cv4-text-primary);
+}
+.cv4-md-editor h2 {
+  font-size: 17px; font-weight: 700; margin: 0 0 0.25em;
+  line-height: 1.35; color: var(--cv4-text-primary);
+}
+.cv4-md-editor h3 {
+  font-size: 15px; font-weight: 600; margin: 0 0 0.2em;
+  line-height: 1.4; color: var(--cv4-text-primary);
+}
+.cv4-md-editor ul,
+.cv4-md-editor ol {
+  padding-left: 1.4em; margin: 0 0 0.35em;
+}
+.cv4-md-editor li { margin-bottom: 0.15em; }
+.cv4-md-editor li p { margin: 0; }
+.cv4-md-editor hr {
+  border: none;
+  border-top: 1px solid var(--cv4-border-divider);
+  margin: 0.6em 0;
+}
+.cv4-md-editor code {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9em;
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: var(--cv4-surface-code);
+}
+.cv4-md-editor pre {
+  background: var(--cv4-surface-code);
+  border-radius: 6px;
+  padding: 8px 12px;
+  overflow-x: auto;
+  margin: 0.4em 0;
+}
+.cv4-md-editor pre code {
+  padding: 0; background: transparent;
+}
+.cv4-md-editor strong { font-weight: 700; }
+.cv4-md-editor em { font-style: italic; }
+.cv4-md-editor blockquote {
+  border-left: 3px solid var(--cv4-border-divider);
+  padding-left: 12px;
+  margin: 0.3em 0;
+  color: var(--cv4-text-muted);
+}
+
+/* read-only compact preview (no editing chrome) */
+.cv4-md-editor-preview {
+  max-height: 120px;
+  overflow: hidden;
+}
+
+/* placeholder */
+.cv4-md-editor .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--cv4-text-placeholder);
+  pointer-events: none;
+  height: 0;
+}

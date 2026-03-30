@@ -33,7 +33,7 @@ export function NodeShell({ nodeId, nodeType, hasContent, status, isFocused, chi
         boxShadow: isFocused ? "var(--cv4-shadow-lg)" : "var(--cv4-shadow-md)",
       }}
     >
-      <Handle type="target" position={Position.Left} id="input" />
+      {/* Visual card — clips child content to rounded corners */}
       <div
         style={{
           overflow: "hidden",
@@ -52,7 +52,9 @@ export function NodeShell({ nodeId, nodeType, hasContent, status, isFocused, chi
         </div>
         {children}
       </div>
-      <Handle type="source" position={Position.Right} id="output" />
+      {/* Handles rendered last so they sit on top of the card visually */}
+      <Handle type="target" position={Position.Left} id="input" style={{ zIndex: 10 }} />
+      <Handle type="source" position={Position.Right} id="output" style={{ zIndex: 10 }} />
     </div>
   );
 }
