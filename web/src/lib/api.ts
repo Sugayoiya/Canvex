@@ -138,6 +138,13 @@ export const canvasApi = {
     },
   ) => api.patch(`/canvas/assets/${assetId}`, data),
   deleteAsset: (assetId: string) => api.delete(`/canvas/assets/${assetId}`),
+
+  batchExecute: (data: { canvas_id: string; node_ids: string[] }) =>
+    api.post("/canvas/batch-execute", data),
+  batchStatus: (batchId: string) =>
+    api.get(`/canvas/batch-execute/${batchId}`),
+  updateBatchNodeStatus: (batchId: string, nodeId: string, status: string) =>
+    api.patch(`/canvas/batch-execute/${batchId}/nodes/${nodeId}`, { status }),
 };
 
 export const agentApi = {
@@ -160,6 +167,35 @@ export const agentApi = {
     api.get(`/agent/sessions/${sessionId}/messages`, {
       params: { limit, offset },
     }),
+};
+
+export const taskApi = {
+  list: (params?: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    project_id?: string;
+    user_id?: string;
+  }) => api.get("/logs/tasks", { params }),
+  counts: (params?: { project_id?: string }) =>
+    api.get("/logs/tasks/counts", { params }),
+  nodeHistory: (nodeId: string, params?: { limit?: number }) =>
+    api.get(`/logs/node-history/${nodeId}`, { params }),
+};
+
+export const billingApi = {
+  usageStats: (params?: {
+    start_date?: string;
+    end_date?: string;
+    project_id?: string;
+  }) => api.get("/billing/usage-stats/", { params }),
+  usageTimeseries: (params: {
+    start_date: string;
+    end_date: string;
+    granularity?: string;
+    project_id?: string;
+  }) => api.get("/billing/usage-timeseries/", { params }),
+  pricing: () => api.get("/billing/pricing/"),
 };
 
 export default api;
