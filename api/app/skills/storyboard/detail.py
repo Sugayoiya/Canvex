@@ -108,7 +108,7 @@ async def handle_storyboard_detail(params: dict[str, Any], ctx: SkillContext) ->
     system_prompt = _SYSTEM_PROMPT.format(style_context=style_ctx)
 
     try:
-        provider = get_provider_manager().get_provider(provider_name, model=model_name)
+        provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
         messages = [
             Message(role="system", content=system_prompt),
             Message(role="user", content=shots_text),

@@ -69,7 +69,7 @@ async def handle_scene_prompt(params: dict[str, Any], ctx: SkillContext) -> Skil
 
     provider_name = params.get("provider", "gemini")
     model_name = params.get("model")
-    provider = get_provider_manager().get_provider(provider_name, model=model_name)
+    provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
 
     parts = [f"场景名：{name}"]
     if data:

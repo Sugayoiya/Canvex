@@ -96,7 +96,7 @@ async def handle_extract_characters(params: dict[str, Any], ctx: SkillContext) -
     from app.services.ai.base import Message
 
     try:
-        provider = get_provider_manager().get_provider(provider_name, model=model_name)
+        provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
         messages = [
             Message(role="system", content=_SYSTEM_PROMPT),
             Message(role="user", content=f"请从以下文本中提取角色：\n\n{text[:8000]}"),

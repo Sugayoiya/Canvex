@@ -57,7 +57,7 @@ async def handle_refine(params: dict[str, Any], ctx: SkillContext) -> SkillResul
     from app.services.ai.base import Message
 
     try:
-        provider = get_provider_manager().get_provider(provider_name, model=model_name)
+        provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
         messages = [
             Message(
                 role="system",

@@ -57,6 +57,9 @@ async def init_db():
     await _seed_default_admin()
     await _seed_demo_project()
 
+    from app.services.ai.provider_manager import seed_providers_from_env
+    await seed_providers_from_env()
+
 
 async def _seed_demo_project():
     """Create a demo project + canvas if none exist, so the chat UI is testable immediately."""
