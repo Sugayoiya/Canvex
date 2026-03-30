@@ -12,7 +12,14 @@ from app.core.security import decode_access_token
 
 logger = logging.getLogger(__name__)
 
+# Legacy role priority — kept for backward compat with existing code paths
 ROLE_PRIORITY = {"owner": 4, "admin": 3, "editor": 2}
+
+TEAM_ROLE_PRIORITY = {"team_admin": 2, "member": 1}
+
+GROUP_ROLE_PRIORITY = {"leader": 4, "editor": 3, "reviewer": 2, "viewer": 1}
+
+_LEGACY_TEAM_ROLE_MAP = {"owner": "team_admin", "admin": "team_admin", "editor": "member"}
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=True)
 oauth2_scheme_optional = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login", auto_error=False)
@@ -95,11 +102,16 @@ def require_admin(user):
         )
 
 
+def _normalize_team_role(role: str) -> str:
+    """Map legacy team roles to the new two-level scheme."""
+    return _LEGACY_TEAM_ROLE_MAP.get(role, role)
+
+
 async def require_team_member(
     team_id: str,
     user,
     db: AsyncSession,
-    min_role: str = "editor",
+    min_role: str = "member",
 ):
     from app.models.team import TeamMember
 
@@ -112,9 +124,56 @@ async def require_team_member(
     member = result.scalar_one_or_none()
     if member is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this team")
-    if ROLE_PRIORITY.get(member.role, 0) < ROLE_PRIORITY.get(min_role, 0):
+
+    effective_role = _normalize_team_role(member.role)
+    required_role = _normalize_team_role(min_role)
+    if TEAM_ROLE_PRIORITY.get(effective_role, 0) < TEAM_ROLE_PRIORITY.get(required_role, 0):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Requires at least '{min_role}' role")
     return member
+
+
+async def require_group_member(
+    group_id: str,
+    user,
+    db: AsyncSession,
+    min_role: str = "editor",
+):
+    from app.models.team import GroupMember
+
+    result = await db.execute(
+        select(GroupMember).where(
+            GroupMember.group_id == group_id,
+            GroupMember.user_id == user.id,
+        )
+    )
+    member = result.scalar_one_or_none()
+    if member is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not a member of this group")
+    if GROUP_ROLE_PRIORITY.get(member.role, 0) < GROUP_ROLE_PRIORITY.get(min_role, 0):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Requires at least '{min_role}' group role")
+    return member
+
+
+async def _check_group_project_access(
+    project_id: str,
+    user_id: str,
+    db: AsyncSession,
+) -> str | None:
+    """Return the best group role the user has for a project, or None."""
+    from app.models.team import GroupProject, GroupMember
+
+    result = await db.execute(
+        select(GroupMember.role).join(
+            GroupProject, GroupProject.group_id == GroupMember.group_id
+        ).where(
+            GroupProject.project_id == project_id,
+            GroupMember.user_id == user_id,
+        )
+    )
+    roles = [row[0] for row in result.all()]
+    if not roles:
+        return None
+    return max(roles, key=lambda r: GROUP_ROLE_PRIORITY.get(r, 0))
 
 
 async def resolve_project_access(
@@ -140,7 +199,23 @@ async def resolve_project_access(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
         return project, "owner"
     elif project.owner_type == "team":
-        member = await require_team_member(project.owner_id, user, db, min_role)
-        return project, member.role
+        member = await require_team_member(project.owner_id, user, db, min_role="member")
+        team_role = _normalize_team_role(member.role)
+
+        if team_role == "team_admin":
+            return project, "team_admin"
+
+        group_role = await _check_group_project_access(project_id, user.id, db)
+
+        requires_write = min_role in ("editor", "leader", "admin", "owner", "team_admin")
+        if requires_write:
+            if group_role and GROUP_ROLE_PRIORITY.get(group_role, 0) >= GROUP_ROLE_PRIORITY.get("editor", 0):
+                return project, group_role
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Requires group editor+ access for this project",
+            )
+
+        return project, group_role or "viewer"
     else:
         raise HTTPException(status_code=403, detail="Project has no owner")
