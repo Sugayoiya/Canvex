@@ -7,7 +7,7 @@
 - [x] **Phase 03: Agent System + Tool Calling + Pipeline Orchestration** (completed 2026-03-28)
 - [x] **Phase 04: Media/Slash Skills + Quota Controls** (completed 2026-03-29)
 - [x] **Phase 05: Canvas/Video Experience + Billing Dashboard** (completed 2026-03-30)
-- [ ] **Phase 06: Collaboration + Versioning + Production Hardening**
+- [x] **Phase 06: Collaboration + Versioning + Production Hardening** (completed 2026-03-30)
 
 ### Phase 01: Foundation + SkillRegistry + Celery + Logging
 **Goal**: Establish skeleton architecture and complete the first end-to-end invocation backbone.
@@ -119,7 +119,7 @@ Plans:
 **Depends on**: Phase 05
 **UI hint**: yes
 **Requirements:** [REQ-11, REQ-12]
-**Plans:** 6/7 plans executed
+**Plans:** 7/7 plans complete
 
 Plans:
 - [x] 06-01-PLAN.md — [W1] Backend Models: Org hierarchy (Group/GroupMember/GroupProject) + OAuthAccount + AI Provider DB models + deps extension
@@ -128,7 +128,7 @@ Plans:
 - [x] 06-04-PLAN.md — [W2] Backend API: OAuth (Google+GitHub) + Team/Group/Invitation CRUD + schemas
 - [x] 06-05-PLAN.md — [W3] Backend API: Project CRUD + User search + AI Provider admin + route registration
 - [x] 06-06-PLAN.md — [W2] Frontend: Login page (Obsidian Lens+OAuth) + AppShell layout (Sidebar+Topbar)
-- [ ] 06-07-PLAN.md — [W4] Frontend: Project Dashboard + Team Management + AI Console + Invite Acceptance
+- [x] 06-07-PLAN.md — [W4] Frontend: Project Dashboard + Team Management + AI Console + Invite Acceptance
 
 **Success Criteria**:
 1. Multi-role collaboration and version history are available.
