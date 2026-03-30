@@ -54,3 +54,19 @@ class UsageStatsResponse(BaseModel):
     total_input_tokens: int
     total_output_tokens: int
     total_cost: Decimal
+
+
+# ---------------------------------------------------------------------------
+# Time-series billing schemas
+# ---------------------------------------------------------------------------
+
+class TimeSeriesPoint(BaseModel):
+    period: str
+    calls: int
+    cost: Decimal
+    tokens: int
+
+
+class TimeSeriesResponse(BaseModel):
+    granularity: str
+    points: list[TimeSeriesPoint]

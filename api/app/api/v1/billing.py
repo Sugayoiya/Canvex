@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select, func
+from sqlalchemy import select, func, String, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.model_pricing import ModelPricing
 from app.models.ai_call_log import AICallLog
@@ -12,6 +13,8 @@ from app.schemas.billing import (
     PricingUpdate,
     PricingResponse,
     UsageStatsResponse,
+    TimeSeriesPoint,
+    TimeSeriesResponse,
 )
 
 router = APIRouter(prefix="/billing", tags=["billing"])
@@ -86,6 +89,66 @@ async def delete_pricing(
     pricing.updated_at = datetime.utcnow()
     await db.flush()
     return {"detail": "Pricing deactivated"}
+
+
+@router.get("/usage-timeseries/", response_model=TimeSeriesResponse)
+async def get_usage_timeseries(
+    start_date: datetime = Query(...),
+    end_date: datetime = Query(...),
+    granularity: str = Query("day", pattern="^(hour|day|week)$"),
+    project_id: str | None = Query(None),
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    # UTC normalization at query boundary
+    if start_date.tzinfo is not None:
+        start_date = start_date.astimezone(timezone.utc).replace(tzinfo=None)
+    if end_date.tzinfo is not None:
+        end_date = end_date.astimezone(timezone.utc).replace(tzinfo=None)
+
+    if settings.USE_SQLITE:
+        fmt_map = {"hour": "%Y-%m-%d %H:00", "day": "%Y-%m-%d", "week": "%Y-%W"}
+        date_group = func.strftime(fmt_map[granularity], AICallLog.created_at)
+    else:
+        date_group = cast(
+            func.date_trunc(granularity, AICallLog.created_at), String
+        )
+
+    stmt = select(
+        date_group.label("period"),
+        func.count().label("calls"),
+        func.coalesce(func.sum(AICallLog.cost), 0).label("cost"),
+        func.coalesce(
+            func.sum(AICallLog.input_tokens + AICallLog.output_tokens), 0
+        ).label("tokens"),
+    )
+
+    if not getattr(user, "is_admin", False):
+        stmt = stmt.where(AICallLog.user_id == user.id)
+
+    stmt = stmt.where(
+        AICallLog.created_at >= start_date,
+        AICallLog.created_at <= end_date,
+    )
+    if project_id:
+        stmt = stmt.where(AICallLog.project_id == project_id)
+
+    stmt = stmt.group_by("period").order_by("period")
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    return TimeSeriesResponse(
+        granularity=granularity,
+        points=[
+            TimeSeriesPoint(
+                period=str(row.period),
+                calls=row.calls,
+                cost=row.cost,
+                tokens=row.tokens,
+            )
+            for row in rows
+        ],
+    )
 
 
 @router.get("/usage-stats/", response_model=list[UsageStatsResponse])
