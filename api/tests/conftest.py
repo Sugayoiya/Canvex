@@ -1,5 +1,6 @@
 import asyncio
 import os
+import uuid
 
 import pytest
 import pytest_asyncio
@@ -71,3 +72,63 @@ async def async_client(db_session):
         yield client
 
     app.dependency_overrides.clear()
+
+
+# ---------------------------------------------------------------------------
+# Factory helpers for Phase 06+ tests
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def make_user(db_session):
+    async def _make(email=None, nickname=None, is_admin=False):
+        from app.models.user import User
+        user = User(
+            id=str(uuid.uuid4()),
+            email=email or f"test-{uuid.uuid4().hex[:8]}@example.com",
+            nickname=nickname or f"user-{uuid.uuid4().hex[:6]}",
+            password_hash="$2b$12$fake",
+            is_admin=is_admin,
+            status="active",
+        )
+        db_session.add(user)
+        await db_session.flush()
+        return user
+    return _make
+
+
+@pytest.fixture
+def make_team(db_session):
+    async def _make(name=None):
+        from app.models.team import Team
+        team = Team(id=str(uuid.uuid4()), name=name or f"team-{uuid.uuid4().hex[:6]}")
+        db_session.add(team)
+        await db_session.flush()
+        return team
+    return _make
+
+
+@pytest.fixture
+def make_group(db_session):
+    async def _make(team_id, name=None):
+        from app.models.team import Group
+        group = Group(id=str(uuid.uuid4()), team_id=team_id, name=name or f"group-{uuid.uuid4().hex[:6]}")
+        db_session.add(group)
+        await db_session.flush()
+        return group
+    return _make
+
+
+@pytest.fixture
+def make_project(db_session):
+    async def _make(owner_type="personal", owner_id=None, name=None):
+        from app.models.project import Project
+        project = Project(
+            id=str(uuid.uuid4()),
+            name=name or f"project-{uuid.uuid4().hex[:6]}",
+            owner_type=owner_type,
+            owner_id=owner_id or str(uuid.uuid4()),
+        )
+        db_session.add(project)
+        await db_session.flush()
+        return project
+    return _make
