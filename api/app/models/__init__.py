@@ -4,6 +4,7 @@ from app.models.project import Project
 from app.models.skill_execution_log import SkillExecutionLog
 from app.models.ai_call_log import AICallLog
 from app.models.canvas import Canvas, CanvasNode, CanvasEdge
+from app.models.batch_execution import BatchExecution
 
 __all__ = [
     "User",
@@ -12,4 +13,5 @@ __all__ = [
     "SkillExecutionLog",
     "AICallLog",
     "Canvas", "CanvasNode", "CanvasEdge",
+    "BatchExecution",
 ]

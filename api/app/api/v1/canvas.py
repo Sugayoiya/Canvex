@@ -16,7 +16,12 @@ from app.schemas.canvas import (
     NodeResponse,
     EdgeCreate,
     EdgeResponse,
+    BatchExecuteRequest,
+    BatchExecuteResponse,
+    BatchStatusResponse,
+    BatchNodeUpdateRequest,
 )
+from app.services.graph_execution_service import BatchExecutionService
 
 router = APIRouter(prefix="/canvas", tags=["canvas"])
 
@@ -225,6 +230,55 @@ async def delete_edge(
     await resolve_project_access(canvas.project_id, user, db)
     await db.delete(edge)
     await db.flush()
+
+
+# ---------------------------------------------------------------------------
+# Batch execution
+# ---------------------------------------------------------------------------
+
+@router.post("/batch-execute", response_model=BatchExecuteResponse)
+async def batch_execute(
+    req: BatchExecuteRequest,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    canvas = await _load_canvas(req.canvas_id, db)
+    await resolve_project_access(canvas.project_id, user, db)
+    svc = BatchExecutionService(db, user)
+    batch = await svc.start_batch(req.canvas_id, req.node_ids)
+    return BatchExecuteResponse(
+        batch_id=batch.id, layers=batch.layers, total_nodes=batch.total_nodes
+    )
+
+
+@router.get("/batch-execute/{batch_id}", response_model=BatchStatusResponse)
+async def get_batch_status(
+    batch_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    svc = BatchExecutionService(db, user)
+    batch = await svc.get_batch_status(batch_id)
+    return BatchStatusResponse(
+        batch_id=batch.id,
+        layers=batch.layers,
+        node_statuses=batch.node_statuses,
+        current_layer=batch.current_layer,
+        status=batch.status,
+    )
+
+
+@router.patch("/batch-execute/{batch_id}/nodes/{node_id}")
+async def update_batch_node_status(
+    batch_id: str,
+    node_id: str,
+    body: BatchNodeUpdateRequest,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    svc = BatchExecutionService(db, user)
+    await svc.update_node_status(batch_id, node_id, body.status)
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------------------

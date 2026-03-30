@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Any
 
 VALID_NODE_TYPES = {"text", "image", "video", "audio"}
@@ -83,3 +83,45 @@ class EdgeResponse(BaseModel):
 class CanvasDetailResponse(CanvasResponse):
     nodes: list[NodeResponse] = []
     edges: list[EdgeResponse] = []
+
+
+# ---------------------------------------------------------------------------
+# Batch execution schemas
+# ---------------------------------------------------------------------------
+
+class BatchExecuteRequest(BaseModel):
+    canvas_id: str
+    node_ids: list[str]
+
+    @field_validator("node_ids")
+    @classmethod
+    def at_least_two(cls, v: list[str]) -> list[str]:
+        if len(v) < 2:
+            raise ValueError("Batch execution requires at least 2 nodes")
+        return v
+
+
+class BatchExecuteResponse(BaseModel):
+    batch_id: str
+    layers: list[list[str]]
+    total_nodes: int
+
+
+class BatchStatusResponse(BaseModel):
+    batch_id: str
+    layers: list[list[str]]
+    node_statuses: dict[str, str]
+    current_layer: int
+    status: str
+
+
+class BatchNodeUpdateRequest(BaseModel):
+    status: str
+
+    @field_validator("status")
+    @classmethod
+    def valid_status(cls, v: str) -> str:
+        allowed = {"queued", "running", "completed", "failed", "blocked", "timeout"}
+        if v not in allowed:
+            raise ValueError(f"Status must be one of {sorted(allowed)}")
+        return v
