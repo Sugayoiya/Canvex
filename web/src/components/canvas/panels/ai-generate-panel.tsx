@@ -1,12 +1,17 @@
 "use client";
 import { useState, useCallback, useRef, useEffect } from "react";
 import {
+  Palette,
+  MapPin,
+  Target,
+  Maximize2,
   Sparkles,
   ChevronDown,
   Zap,
   ArrowUp,
   Upload,
   Loader2,
+  Camera,
 } from "lucide-react";
 import { usePromptBuilder } from "../hooks/use-prompt-builder";
 import { useNodeExecution } from "../hooks/use-node-execution";
@@ -14,16 +19,23 @@ import { useCanvasStore } from "@/stores/canvas-store";
 
 interface AIGeneratePanelProps {
   nodeId: string;
+  quotaExceeded?: boolean;
 }
+
+const TAGS = [
+  { icon: Palette, label: "风格" },
+  { icon: MapPin, label: "标记" },
+  { icon: Target, label: "聚焦" },
+] as const;
 
 const nodePromptCache = new Map<string, string>();
 
-export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
+export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePanelProps) {
   const [prompt, setPrompt] = useState(() => nodePromptCache.get(nodeId) ?? "");
   const prevNodeIdRef = useRef(nodeId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { finalPrompt, upstreamImages } = usePromptBuilder(nodeId);
-  const { canvasId, projectId, focusedNodeType } = useCanvasStore();
+  const { canvasId, focusedNodeType } = useCanvasStore();
   const { status: execStatus, message: execMessage, execute } = useNodeExecution(nodeId);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +56,7 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
   }, [nodeId]);
 
   const isExecuting = execStatus === "queued" || execStatus === "running";
+  const isDisabled = quotaExceeded || isExecuting;
 
   const skillForNodeType = (type: string | null) => {
     switch (type) {
@@ -55,7 +68,7 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
   };
 
   const handleSend = useCallback(async () => {
-    if (isExecuting) return;
+    if (isDisabled) return;
     const combined = [prompt, finalPrompt].filter(Boolean).join("\n\n");
     if (!combined.trim()) return;
 
@@ -68,16 +81,11 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
     await execute(skillName, params);
     setPrompt("");
     nodePromptCache.delete(nodeId);
-  }, [prompt, finalPrompt, upstreamImages, isExecuting, nodeId, focusedNodeType, execute]);
+  }, [prompt, finalPrompt, upstreamImages, isDisabled, nodeId, focusedNodeType, execute]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !canvasId) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("canvas_id", canvasId);
-    formData.append("node_id", nodeId);
 
     try {
       const { canvasApi } = await import("@/lib/api");
@@ -90,10 +98,10 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
   }, [canvasId, nodeId]);
 
   const placeholderByType: Record<string, string> = {
-    text: "描述你想要生成的文本内容，Ctrl+Enter 发送",
-    image: "描述你想要生成的画面内容，Ctrl+Enter 发送",
-    video: "描述你想要生成的视频内容，Ctrl+Enter 发送",
-    audio: "描述你想要生成的音频内容，Ctrl+Enter 发送",
+    text: "描述你想要生成的文本内容，按/呼出指令，@引用素材",
+    image: "描述你想要生成的画面内容，按/呼出指令，@引用素材",
+    video: "描述你想要生成的视频内容，按/呼出指令，@引用素材",
+    audio: "描述你想要生成的音频内容，按/呼出指令，@引用素材",
   };
 
   return (
@@ -106,6 +114,7 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
         boxShadow: "var(--cv4-shadow-lg)",
       }}
     >
+      {/* Execution status bar */}
       {execStatus !== "idle" && execStatus !== "completed" && (
         <div
           className="flex items-center gap-2"
@@ -122,6 +131,30 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
         </div>
       )}
 
+      {/* Tags row */}
+      <div className="flex items-center gap-2" style={{ padding: "12px 16px 8px 16px" }}>
+        {TAGS.map(({ icon: Icon, label }) => (
+          <button
+            key={label}
+            className="flex items-center gap-1 cursor-pointer"
+            style={{
+              padding: "8px 12px",
+              background: "var(--cv4-surface-primary)",
+              borderRadius: "var(--cv4-radius-tag)",
+              border: "none",
+            }}
+          >
+            <Icon size={14} style={{ color: "var(--cv4-text-secondary)" }} />
+            <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)" }}>
+              {label}
+            </span>
+          </button>
+        ))}
+        <span className="flex-1" />
+        <Maximize2 size={16} style={{ color: "var(--cv4-text-disabled)", cursor: "pointer" }} />
+      </div>
+
+      {/* Input area */}
       <div style={{ padding: "8px 16px 12px 16px" }}>
         <textarea
           ref={textareaRef}
@@ -150,24 +183,59 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
         />
       </div>
 
+      {/* Bottom bar */}
       <div className="flex items-center gap-2" style={{ padding: "8px 16px 12px 16px" }}>
+        {/* Model selector pill */}
         <button
           className="flex items-center gap-1 cursor-pointer"
           style={{
             padding: "8px 12px",
             background: "var(--cv4-surface-primary)",
             borderRadius: "var(--cv4-radius-tag)",
+            border: "none",
           }}
         >
           <Sparkles size={12} style={{ color: "var(--cv4-text-secondary)" }} />
           <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)" }}>
-            Gemini
+            Lib Nano Pro
           </span>
           <ChevronDown size={10} style={{ color: "var(--cv4-text-disabled)" }} />
         </button>
 
+        {/* Aspect ratio pill */}
+        <button
+          className="flex items-center gap-1 cursor-pointer"
+          style={{
+            padding: "8px 12px",
+            background: "var(--cv4-surface-primary)",
+            borderRadius: "var(--cv4-radius-tag)",
+            border: "none",
+          }}
+        >
+          <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)" }}>
+            16:9 · 2K
+          </span>
+        </button>
+
+        {/* Camera control pill */}
+        <button
+          className="flex items-center gap-1 cursor-pointer"
+          style={{
+            padding: "8px 12px",
+            background: "var(--cv4-surface-primary)",
+            borderRadius: "var(--cv4-radius-tag)",
+            border: "none",
+          }}
+        >
+          <Camera size={12} style={{ color: "var(--cv4-text-secondary)" }} />
+          <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)" }}>
+            摄像机控制
+          </span>
+        </button>
+
         <span className="flex-1" />
 
+        {/* File upload */}
         <input
           ref={fileInputRef}
           type="file"
@@ -184,26 +252,46 @@ export function AIGeneratePanel({ nodeId }: AIGeneratePanelProps) {
             height: 30,
             borderRadius: "var(--cv4-radius-button)",
             background: "var(--cv4-surface-primary)",
+            border: "none",
           }}
         >
           <Upload size={14} style={{ color: "var(--cv4-text-secondary)" }} />
         </button>
 
+        {/* Count selector */}
+        <button
+          className="flex items-center gap-1 cursor-pointer"
+          style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)", background: "none", border: "none" }}
+        >
+          1张
+          <ChevronDown size={10} style={{ color: "var(--cv4-text-disabled)" }} />
+        </button>
+
+        {/* Divider */}
         <div style={{ width: 1, height: 16, background: "var(--cv4-border-divider)" }} />
 
-        <Zap size={12} style={{ color: "var(--cv4-text-disabled)" }} />
+        {/* Quota indicator */}
+        <Zap
+          size={12}
+          style={{ color: quotaExceeded ? "#EF4444" : "var(--cv4-text-disabled)" }}
+        />
+        <span style={{ fontFamily: "Space Grotesk, sans-serif", fontSize: 12, color: "var(--cv4-text-disabled)" }}>
+          14
+        </span>
 
+        {/* Send button */}
         <button
           onClick={handleSend}
-          disabled={isExecuting}
-          title={isExecuting ? "执行中..." : "发送 (Ctrl+Enter)"}
+          disabled={isDisabled}
+          title={quotaExceeded ? "额度已用完 — 升级计划或联系管理员" : isExecuting ? "执行中..." : "发送 (Ctrl+Enter)"}
           className="flex items-center justify-center cursor-pointer disabled:cursor-not-allowed"
           style={{
             width: 30,
             height: 30,
             borderRadius: "var(--cv4-radius-button)",
             background: "var(--cv4-btn-primary)",
-            opacity: isExecuting ? 0.5 : 1,
+            border: "none",
+            opacity: isDisabled ? 0.5 : 1,
           }}
         >
           {isExecuting ? (

@@ -26,6 +26,7 @@ import { isValidConnection } from "@/lib/connection-rules";
 import { LeftFloatingMenu } from "./canvas-floating-toolbar";
 import { PanelHost } from "./panels/panel-host";
 import { AssetPanel } from "./canvas-asset-panel";
+import { NodeCreationMenu } from "./canvas-node-creation-menu";
 import { useNodeFocus } from "./hooks/use-node-focus";
 import { nodeTypes } from "./nodes";
 
@@ -120,6 +121,15 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const { handlePaneClick, focusedNodeId } = useNodeFocus();
   const { clearFocus } = useCanvasStore();
   const [showAssets, setShowAssets] = useState(false);
+  const { screenToFlowPosition } = useReactFlow();
+
+  const connectStartRef = useRef<{ nodeId: string; nodeType: string } | null>(null);
+  const [creationMenu, setCreationMenu] = useState<{
+    screenPos: { x: number; y: number };
+    flowPos: { x: number; y: number };
+    sourceNodeType: string;
+    sourceNodeId: string;
+  } | null>(null);
 
   useEffect(() => {
     if (initialData) {
@@ -194,6 +204,83 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
     [setSaving],
   );
 
+  const handleConnectStart = useCallback(
+    (_event: MouseEvent | TouchEvent, params: { nodeId: string | null; handleType: string | null }) => {
+      if (!params.nodeId) return;
+      const node = nodes.find((n) => n.id === params.nodeId);
+      connectStartRef.current = {
+        nodeId: params.nodeId,
+        nodeType: node?.type ?? "text",
+      };
+    },
+    [nodes],
+  );
+
+  const handleConnectEnd = useCallback(
+    (event: MouseEvent | TouchEvent) => {
+      const target = (event as MouseEvent).target as HTMLElement;
+      const isDropOnPane = target?.classList?.contains("react-flow__pane");
+      if (!isDropOnPane || !connectStartRef.current) {
+        connectStartRef.current = null;
+        return;
+      }
+
+      const clientX = (event as MouseEvent).clientX;
+      const clientY = (event as MouseEvent).clientY;
+      const flowPos = screenToFlowPosition({ x: clientX, y: clientY });
+
+      setCreationMenu({
+        screenPos: { x: clientX, y: clientY },
+        flowPos,
+        sourceNodeType: connectStartRef.current.nodeType,
+        sourceNodeId: connectStartRef.current.nodeId,
+      });
+      connectStartRef.current = null;
+    },
+    [screenToFlowPosition],
+  );
+
+  const handleCreationMenuSelect = useCallback(
+    (nodeType: string) => {
+      if (!creationMenu) return;
+      const { flowPos, sourceNodeId } = creationMenu;
+
+      setSaving(true);
+      canvasApi
+        .createNode({
+          canvas_id: canvasId,
+          node_type: nodeType,
+          position_x: flowPos.x,
+          position_y: flowPos.y,
+        })
+        .then((res) => {
+          const created = res.data as BackendNode;
+          setNodes((nds) => [...nds, toFlowNode(created)]);
+
+          const connection: Connection = {
+            source: sourceNodeId,
+            target: created.id,
+            sourceHandle: "output",
+            targetHandle: "input",
+          };
+          setEdges((eds) => addEdge(connection, eds));
+          canvasApi
+            .createEdge({
+              canvas_id: canvasId,
+              source_node_id: sourceNodeId,
+              target_node_id: created.id,
+              source_handle: "output",
+              target_handle: "input",
+            })
+            .catch(() => {});
+        })
+        .finally(() => setSaving(false));
+
+      setCreationMenu(null);
+    },
+    [canvasId, creationMenu, setNodes, setEdges, setSaving],
+  );
+
   const handleAddNode = useCallback(
     (nodeType: string) => {
       const vp = getViewport();
@@ -225,9 +312,11 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         onNodesChange={handleNodesChange}
         onEdgesChange={handleEdgesChange}
         onConnect={handleConnect}
+        onConnectStart={handleConnectStart}
+        onConnectEnd={handleConnectEnd}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={persistViewport}
-        onPaneClick={handlePaneClick}
+        onPaneClick={(e) => { handlePaneClick(e); setCreationMenu(null); }}
         nodeTypes={nodeTypes}
         isValidConnection={(conn) => isValidConnection(conn, nodes)}
         deleteKeyCode={["Backspace", "Delete"]}
@@ -246,17 +335,29 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         />
         <Controls className="!bg-zinc-800 !border-zinc-700 !text-zinc-200 [&>button]:!bg-zinc-800 [&>button]:!border-zinc-700 [&>button]:!text-zinc-200 [&>button:hover]:!bg-zinc-700" />
         <MiniMap
+          position="bottom-left"
           style={{
-            backgroundColor: "#18181b",
-            border: "1px solid #27272a",
+            left: 60,
+            bottom: 10,
+            backgroundColor: "var(--cv4-surface-primary)",
+            border: "1px solid var(--cv4-border-default)",
+            borderRadius: 10,
           }}
-          maskColor="rgba(0, 0, 0, 0.6)"
-          nodeColor="#3f3f46"
+          maskColor="rgba(0, 0, 0, 0.5)"
+          nodeColor="var(--cv4-text-muted)"
         />
       </ReactFlow>
       <LeftFloatingMenu onAddNode={handleAddNode} onToggleAssets={() => setShowAssets(v => !v)} />
       <PanelHost />
       <AssetPanel open={showAssets} onClose={() => setShowAssets(false)} />
+      {creationMenu && (
+        <NodeCreationMenu
+          position={creationMenu.screenPos}
+          sourceNodeType={creationMenu.sourceNodeType}
+          onSelect={handleCreationMenuSelect}
+          onClose={() => setCreationMenu(null)}
+        />
+      )}
     </div>
   );
 }

@@ -44,7 +44,7 @@ export function NodeCreationMenu({ position, sourceNodeType, onSelect, onClose }
   return (
     <div
       ref={ref}
-      className="absolute flex flex-col gap-1"
+      className="fixed flex flex-col gap-1"
       style={{
         left: position.x,
         top: position.y,
