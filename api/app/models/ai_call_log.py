@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import String, DateTime, Text, Integer, Numeric
+from sqlalchemy import String, DateTime, Text, Integer, Numeric, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -9,6 +9,11 @@ from app.core.database import Base
 
 class AICallLog(Base):
     __tablename__ = "ai_call_logs"
+    __table_args__ = (
+        Index("ix_acl_user_created", "user_id", "created_at"),
+        Index("ix_acl_team_created", "team_id", "created_at"),
+        Index("ix_acl_project_created", "project_id", "created_at"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     trace_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
@@ -17,6 +22,12 @@ class AICallLog(Base):
     user_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)
     team_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     project_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+
+    group_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    canvas_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    node_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    key_owner_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    key_owner_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 
     provider: Mapped[str] = mapped_column(String(30), nullable=False, index=True)
     model: Mapped[str] = mapped_column(String(100), nullable=False, index=True)

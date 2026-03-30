@@ -19,16 +19,26 @@ def set_ai_call_context(
     trace_id: str,
     user_id: str,
     team_id: str | None = None,
+    group_id: str | None = None,
     project_id: str | None = None,
+    canvas_id: str | None = None,
+    node_id: str | None = None,
     skill_execution_id: str | None = None,
+    key_owner_type: str | None = None,
+    key_owner_id: str | None = None,
 ) -> None:
     """Set ContextVar values that log_ai_call reads automatically."""
     _ai_call_ctx.set({
         "trace_id": trace_id,
         "user_id": user_id,
         "team_id": team_id,
+        "group_id": group_id,
         "project_id": project_id,
+        "canvas_id": canvas_id,
+        "node_id": node_id,
         "skill_execution_id": skill_execution_id,
+        "key_owner_type": key_owner_type,
+        "key_owner_id": key_owner_id,
     })
 
 
@@ -88,6 +98,11 @@ async def log_ai_call(
             user_id=ctx.get("user_id", ""),
             team_id=ctx.get("team_id"),
             project_id=ctx.get("project_id"),
+            group_id=ctx.get("group_id"),
+            canvas_id=ctx.get("canvas_id"),
+            node_id=ctx.get("node_id"),
+            key_owner_type=ctx.get("key_owner_type"),
+            key_owner_id=ctx.get("key_owner_id"),
             provider=provider,
             model=model,
             model_type=model_type,
@@ -101,7 +116,7 @@ async def log_ai_call(
             input_unit_price=input_unit_price,
             output_unit_price=output_unit_price,
             pricing_snapshot_id=pricing_snapshot_id,
-            credential_source="env",
+            credential_source=ctx.get("key_owner_type", "env"),
         )
         async with AsyncSessionLocal() as session:
             session.add(log_entry)
