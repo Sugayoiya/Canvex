@@ -2,7 +2,7 @@
 import { useCallback } from "react";
 import { useCanvasStore } from "@/stores/canvas-store";
 
-export type PanelType = "ai-generate" | "text-toolbar" | "template-menu" | null;
+export type PanelType = "ai-generate" | "text-toolbar" | "image-toolbar" | "video-toolbar" | "audio-toolbar" | null;
 export type PanelDirection = "above" | "below";
 
 export interface FocusState {
@@ -19,7 +19,10 @@ export function useNodeFocus() {
     if (!focusedNodeId) return null;
     if (!focusedNodeHasContent) return "ai-generate";
     if (focusedNodeType === "text") return "text-toolbar";
-    return "template-menu";
+    if (focusedNodeType === "image") return "image-toolbar";
+    if (focusedNodeType === "video") return "video-toolbar";
+    if (focusedNodeType === "audio") return "audio-toolbar";
+    return null;
   })();
 
   const panelDirection: PanelDirection = focusedNodeHasContent ? "above" : "below";
