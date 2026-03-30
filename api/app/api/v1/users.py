@@ -1,0 +1,105 @@
+import logging
+
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import select, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.deps import get_db, get_current_user
+from app.models.user import User
+from app.models.team import TeamMember, Team
+from app.schemas.user import UserSearchResult, UserProfileResponse, UserProfileUpdate
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/users", tags=["users"])
+
+
+@router.get("/search", response_model=list[UserSearchResult])
+async def search_users(
+    q: str = Query(..., min_length=1),
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    pattern = f"%{q}%"
+    stmt = (
+        select(User)
+        .where(
+            or_(User.email.ilike(pattern), User.nickname.ilike(pattern)),
+            User.id != user.id,
+            User.status == "active",
+        )
+        .limit(20)
+    )
+    result = await db.execute(stmt)
+    return [UserSearchResult.model_validate(u) for u in result.scalars().all()]
+
+
+@router.get("/me", response_model=UserProfileResponse)
+async def get_my_profile(
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(TeamMember)
+        .where(TeamMember.user_id == user.id)
+        .options(selectinload(TeamMember.team))
+    )
+    memberships = result.scalars().all()
+    teams = [
+        {
+            "id": m.team.id,
+            "name": m.team.name,
+            "role": m.role,
+            "avatar": m.team.avatar,
+        }
+        for m in memberships
+        if m.team
+    ]
+    return UserProfileResponse(
+        id=user.id,
+        email=user.email,
+        nickname=user.nickname,
+        avatar=user.avatar,
+        is_admin=user.is_admin,
+        created_at=user.created_at,
+        teams=teams,
+    )
+
+
+@router.patch("/me", response_model=UserProfileResponse)
+async def update_my_profile(
+    data: UserProfileUpdate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(user, key, value)
+    await db.flush()
+
+    result = await db.execute(
+        select(TeamMember)
+        .where(TeamMember.user_id == user.id)
+        .options(selectinload(TeamMember.team))
+    )
+    memberships = result.scalars().all()
+    teams = [
+        {
+            "id": m.team.id,
+            "name": m.team.name,
+            "role": m.role,
+            "avatar": m.team.avatar,
+        }
+        for m in memberships
+        if m.team
+    ]
+    return UserProfileResponse(
+        id=user.id,
+        email=user.email,
+        nickname=user.nickname,
+        avatar=user.avatar,
+        is_admin=user.is_admin,
+        created_at=user.created_at,
+        teams=teams,
+    )
