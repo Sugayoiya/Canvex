@@ -129,9 +129,13 @@ body {
   font-size: 15px; font-weight: 600; margin: 0 0 0.2em;
   line-height: 1.4; color: var(--cv4-text-primary);
 }
-.cv4-md-editor ul,
+.cv4-md-editor ul {
+  padding-left: 1.4em; margin: 0 0 0.35em;
+  list-style-type: disc;
+}
 .cv4-md-editor ol {
   padding-left: 1.4em; margin: 0 0 0.35em;
+  list-style-type: decimal;
 }
 .cv4-md-editor li { margin-bottom: 0.15em; }
 .cv4-md-editor li p { margin: 0; }
