@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 06-06-PLAN.md
-last_updated: "2026-03-30T14:57:31.385Z"
+stopped_at: Completed 06-04-PLAN.md
+last_updated: "2026-03-30T14:57:39.786Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
@@ -122,6 +122,9 @@ Progress: [██████████] 100%
 - [Phase 06]: Suspense boundary wrapping LoginContent for useSearchParams SSR safety in Next.js 16
 - [Phase 06]: Inline styles with CSS custom properties (--ob-*) matching Obsidian Lens spec for design fidelity
 - [Phase 06]: OAuth callback via URL params with history.replaceState cleanup
+- [Phase 06]: OAuth state uses JWT-signed nonce with 10min expiry for CSRF protection
+- [Phase 06]: GitHub email fallback to /user/emails API for null primary emails
+- [Phase 06]: Group member add validates team membership first; last team_admin guard prevents removing sole admin
 
 ### Pending Todos
 
@@ -140,6 +143,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-30T14:57:24.579Z
-Stopped at: Completed 06-06-PLAN.md
+Last session: 2026-03-30T14:57:39.784Z
+Stopped at: Completed 06-04-PLAN.md
 Resume file: None
