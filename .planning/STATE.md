@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Skill + Celery Refactor
 status: executing
-stopped_at: Completed 06-03-PLAN.md
-last_updated: "2026-03-30T14:49:12.510Z"
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-03-30T14:51:03.826Z"
 last_activity: 2026-03-30
 progress:
   total_phases: 7
   completed_phases: 6
   total_plans: 39
-  completed_plans: 33
+  completed_plans: 34
   percent: 100
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 ## Current Position
 
 Phase: 06 (collaboration-prod) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 Status: Ready to execute
 Last activity: 2026-03-30
 
@@ -117,6 +117,8 @@ Progress: [██████████] 100%
 - [Phase 05]: ProjectUsageView as separate component with independent queries — cleaner separation of global vs project billing views
 - [Phase 06]: Obsidian Lens --ob-* tokens coexist with --cv4-* Phase 04 tokens; Space Grotesk+Manrope replace Geist
 - [Phase 06]: AuthGuard inside QueryClientProvider; SpaceContext discriminated union for personal/team switching
+- [Phase 06]: TeamMember default role migrated from editor to member with legacy backward compat
+- [Phase 06]: resolve_project_access: team_admin bypasses group check, members need group editor+ for writes
 
 ### Pending Todos
 
@@ -135,6 +137,6 @@ Progress: [██████████] 100%
 
 ## Session Continuity
 
-Last session: 2026-03-30T14:49:12.507Z
-Stopped at: Completed 06-03-PLAN.md
+Last session: 2026-03-30T14:51:03.824Z
+Stopped at: Completed 06-01-PLAN.md
 Resume file: None
