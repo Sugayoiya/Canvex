@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-03-30
+revised: 2026-03-30
 ---
 
 # Phase 05 — UI Design Contract
@@ -36,13 +37,17 @@ Inherited from `design-tokens.json`. All values are multiples of 4.
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Toolbar internal gap (`gap.toolbarItems`), toolbar vertical padding |
-| sm | 6px | NodeLabel icon-to-text gap, VideoToolbar button gap |
+| sm | 8px | NodeLabel icon-to-text gap, VideoToolbar/AudioToolbar button gap, auto-refresh indicator gap |
 | md | 8px | Node label gap-above-node, toolbar padding-horizontal, `gap.nodeItems`, `gap.tagItems` |
 | lg | 12px | Node card vertical padding, panel padding vertical, AudioNode internal gap |
 | xl | 16px | Node card horizontal padding, chat padding vertical, AudioNode horizontal padding |
 | 2xl | 20px | Chat padding horizontal |
 | 3xl | 24px | Billing page section gap, KPI card internal padding |
 | 4xl | 32px | Billing page outer padding, Task page outer padding |
+
+> **Note on `sm` = `md` = 8px:** Both tokens resolve to 8px but carry distinct semantic roles — `sm` for inline icon-to-text gaps and compact button spacing; `md` for structural node/toolbar gaps. This preserves intent if the scale is later refined.
+
+> **Non-standard spacing justification:** 12px (3×4) fills the gap between 8px and 16px for compact node UI; 20px (5×4) fills the gap between 16px and 24px for content padding. Both are inherited from Phase 04 design tokens and already deployed in production.
 
 **Phase 05 additions:**
 
@@ -60,16 +65,30 @@ Exceptions: Audio playhead at 2px width (not a spacing token, visual element).
 
 ## Typography
 
-### Inherited Scale (Canvas nodes — from design-tokens.json)
+**Consolidated scale: 4 sizes × 2 weights.** V5 consolidates the inherited V4 typography scale from 7 sizes (9/11/12/13/15/20/28) to 4 sizes (11/13/20/28) and from 3 weights (400/600/700) to 2 weights (400/700) for clearer visual hierarchy.
+
+| Size | Role | Usage |
+|------|------|-------|
+| 11px | micro | Metadata, badges, toolbar button text, chart labels, chart axis ticks, tooltip text, KPI delta |
+| 13px | body | Node titles, node content, table cells, KPI labels, toolbar labels, filters, section titles (bold), table headers (bold) |
+| 20px | heading | Page titles, section titles, pie chart center label |
+| 28px | display | KPI card numeric values |
+
+| Weight | Role | Usage |
+|--------|------|-------|
+| 400 | regular | Body text, labels, placeholders, metadata, chart labels |
+| 700 | bold | Headings, KPI values, emphasized labels, section titles, table headers, status badges, KPI delta |
+
+### Inherited Scale (Canvas nodes — consolidated from design-tokens.json)
 
 | Role | Size | Weight | Font | Line Height |
 |------|------|--------|------|-------------|
-| nodeTitle | 12px | 400 | Space Grotesk | 1.0 |
-| nodeContent | 12px | 400 | Manrope | 1.6 |
-| nodeContentTitle | 15px | 700 | Manrope | 1.6 |
-| toolbarLabel | 12px | 700 | Space Grotesk | 1.0 |
+| nodeTitle | 13px | 400 | Space Grotesk | 1.0 |
+| nodeContent | 13px | 400 | Manrope | 1.6 |
+| nodeContentTitle | 13px | 700 | Manrope | 1.6 |
+| toolbarLabel | 13px | 700 | Space Grotesk | 1.0 |
 | toolbarButtonText | 11px | 400 | Manrope | 1.0 |
-| metadata | 9px | 400 | Space Grotesk | 1.0 |
+| metadata | 11px | 400 | Space Grotesk | 1.0 |
 
 ### Phase 05 Additions (Billing + Task pages)
 
@@ -78,14 +97,14 @@ Exceptions: Audio playhead at 2px width (not a spacing token, visual element).
 | pageTitle | 20px | 700 | Space Grotesk | 1.2 | "计费概览", "任务监控" page headings |
 | kpiValue | 28px | 700 | Space Grotesk | 1.1 | KPI card numeric values ($1,234.56) |
 | kpiLabel | 13px | 400 | Manrope | 1.4 | KPI card descriptive labels |
-| kpiDelta | 11px | 600 | Space Grotesk | 1.0 | KPI trend indicator (+12.3%) |
-| sectionTitle | 15px | 600 | Space Grotesk | 1.3 | Chart section titles, table section titles |
-| tableHeader | 12px | 600 | Space Grotesk | 1.0 | Table column headers |
+| kpiDelta | 11px | 700 | Space Grotesk | 1.0 | KPI trend indicator (+12.3%) |
+| sectionTitle | 13px | 700 | Space Grotesk | 1.3 | Chart section titles, table section titles |
+| tableHeader | 13px | 700 | Space Grotesk | 1.0 | Table column headers |
 | tableCell | 13px | 400 | Manrope | 1.4 | Table body cells |
-| filterLabel | 12px | 400 | Manrope | 1.0 | Filter/toggle labels |
-| statusBadge | 11px | 600 | Space Grotesk | 1.0 | Task status badges (RUNNING, FAILED, etc.) |
+| filterLabel | 13px | 400 | Manrope | 1.0 | Filter/toggle labels |
+| statusBadge | 11px | 700 | Space Grotesk | 1.0 | Task status badges (RUNNING, FAILED, etc.) |
 | chartLabel | 11px | 400 | Manrope | 1.0 | Recharts axis tick labels |
-| chartTooltip | 12px | 400 | Manrope | 1.4 | Recharts tooltip text |
+| chartTooltip | 13px | 400 | Manrope | 1.4 | Recharts tooltip text |
 
 ---
 
@@ -140,14 +159,16 @@ Status and chart colors. Add as new CSS custom properties under `--cv5-*` prefix
 
 > All specs pre-defined in `designs/component-specs.md`. Summarized here for cross-reference.
 
+**Visual Focal Point:** The node card content (image/video/audio preview) is the primary visual anchor. Type-specific toolbars above the node are the primary interaction surface, drawing attention via elevated surface + shadow contrast against the canvas background.
+
 #### NodeLabel (MODIFY node-shell.tsx)
 
 | Property | Value | Source |
 |----------|-------|--------|
 | Position | 8px above node, left-aligned to node left edge | component-specs §1 |
-| Layout | horizontal, gap=6, align-items=center | component-specs §1 |
+| Layout | horizontal, gap=8, align-items=center | component-specs §1 (consolidated from 6px to 8px) |
 | Icon | 14px, `var(--cv4-text-muted)` | component-specs §1 |
-| Title | 12px Space Grotesk, `var(--cv4-text-muted)` | component-specs §1 |
+| Title | 13px Space Grotesk, `var(--cv4-text-muted)` | component-specs §1 (consolidated from 12px) |
 | Implementation | `position: absolute; top: -24px; left: 0` within NodeShell | RESEARCH.md Pattern 1 |
 
 | Node Type | Icon | Default Label |
@@ -204,13 +225,13 @@ Status and chart colors. Add as new CSS custom properties under `--cv5-*` prefix
 
 **Right group — Utility (icon-only buttons):**
 
-| Icon | Function | Button Size |
-|------|----------|-------------|
-| `grid-3x3` | 九宫格 | 28×28, r=6 |
-| `pen-tool` | 画笔标注 | same |
-| `crop` | 裁剪 | same |
-| `download` | 下载 | same |
-| `maximize-2` | 放大预览 | same |
+| Icon | Function | Button Size | aria-label |
+|------|----------|-------------|------------|
+| `grid-3x3` | 九宫格 | 28×28, r=6 | "九宫格" |
+| `pen-tool` | 画笔标注 | same | "画笔标注" |
+| `crop` | 裁剪 | same | "裁剪" |
+| `download` | 下载 | same | "下载" |
+| `maximize-2` | 放大预览 | same | "放大预览" |
 
 - Icon: 14px, `var(--cv4-text-secondary)`
 - Hover: background `var(--cv4-hover-highlight)`
@@ -226,11 +247,11 @@ Status and chart colors. Add as new CSS custom properties under `--cv5-*` prefix
 | Corner radius | 10px |
 | Border | 1px `var(--cv4-border-default)` |
 | Shadow | `var(--cv4-shadow-sm)` |
-| Layout | horizontal, gap=6, padding=[4, 8], align-items=center |
+| Layout | horizontal, gap=8, padding=[4, 8], align-items=center |
 
 | Content | Type | Function |
 |---------|------|----------|
-| `2x` | text button (12px, 600wt, Space Grotesk) | Playback speed toggle |
+| `2x` | text button (13px, 700wt, Space Grotesk) | Playback speed toggle |
 | `download` (14px icon) | icon button | Download video |
 
 #### AudioNode (REWRITE)
@@ -254,7 +275,7 @@ Status and chart colors. Add as new CSS custom properties under `--cv5-*` prefix
 | Waveform color | `var(--cv4-text-disabled)` |
 | Progress color | `var(--cv4-text-muted)` |
 | Playhead | 2px wide, `#FF3B30` (`--cv5-status-failed`), full height |
-| Upload button | 30×30px, r=15, border 1px `var(--cv4-text-disabled)`, icon `arrow-up-from-line` 14px |
+| Upload button | 30×30px, r=15, border 1px `var(--cv4-text-disabled)`, icon `arrow-up-from-line` 14px, tooltip "上传音频文件" |
 
 **Controls row:**
 
@@ -266,7 +287,7 @@ Status and chart colors. Add as new CSS custom properties under `--cv5-*` prefix
 
 #### AudioToolbar (NEW)
 
-Same structure as VideoToolbar: `2x` + `download`, same dimensions.
+Same structure as VideoToolbar: `2x` (13px/700 Space Grotesk) + `download`, gap=8, same dimensions.
 
 #### TextNode V5 (MODIFY)
 
@@ -296,8 +317,8 @@ Same structure as VideoToolbar: `2x` + `download`, same dimensions.
 
 | Element | Spec |
 |---------|------|
-| Selection count | "已选择 N 个节点", 12px Manrope, `var(--cv4-text-secondary)` |
-| Run button | padding=[6, 16], r=8, bg `var(--cv4-btn-primary)`, text "执行选中", 12px/600 Space Grotesk, `var(--cv4-btn-primary-text)` |
+| Selection count | "已选择 N 个节点", 13px Manrope, `var(--cv4-text-secondary)` |
+| Run button | padding=[6, 16], r=8, bg `var(--cv4-btn-primary)`, text "执行选中", 13px/700 Space Grotesk, `var(--cv4-btn-primary-text)` |
 | Cancel button | `x` icon 14px, `var(--cv4-text-muted)`, clears selection |
 
 **States:**
@@ -337,16 +358,18 @@ Same structure as VideoToolbar: `2x` + `download`, same dimensions.
 | Element | Spec |
 |---------|------|
 | Status dot | 8px circle, color by status (`--cv5-status-*`) |
-| Skill name | 12px Manrope, `var(--cv4-text-primary)` |
-| Duration | 9px Space Grotesk, `var(--cv4-text-muted)` |
-| Cost | 9px Space Grotesk, `var(--cv4-text-muted)` |
-| Timestamp | 9px Space Grotesk, `var(--cv4-text-disabled)` |
+| Skill name | 13px Manrope, `var(--cv4-text-primary)` |
+| Duration | 11px Space Grotesk, `var(--cv4-text-muted)` |
+| Cost | 11px Space Grotesk, `var(--cv4-text-muted)` |
+| Timestamp | 11px Space Grotesk, `var(--cv4-text-disabled)` |
 
 ---
 
 ### Workstream 2: Billing Dashboard (NEW page)
 
 Route: `/billing`
+
+**Visual Focal Point:** KPI card numeric values (28px display) are the primary visual anchor — the largest text on the page draws the eye first. The trend chart below provides secondary visual weight. The usage detail table is tertiary, scanned on demand.
 
 #### Page Layout
 
@@ -384,8 +407,8 @@ Route: `/billing`
 | Property | Value |
 |----------|-------|
 | Layout | horizontal, r=8, bg `var(--cv4-surface-secondary)`, p=[2] |
-| Tab active | bg `var(--cv4-surface-primary)`, r=6, 12px/600 Space Grotesk, `var(--cv4-text-primary)` |
-| Tab inactive | transparent, 12px/400 Manrope, `var(--cv4-text-muted)` |
+| Tab active | bg `var(--cv4-surface-primary)`, r=6, 13px/700 Space Grotesk, `var(--cv4-text-primary)` |
+| Tab inactive | transparent, 13px/400 Manrope, `var(--cv4-text-muted)` |
 | Tab padding | [6, 16] |
 
 **Date range picker:**
@@ -396,7 +419,7 @@ Route: `/billing`
 | Background | `var(--cv4-surface-primary)` |
 | Border | 1px `var(--cv4-border-default)` |
 | Icon | `calendar` 14px, `var(--cv4-text-muted)` |
-| Text | 12px Manrope, `var(--cv4-text-secondary)` |
+| Text | 13px Manrope, `var(--cv4-text-secondary)` |
 | Presets | 最近7天 / 最近30天 / 本月 / 自定义 |
 
 #### KPI Card
@@ -414,7 +437,7 @@ Route: `/billing`
 |---------|------|
 | Label | "本月总花费", 13px/400 Manrope, `var(--cv4-text-muted)` |
 | Value | "$1,234.56", 28px/700 Space Grotesk, `var(--cv4-text-primary)` |
-| Delta | "+12.3%", 11px/600 Space Grotesk, `var(--cv5-status-success)` for positive, `var(--cv5-status-failed)` for negative |
+| Delta | "+12.3%", 11px/700 Space Grotesk, `var(--cv5-status-success)` for positive, `var(--cv5-status-failed)` for negative |
 | Delta icon | `trending-up` or `trending-down` 12px, same color as delta text |
 | Sparkline (optional) | 48px wide, 24px tall, stroke `var(--cv5-chart-series-1)`, bottom-right corner |
 
@@ -476,7 +499,7 @@ Center label (donut center): total cost, 20px/700 Space Grotesk, `var(--cv4-text
 | Background | `var(--cv4-surface-primary)` |
 | Corner radius | 12px |
 | Border | 1px `var(--cv4-border-default)` |
-| Header row | bg `var(--cv4-surface-secondary)`, 12px/600 Space Grotesk, `var(--cv4-text-muted)` |
+| Header row | bg `var(--cv4-surface-secondary)`, 13px/700 Space Grotesk, `var(--cv4-text-muted)` |
 | Body row | h=48px, border-bottom 1px `var(--cv4-border-subtle)` |
 | Body text | 13px/400 Manrope, `var(--cv4-text-secondary)` |
 | Hover | bg `var(--cv4-hover-highlight)` |
@@ -509,6 +532,8 @@ When "按项目" toggle active, replaces default view with:
 
 Route: `/tasks`
 
+**Visual Focal Point:** The task list table dominates the page — status badges with color-coded backgrounds are the primary visual anchor, enabling rapid scan of task health. Filter tabs above provide secondary focus for narrowing scope.
+
 #### Page Layout
 
 ```
@@ -534,9 +559,9 @@ Same pattern as Billing: title "任务监控", 20px/700 Space Grotesk.
 
 | Property | Value |
 |----------|-------|
-| Layout | horizontal, gap=6, align-items=center |
+| Layout | horizontal, gap=8, align-items=center |
 | Dot | 8px circle, `var(--cv5-status-success)` when active, `var(--cv4-text-disabled)` when paused |
-| Text | "自动刷新", 12px Manrope, `var(--cv4-text-muted)` |
+| Text | "自动刷新", 13px Manrope, `var(--cv4-text-muted)` |
 | Toggle | click to pause/resume |
 | Interval | 5s (React Query `refetchInterval`) |
 
@@ -545,10 +570,10 @@ Same pattern as Billing: title "任务监控", 20px/700 Space Grotesk.
 | Property | Value |
 |----------|-------|
 | Layout | horizontal, gap=4 |
-| Tab style | padding=[6, 12], r=8, 12px/400 Manrope |
+| Tab style | padding=[6, 12], r=8, 13px/400 Manrope |
 | Tab inactive | bg transparent, `var(--cv4-text-muted)` |
 | Tab active | bg `var(--cv4-surface-primary)`, `var(--cv4-text-primary)`, border 1px `var(--cv4-border-default)` |
-| Count badge | 9px/600 Space Grotesk, `var(--cv4-text-disabled)`, after tab text |
+| Count badge | 11px/700 Space Grotesk, `var(--cv4-text-disabled)`, after tab text |
 
 | Tab | Filter Value | Badge Color |
 |-----|-------------|-------------|
@@ -569,7 +594,7 @@ Same style as billing date picker: h=36, bg `var(--cv4-surface-primary)`, border
 | Background | `var(--cv4-surface-primary)` |
 | Corner radius | 12px |
 | Border | 1px `var(--cv4-border-default)` |
-| Header | bg `var(--cv4-surface-secondary)`, 12px/600 Space Grotesk, `var(--cv4-text-muted)` |
+| Header | bg `var(--cv4-surface-secondary)`, 13px/700 Space Grotesk, `var(--cv4-text-muted)` |
 | Row | h=48px, border-bottom 1px `var(--cv4-border-subtle)` |
 | Row hover | bg `var(--cv4-hover-highlight)` |
 
@@ -579,19 +604,19 @@ Same style as billing date picker: h=36, bg `var(--cv4-surface-primary)`, border
 |--------|-------|---------|
 | 状态 | 80px | Status badge (see below) |
 | 技能名称 | 200px | 13px Manrope, `var(--cv4-text-primary)` |
-| 用户 | 120px | 12px Manrope, `var(--cv4-text-secondary)` (admin only) |
-| 项目 | 160px | 12px Manrope, `var(--cv4-text-secondary)` |
-| 耗时 | 80px | 12px Space Grotesk, `var(--cv4-text-muted)` |
-| Token | 80px | 12px Space Grotesk, `var(--cv4-text-muted)` |
-| 费用 | 80px | 12px Space Grotesk, `var(--cv4-text-muted)` |
-| 时间 | 140px | 12px Space Grotesk, `var(--cv4-text-disabled)` |
+| 用户 | 120px | 13px Manrope, `var(--cv4-text-secondary)` (admin only) |
+| 项目 | 160px | 13px Manrope, `var(--cv4-text-secondary)` |
+| 耗时 | 80px | 13px Space Grotesk, `var(--cv4-text-muted)` |
+| Token | 80px | 13px Space Grotesk, `var(--cv4-text-muted)` |
+| 费用 | 80px | 13px Space Grotesk, `var(--cv4-text-muted)` |
+| 时间 | 140px | 13px Space Grotesk, `var(--cv4-text-disabled)` |
 
 #### Status Badge
 
 | Property | Value |
 |----------|-------|
 | Layout | horizontal, gap=4, padding=[3, 8], r=6 |
-| Font | 11px/600 Space Grotesk, uppercase |
+| Font | 11px/700 Space Grotesk, uppercase |
 
 | Status | Background | Text Color | Label |
 |--------|-----------|------------|-------|
@@ -607,7 +632,7 @@ Same style as billing date picker: h=36, bg `var(--cv4-surface-primary)`, border
 | Property | Value |
 |----------|-------|
 | Layout | horizontal, gap=4, justify=center, padding=[16, 0] |
-| Page button | 32×32, r=6, 12px Space Grotesk |
+| Page button | 32×32, r=6, 13px Space Grotesk |
 | Active page | bg `var(--cv4-btn-primary)`, `var(--cv4-btn-primary-text)` |
 | Inactive page | bg transparent, `var(--cv4-text-muted)` |
 | Arrow buttons | `chevron-left` / `chevron-right` 14px, `var(--cv4-text-muted)` |
@@ -673,7 +698,7 @@ Same style as billing date picker: h=36, bg `var(--cv4-surface-primary)`, border
 | BatchExecutionBar cancel | tooltip "取消选择" |
 | Batch cycle error | "子图中存在循环依赖，无法执行" |
 | ImageToolbar disabled skill | tooltip "即将上线" |
-| Audio empty state | Upload button with `arrow-up-from-line` icon, no text |
+| Audio empty state | Upload button with `arrow-up-from-line` icon, tooltip "上传音频文件" |
 | Audio time format | "MM:SS / MM:SS" (e.g., "00:07 / 00:12") |
 | Node history empty | "暂无执行记录" |
 | Node history title | "执行历史" |
@@ -724,7 +749,7 @@ This phase contains no destructive actions. Batch execution is non-destructive (
 | Color contrast | All status badge text on badge backgrounds meets WCAG AA (4.5:1) |
 | Keyboard nav | Tab through toolbar buttons, Enter to activate, Escape to dismiss |
 | Reduced motion | `@media (prefers-reduced-motion: reduce)` — disable BatchExecutionBar slide, chart animations |
-| Screen reader | `aria-label` on all icon-only buttons (e.g., `aria-label="下载"` on download button) |
+| Screen reader | `aria-label` on all icon-only buttons. ImageToolbar right-side: `grid-3x3`="九宫格", `pen-tool`="画笔标注", `crop`="裁剪", `download`="下载", `maximize-2`="放大预览". VideoToolbar: `download`="下载". AudioToolbar: `download`="下载". AudioNode: upload="上传音频文件", play="播放"/"暂停". |
 | Focus visible | 2px outline `var(--cv5-selection-stroke)` offset 2px on all interactive elements |
 
 ---
@@ -772,4 +797,5 @@ No third-party shadcn registries. No registry vetting required.
 
 *Phase: 05-interaction-video*
 *UI-SPEC created: 2026-03-30*
+*UI-SPEC revised: 2026-03-30 — fixes: typography consolidation (7→4 sizes, 3→2 weights), spacing sm 6→8px, audio tooltip, visual focal points, aria-labels, spacing justification*
 *Sources: design-tokens.json, component-specs.md, canvas-v5-node-redesign.png, CONTEXT.md (18 decisions), RESEARCH.md (stack + patterns)*
