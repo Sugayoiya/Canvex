@@ -184,6 +184,22 @@ body {
   color: var(--cv4-text-muted);
 }
 
+/* === Phase 05: Selection box + selected node styling === */
+.react-flow__selection {
+  background: var(--cv5-selection-fill) !important;
+  border: 1px dashed var(--cv5-selection-stroke) !important;
+}
+
+.react-flow__nodesselection-rect {
+  background: var(--cv5-selection-fill) !important;
+  border: 1px dashed var(--cv5-selection-stroke) !important;
+}
+
+.react-flow__node.selected .node-card-body {
+  border: 1.5px solid var(--cv5-selection-stroke) !important;
+  box-shadow: var(--cv4-shadow-lg) !important;
+}
+
 /* read-only compact preview (no editing chrome) */
 .cv4-md-editor-preview {
   max-height: 120px;

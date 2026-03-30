@@ -29,6 +29,8 @@ import { AssetPanel } from "./canvas-asset-panel";
 import { NodeCreationMenu } from "./canvas-node-creation-menu";
 import { PaneContextMenu } from "./canvas-context-menu";
 import { useNodeFocus } from "./hooks/use-node-focus";
+import { useBatchExecution } from "./hooks/use-batch-execution";
+import { BatchExecutionBar } from "./batch-execution-bar";
 import { nodeTypes } from "./nodes";
 
 /* ------------------------------------------------------------------ */
@@ -123,6 +125,17 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const { clearFocus } = useCanvasStore();
   const [showAssets, setShowAssets] = useState(false);
   const { screenToFlowPosition } = useReactFlow();
+
+  const {
+    selectedNodes: batchSelectedNodes,
+    canBatchExecute,
+    batchState,
+    executeBatch,
+    clearSelection,
+    dismissBar,
+    completedCount,
+    totalCount,
+  } = useBatchExecution();
 
   const connectStartRef = useRef<{ nodeId: string; nodeType: string } | null>(null);
   const connectSucceededRef = useRef(false);
@@ -382,6 +395,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
         onPaneClick={() => { handlePaneClick(); setCreationMenu(null); setContextMenu(null); }}
         onPaneContextMenu={handlePaneContextMenu}
         nodeTypes={nodeTypes}
+        selectionOnDrag
         isValidConnection={(conn) => isValidConnection(conn, nodes)}
         deleteKeyCode={["Backspace", "Delete"]}
         minZoom={0.2}
@@ -427,6 +441,16 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
           position={contextMenu.screenPos}
           onAddNode={handleContextMenuAddNode}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+      {canBatchExecute && (
+        <BatchExecutionBar
+          selectedCount={batchSelectedNodes.length}
+          batchState={batchState}
+          completedCount={completedCount}
+          totalCount={totalCount}
+          onExecute={executeBatch}
+          onDismiss={() => { clearSelection(); dismissBar(); }}
         />
       )}
     </div>
