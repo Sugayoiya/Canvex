@@ -1,0 +1,249 @@
+import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.core.deps import get_db, get_current_user, require_admin, require_team_member
+from app.models.ai_provider_config import (
+    AIProviderConfig,
+    AIProviderKey,
+    AIModelConfig,
+    AIModelProviderMapping,
+)
+from app.services.ai.provider_manager import encrypt_api_key
+from app.schemas.ai_provider import (
+    ProviderConfigCreate,
+    ProviderConfigUpdate,
+    ProviderConfigResponse,
+    ProviderKeyCreate,
+    ProviderKeyResponse,
+    ModelConfigResponse,
+)
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter(prefix="/ai-providers", tags=["ai-providers"])
+
+
+async def _verify_config_ownership(config: AIProviderConfig, user, db: AsyncSession):
+    """Verify the user has permission to manage a provider config."""
+    if config.owner_type == "system":
+        require_admin(user)
+    elif config.owner_type == "team":
+        await require_team_member(config.owner_id, user, db, min_role="team_admin")
+    elif config.owner_type == "personal":
+        if config.owner_id != user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+
+def _config_to_response(config: AIProviderConfig) -> ProviderConfigResponse:
+    keys = config.keys if config.keys else []
+    return ProviderConfigResponse(
+        id=config.id,
+        provider_name=config.provider_name,
+        display_name=config.display_name,
+        is_enabled=config.is_enabled,
+        priority=config.priority,
+        owner_type=config.owner_type,
+        owner_id=config.owner_id,
+        key_count=len(keys),
+        active_key_count=sum(1 for k in keys if k.is_active),
+        created_at=config.created_at,
+    )
+
+
+@router.get("/", response_model=list[ProviderConfigResponse])
+async def list_providers(
+    owner_type: str = Query("system"),
+    owner_id: str | None = Query(None),
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if owner_type == "system":
+        require_admin(user)
+        stmt = (
+            select(AIProviderConfig)
+            .where(AIProviderConfig.owner_type == "system")
+            .options(selectinload(AIProviderConfig.keys))
+        )
+    elif owner_type == "team":
+        if not owner_id:
+            raise HTTPException(status_code=400, detail="owner_id required for team providers")
+        await require_team_member(owner_id, user, db, min_role="member")
+        stmt = (
+            select(AIProviderConfig)
+            .where(AIProviderConfig.owner_type == "team", AIProviderConfig.owner_id == owner_id)
+            .options(selectinload(AIProviderConfig.keys))
+        )
+    elif owner_type == "personal":
+        stmt = (
+            select(AIProviderConfig)
+            .where(AIProviderConfig.owner_type == "personal", AIProviderConfig.owner_id == user.id)
+            .options(selectinload(AIProviderConfig.keys))
+        )
+    else:
+        raise HTTPException(status_code=400, detail=f"Invalid owner_type: {owner_type}")
+
+    result = await db.execute(stmt)
+    configs = result.scalars().all()
+    return [_config_to_response(c) for c in configs]
+
+
+@router.post("/", response_model=ProviderConfigResponse, status_code=status.HTTP_201_CREATED)
+async def create_provider(
+    data: ProviderConfigCreate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if data.owner_type == "system":
+        require_admin(user)
+    elif data.owner_type == "team":
+        if not data.owner_id:
+            raise HTTPException(status_code=400, detail="owner_id required for team providers")
+        await require_team_member(data.owner_id, user, db, min_role="team_admin")
+    elif data.owner_type == "personal":
+        data.owner_id = user.id
+
+    config = AIProviderConfig(
+        provider_name=data.provider_name,
+        display_name=data.display_name,
+        is_enabled=data.is_enabled,
+        priority=data.priority,
+        owner_type=data.owner_type,
+        owner_id=data.owner_id,
+    )
+    db.add(config)
+    await db.flush()
+
+    config.keys = []
+    return _config_to_response(config)
+
+
+@router.patch("/{provider_id}", response_model=ProviderConfigResponse)
+async def update_provider(
+    provider_id: str,
+    data: ProviderConfigUpdate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(AIProviderConfig)
+        .where(AIProviderConfig.id == provider_id)
+        .options(selectinload(AIProviderConfig.keys))
+    )
+    config = result.scalar_one_or_none()
+    if not config:
+        raise HTTPException(status_code=404, detail="Provider config not found")
+
+    await _verify_config_ownership(config, user, db)
+
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(config, key, value)
+    await db.flush()
+    return _config_to_response(config)
+
+
+@router.delete("/{provider_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_provider(
+    provider_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(AIProviderConfig).where(AIProviderConfig.id == provider_id)
+    )
+    config = result.scalar_one_or_none()
+    if not config:
+        raise HTTPException(status_code=404, detail="Provider config not found")
+
+    await _verify_config_ownership(config, user, db)
+    await db.delete(config)
+    await db.flush()
+
+
+@router.post("/{provider_id}/keys", response_model=ProviderKeyResponse, status_code=status.HTTP_201_CREATED)
+async def add_provider_key(
+    provider_id: str,
+    data: ProviderKeyCreate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(AIProviderConfig).where(AIProviderConfig.id == provider_id)
+    )
+    config = result.scalar_one_or_none()
+    if not config:
+        raise HTTPException(status_code=404, detail="Provider config not found")
+
+    await _verify_config_ownership(config, user, db)
+
+    key = AIProviderKey(
+        provider_config_id=provider_id,
+        api_key_encrypted=encrypt_api_key(data.api_key),
+        label=data.label,
+    )
+    db.add(key)
+    await db.flush()
+    return ProviderKeyResponse(
+        id=key.id,
+        label=key.label,
+        is_active=key.is_active,
+        error_count=key.error_count,
+        last_used_at=key.last_used_at,
+        created_at=key.created_at,
+    )
+
+
+@router.delete("/{provider_id}/keys/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_provider_key(
+    provider_id: str,
+    key_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(AIProviderConfig).where(AIProviderConfig.id == provider_id)
+    )
+    config = result.scalar_one_or_none()
+    if not config:
+        raise HTTPException(status_code=404, detail="Provider config not found")
+
+    await _verify_config_ownership(config, user, db)
+
+    key_result = await db.execute(
+        select(AIProviderKey).where(
+            AIProviderKey.id == key_id,
+            AIProviderKey.provider_config_id == provider_id,
+        )
+    )
+    key = key_result.scalar_one_or_none()
+    if not key:
+        raise HTTPException(status_code=404, detail="Key not found")
+    await db.delete(key)
+    await db.flush()
+
+
+@router.get("/models", response_model=list[ModelConfigResponse])
+async def list_models(
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(AIModelConfig)
+        .where(AIModelConfig.is_enabled == True)  # noqa: E712
+        .options(selectinload(AIModelConfig.provider_mappings).selectinload(AIModelProviderMapping.provider_config))
+    )
+    models = result.scalars().all()
+
+    responses = []
+    for mc in models:
+        provider_names = [
+            m.provider_config.display_name
+            for m in (mc.provider_mappings or [])
+            if m.provider_config
+        ]
+        responses.append(ModelConfigResponse.from_model_config(mc, provider_names))
+    return responses
