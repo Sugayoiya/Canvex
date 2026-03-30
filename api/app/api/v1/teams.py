@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
-from app.core.deps import get_db, get_current_user, require_team_member
-from app.models.team import Team, TeamMember, TeamInvitation
+from app.core.deps import get_db, get_current_user, require_team_member, require_group_member
+from app.models.team import Team, TeamMember, TeamInvitation, Group, GroupMember
 from app.models.user import User
 from app.schemas.team import (
     TeamCreate,
@@ -19,6 +19,12 @@ from app.schemas.team import (
     UpdateMemberRequest,
     InvitationResponse,
     CreateInvitationRequest,
+    GroupCreate,
+    GroupUpdate,
+    GroupResponse,
+    GroupMemberResponse,
+    AddGroupMemberRequest,
+    UpdateGroupMemberRequest,
 )
 
 router = APIRouter(prefix="/teams", tags=["teams"])
@@ -370,3 +376,255 @@ async def accept_invitation(
         user_nickname=user.nickname,
         user_avatar=getattr(user, "avatar", None),
     )
+
+
+# ---------------------------------------------------------------------------
+# Group CRUD
+# ---------------------------------------------------------------------------
+
+VALID_GROUP_ROLES = {"leader", "editor", "reviewer", "viewer"}
+
+
+@router.post("/{team_id}/groups", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
+async def create_group(
+    team_id: str,
+    req: GroupCreate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_team_member(team_id, user, db, min_role="team_admin")
+
+    group = Group(team_id=team_id, name=req.name, description=req.description)
+    db.add(group)
+    await db.flush()
+
+    leader = GroupMember(group_id=group.id, user_id=user.id, role="leader")
+    db.add(leader)
+    await db.flush()
+
+    return GroupResponse(
+        id=group.id,
+        team_id=group.team_id,
+        name=group.name,
+        description=group.description,
+        member_count=1,
+        created_at=group.created_at,
+    )
+
+
+@router.get("/{team_id}/groups", response_model=list[GroupResponse])
+async def list_groups(
+    team_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_team_member(team_id, user, db, min_role="member")
+
+    result = await db.execute(
+        select(Group).where(Group.team_id == team_id, Group.is_deleted == False)  # noqa: E712
+    )
+    groups = result.scalars().all()
+
+    responses = []
+    for g in groups:
+        count_result = await db.execute(
+            select(func.count()).select_from(GroupMember).where(GroupMember.group_id == g.id)
+        )
+        responses.append(GroupResponse(
+            id=g.id,
+            team_id=g.team_id,
+            name=g.name,
+            description=g.description,
+            member_count=count_result.scalar() or 0,
+            created_at=g.created_at,
+        ))
+    return responses
+
+
+@router.patch("/{team_id}/groups/{group_id}", response_model=GroupResponse)
+async def update_group(
+    team_id: str,
+    group_id: str,
+    req: GroupUpdate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_group_member(group_id, user, db, min_role="leader")
+
+    result = await db.execute(
+        select(Group).where(Group.id == group_id, Group.team_id == team_id, Group.is_deleted == False)  # noqa: E712
+    )
+    group = result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    update_data = req.model_dump(exclude_unset=True)
+    for k, v in update_data.items():
+        setattr(group, k, v)
+
+    count_result = await db.execute(
+        select(func.count()).select_from(GroupMember).where(GroupMember.group_id == group_id)
+    )
+    return GroupResponse(
+        id=group.id,
+        team_id=group.team_id,
+        name=group.name,
+        description=group.description,
+        member_count=count_result.scalar() or 0,
+        created_at=group.created_at,
+    )
+
+
+@router.delete("/{team_id}/groups/{group_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_group(
+    team_id: str,
+    group_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_team_member(team_id, user, db, min_role="team_admin")
+
+    result = await db.execute(
+        select(Group).where(Group.id == group_id, Group.team_id == team_id, Group.is_deleted == False)  # noqa: E712
+    )
+    group = result.scalar_one_or_none()
+    if not group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    group.is_deleted = True
+    group.deleted_at = datetime.now(timezone.utc)
+
+
+# ---------------------------------------------------------------------------
+# Group member management
+# ---------------------------------------------------------------------------
+
+@router.get("/{team_id}/groups/{group_id}/members", response_model=list[GroupMemberResponse])
+async def list_group_members(
+    team_id: str,
+    group_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_team_member(team_id, user, db, min_role="member")
+
+    result = await db.execute(
+        select(GroupMember).where(GroupMember.group_id == group_id)
+    )
+    members = result.scalars().all()
+
+    responses = []
+    for m in members:
+        user_result = await db.execute(select(User).where(User.id == m.user_id))
+        u = user_result.scalar_one_or_none()
+        responses.append(GroupMemberResponse(
+            id=m.id,
+            user_id=m.user_id,
+            role=m.role,
+            joined_at=m.joined_at,
+            user_email=u.email if u else None,
+            user_nickname=u.nickname if u else None,
+        ))
+    return responses
+
+
+@router.post(
+    "/{team_id}/groups/{group_id}/members",
+    response_model=GroupMemberResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_group_member(
+    team_id: str,
+    group_id: str,
+    req: AddGroupMemberRequest,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_group_member(group_id, user, db, min_role="leader")
+
+    team_check = await db.execute(
+        select(TeamMember).where(TeamMember.team_id == team_id, TeamMember.user_id == req.user_id)
+    )
+    if not team_check.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="User must be a team member first")
+
+    existing = await db.execute(
+        select(GroupMember).where(GroupMember.group_id == group_id, GroupMember.user_id == req.user_id)
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=409, detail="User is already a group member")
+
+    if req.role not in VALID_GROUP_ROLES:
+        raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {VALID_GROUP_ROLES}")
+
+    gm = GroupMember(group_id=group_id, user_id=req.user_id, role=req.role)
+    db.add(gm)
+    await db.flush()
+
+    target_result = await db.execute(select(User).where(User.id == req.user_id))
+    target_user = target_result.scalar_one_or_none()
+
+    return GroupMemberResponse(
+        id=gm.id,
+        user_id=gm.user_id,
+        role=gm.role,
+        joined_at=gm.joined_at,
+        user_email=target_user.email if target_user else None,
+        user_nickname=target_user.nickname if target_user else None,
+    )
+
+
+@router.patch("/{team_id}/groups/{group_id}/members/{member_id}", response_model=GroupMemberResponse)
+async def update_group_member(
+    team_id: str,
+    group_id: str,
+    member_id: str,
+    req: UpdateGroupMemberRequest,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_group_member(group_id, user, db, min_role="leader")
+
+    if req.role not in VALID_GROUP_ROLES:
+        raise HTTPException(status_code=400, detail=f"Invalid role. Must be one of: {VALID_GROUP_ROLES}")
+
+    result = await db.execute(
+        select(GroupMember).where(GroupMember.id == member_id, GroupMember.group_id == group_id)
+    )
+    member_obj = result.scalar_one_or_none()
+    if not member_obj:
+        raise HTTPException(status_code=404, detail="Group member not found")
+
+    member_obj.role = req.role
+
+    target_result = await db.execute(select(User).where(User.id == member_obj.user_id))
+    target_user = target_result.scalar_one_or_none()
+
+    return GroupMemberResponse(
+        id=member_obj.id,
+        user_id=member_obj.user_id,
+        role=member_obj.role,
+        joined_at=member_obj.joined_at,
+        user_email=target_user.email if target_user else None,
+        user_nickname=target_user.nickname if target_user else None,
+    )
+
+
+@router.delete("/{team_id}/groups/{group_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_group_member(
+    team_id: str,
+    group_id: str,
+    member_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_group_member(group_id, user, db, min_role="leader")
+
+    result = await db.execute(
+        select(GroupMember).where(GroupMember.id == member_id, GroupMember.group_id == group_id)
+    )
+    member_obj = result.scalar_one_or_none()
+    if not member_obj:
+        raise HTTPException(status_code=404, detail="Group member not found")
+
+    await db.delete(member_obj)
