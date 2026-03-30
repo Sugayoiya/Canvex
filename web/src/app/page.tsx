@@ -1,24 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthStore, useAuthHydrated } from "@/stores/auth-store";
 
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const hydrated = useAuthHydrated();
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!hydrated) return;
     if (isAuthenticated) {
       router.replace("/projects");
     } else {
       router.replace("/login");
     }
-  }, [mounted, isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">

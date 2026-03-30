@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authApi } from "@/lib/api";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthStore, useAuthHydrated } from "@/stores/auth-store";
 
 function GoogleIcon() {
   return (
@@ -52,16 +52,17 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth, isAuthenticated } = useAuthStore();
+  const hydrated = useAuthHydrated();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (hydrated && isAuthenticated) {
       router.replace("/projects");
     }
-  }, [isAuthenticated, router]);
+  }, [hydrated, isAuthenticated, router]);
 
   useEffect(() => {
     const accessToken = searchParams.get("access_token");
