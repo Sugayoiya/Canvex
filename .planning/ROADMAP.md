@@ -115,9 +115,21 @@ Plans:
 3. Operational visibility includes task monitoring readiness.
 
 ### Phase 06: Collaboration + Versioning + Production Hardening
-**Goal**: Complete collaboration model and production operations baseline.
+**Goal**: Deliver multi-tenant collaboration (Global Admin → Team → Group), AI Provider DB management with multi-key routing, project/canvas CRUD with ownership, and authentication enhancements (OAuth + AuthGuard).
 **Depends on**: Phase 05
 **UI hint**: yes
+**Requirements:** [REQ-11, REQ-12]
+**Plans:** 7 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — [W1] Backend Models: Org hierarchy (Group/GroupMember/GroupProject) + OAuthAccount + AI Provider DB models + deps extension
+- [ ] 06-02-PLAN.md — [W1] ProviderManager DB rewrite (KeyRotator, credential chain, env seeding) + AICallLog dimension enrichment
+- [ ] 06-03-PLAN.md — [W1] Frontend Infra: Obsidian Lens tokens + AuthGuard + auth-store extension + API client
+- [ ] 06-04-PLAN.md — [W2] Backend API: OAuth (Google+GitHub) + Team/Group/Invitation CRUD + schemas
+- [ ] 06-05-PLAN.md — [W3] Backend API: Project CRUD + User search + AI Provider admin + route registration
+- [ ] 06-06-PLAN.md — [W2] Frontend: Login page (Obsidian Lens+OAuth) + AppShell layout (Sidebar+Topbar)
+- [ ] 06-07-PLAN.md — [W4] Frontend: Project Dashboard + Team Management + AI Console + Invite Acceptance
+
 **Success Criteria**:
 1. Multi-role collaboration and version history are available.
 2. Production deployment and periodic jobs are stable.
