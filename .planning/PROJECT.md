@@ -17,6 +17,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ Phase 3 agent tool-calling orchestration — Validated in Phase 03: agent-system
 - ✓ Phase 3.1 agent chat + canvas quality fix — 12 issues resolved across Agent Chat and Canvas
 - ✓ Phase 4 media/slash skills + quota controls — Validated in Phase 04: media-tools
+- ✓ Phase 5 canvas/video experience + billing dashboard — Validated in Phase 05: interaction-video
 
 ### Active
 
@@ -60,4 +61,4 @@ This document evolves at phase transitions and milestone boundaries.
 - After each milestone, re-check core value, constraints, and scope boundaries.
 
 ---
-*Last updated: 2026-03-29 after Phase 04 completion — 4 material-type nodes (text/image/video/audio), focus-panel system, template-driven workflows, asset library, video generation skill, quota enforcement*
+*Last updated: 2026-03-30 after Phase 05 completion — V5 node redesign, type-specific toolbars, batch execution, billing dashboard with Recharts, task monitoring page with visibility-aware polling, node execution history popover*
