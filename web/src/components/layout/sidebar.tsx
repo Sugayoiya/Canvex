@@ -7,7 +7,6 @@ import {
   FolderOpen,
   Users,
   Bot,
-  Settings2,
   ListTodo,
   BarChart3,
   ChevronDown,
@@ -25,7 +24,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Projects", href: "/projects", icon: FolderOpen },
   { label: "Team & Roles", href: "/teams", icon: Users },
   { label: "AI Console", href: "/settings/ai", icon: Bot },
-  { label: "Settings", href: "/settings", icon: Settings2 },
 ];
 
 const BOTTOM_ITEMS: NavItem[] = [
