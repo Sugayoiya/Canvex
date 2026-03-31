@@ -1,44 +1,44 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: Skill + Celery Refactor
-status: verifying
-stopped_at: Completed 06-07-PLAN.md
-last_updated: "2026-03-30T15:16:06.523Z"
-last_activity: 2026-03-30
+milestone: v2.1
+milestone_name: Admin Console
+status: planning
+stopped_at: null
+last_updated: "2026-03-31T00:00:00.000Z"
+last_activity: 2026-03-31
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 39
-  completed_plans: 39
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-28)
+See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 06 — collaboration-prod
+**Current focus:** Defining requirements for v2.1 Admin Console
 
 ## Current Position
 
-Phase: 06
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-03-30
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-31 — Milestone v2.1 started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 6
-- Average duration: ~3 min
-- Total execution time: ~18 min
+- Total plans completed: 0
+- Average duration: —
+- Total execution time: —
 
 ## Accumulated Context
 
