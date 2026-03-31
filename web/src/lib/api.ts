@@ -19,29 +19,56 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Auto-refresh on 401
+let refreshPromise: Promise<string> | null = null;
+
+function clearAuthAndRedirect() {
+  refreshPromise = null;
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("refresh_token");
+  try {
+    const { useAuthStore } = require("@/stores/auth-store");
+    useAuthStore.getState().logout();
+  } catch { /* SSR or store not ready */ }
+  if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+    window.location.href = "/login";
+  }
+}
+
+// Auto-refresh on 401 with mutex to prevent concurrent refresh storms
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const original = error.config;
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
-      try {
-        const refreshToken = localStorage.getItem("refresh_token");
-        if (!refreshToken) throw new Error("No refresh token");
 
-        const { data } = await axios.post(
-          `${API_BASE_URL}/api/v1/auth/refresh`,
-          { refresh_token: refreshToken }
-        );
-        localStorage.setItem("access_token", data.access_token);
-        localStorage.setItem("refresh_token", data.refresh_token);
-        original.headers.Authorization = `Bearer ${data.access_token}`;
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (!refreshToken) {
+        clearAuthAndRedirect();
+        return Promise.reject(error);
+      }
+
+      if (!refreshPromise) {
+        refreshPromise = axios
+          .post(`${API_BASE_URL}/api/v1/auth/refresh`, { refresh_token: refreshToken })
+          .then(({ data }) => {
+            localStorage.setItem("access_token", data.access_token);
+            localStorage.setItem("refresh_token", data.refresh_token);
+            refreshPromise = null;
+            return data.access_token as string;
+          })
+          .catch(() => {
+            clearAuthAndRedirect();
+            return Promise.reject(error);
+          });
+      }
+
+      try {
+        const newToken = await refreshPromise;
+        original.headers.Authorization = `Bearer ${newToken}`;
         return api(original);
       } catch {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
-        window.location.href = "/login";
+        return Promise.reject(error);
       }
     }
     return Promise.reject(error);
