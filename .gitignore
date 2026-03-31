@@ -56,6 +56,12 @@ htmlcov/
 .pytest_cache/
 coverage/
 
+# Redis
+dump.rdb
+
+# Stray root lock files
+/package-lock.json
+
 # Celery
 celerybeat-schedule
 celerybeat.pid
