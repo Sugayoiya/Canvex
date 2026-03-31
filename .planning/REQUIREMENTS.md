@@ -35,12 +35,40 @@
 - [x] **REQ-11**: Multi-role collaboration and version history are implemented.
 - [x] **REQ-12**: Production deployment/ops baseline (beat/monitoring/retention/export) is complete.
 
-## v2 Requirements
+## v2.1 Requirements — Admin Console
+
+### Admin API Foundation
+
+- **REQ-13**: Admin user management API — paginated user list with search/filter, user status toggle (active/banned), admin role grant/revoke with last-admin/self-demotion safeguards, dedicated response schemas excluding sensitive fields.
+- **REQ-14**: Admin audit trail — structured `AdminAuditLog` model recording all admin mutations (user status, admin flag, quota, pricing, provider config) with admin_user_id, action_type, target, old/new values. Append-only.
+- **REQ-15**: Admin log scope lifting — `/logs/skills`, `/logs/ai-calls`, `/logs/ai-calls/stats`, `/logs/trace/{trace_id}` must support admin cross-user queries (bypass `user_id` filter when `is_admin`). `/admin/teams` endpoint with aggregate member counts.
+- **REQ-16**: Admin dashboard stats endpoint — aggregate KPIs (user count, team count, active task count, total cost, provider status) in a single `GET /admin/dashboard` call.
+
+### Admin Frontend Foundation
+
+- **REQ-17**: Admin route guard and layout — `AdminGuard` checking `user.is_admin` from auth store, separate `AdminShell` layout with `AdminSidebar`, shared `Topbar`. Admin pages code-split from regular bundles. Re-validate `/auth/me` on admin page mount.
+- **REQ-18**: Admin API client and dependencies — `adminApi` + `quotaApi` namespaces in `api.ts`. Install `@tanstack/react-table` (^8.21) and `sonner` (^2.0). Toaster with Obsidian Lens theming.
+
+### Admin Vertical Features
+
+- **REQ-19**: Admin user management UI — paginated, searchable, sortable user table (TanStack Table, server-side); inline status toggle and admin role toggle with confirmation modals; toast feedback via sonner.
+- **REQ-20**: Admin team overview UI — all-teams directory with name, member count, created date; drill-down link to team detail.
+- **REQ-21**: Admin quota management UI — per-user and per-team quota view/edit, wired to existing `PUT /quota/user/{id}` and `PUT /quota/team/{id}` endpoints; user/team picker search.
+- **REQ-22**: Admin pricing management UI — model pricing CRUD table wired to existing `POST/PATCH/DELETE /billing/pricing/` endpoints; create/edit forms; deactivate with confirmation.
+- **REQ-23**: Admin system AI Provider management UI — system-level provider list/create/edit/delete and key management, isolated from team/personal AI Console; wired to existing `owner_type=system` endpoints.
+
+### Admin Monitoring & Dashboard
+
+- **REQ-24**: Admin monitoring dashboard — global task monitoring (reuse TaskMonitorPage with admin scope), AI call logs, skill execution logs with cross-user filtering; usage/cost time-series and breakdowns (reuse billing components).
+- **REQ-25**: Admin dashboard landing page — 4-6 actionable KPI cards (users at quota limit, failed tasks, provider errors, total cost), secondary aggregate stats, link to sub-pages. Not a vanity metrics wall.
 
 ### Future
 
 - **REQ-F01**: Advanced cross-project workflow templates.
 - **REQ-F02**: Enterprise compliance and audit export enhancements.
+- **REQ-F03**: User/team drill-down pages (full activity, spend, quota in one view).
+- **REQ-F04**: Bulk quota templates and CSV/JSON export.
+- **REQ-F05**: Pricing change history with immutable versioning.
 
 ## Out of Scope
 
@@ -48,29 +76,49 @@
 |---------|--------|
 | Legacy queue architecture extension | Replaced by Celery-first strategy |
 | Full enterprise compliance in v1 | Deferred after production stabilization |
+| Fine-grained admin RBAC (super-admin/billing-admin/support-admin) | `is_admin` boolean sufficient at current scale |
+| Login-as-user impersonation | High security/audit risk without enterprise-grade isolation |
+| Customizable admin dashboards (drag-and-drop widgets) | Fixed IA with good filters wins faster |
+| SCIM/LDAP provisioning | No enterprise customer demand yet |
+| WebSocket real-time push for admin | Polling + React Query refetchInterval sufficient |
+| Multi-currency tax-grade pricing | Credit-based single-region product |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| REQ-01 | Phase 1 | Complete |
-| REQ-02 | Phase 1 | Complete |
-| REQ-03 | Phase 2 | Complete |
-| REQ-04 | Phase 2 | Complete |
-| REQ-05 | Phase 3 | Complete |
-| REQ-06 | Phase 3 | Complete |
-| REQ-07 | Phase 4 | Complete |
-| REQ-08 | Phase 4 | Complete |
-| REQ-09 | Phase 5 | Complete |
-| REQ-10 | Phase 5 | Complete |
-| REQ-11 | Phase 6 | Complete |
-| REQ-12 | Phase 6 | Complete |
+| REQ-01 | Phase 01 | Complete |
+| REQ-02 | Phase 01 | Complete |
+| REQ-03 | Phase 02 | Complete |
+| REQ-04 | Phase 02 | Complete |
+| REQ-05 | Phase 03 | Complete |
+| REQ-06 | Phase 03 | Complete |
+| REQ-07 | Phase 04 | Complete |
+| REQ-08 | Phase 04 | Complete |
+| REQ-09 | Phase 05 | Complete |
+| REQ-10 | Phase 05 | Complete |
+| REQ-11 | Phase 06 | Complete |
+| REQ-12 | Phase 06 | Complete |
+| REQ-13 | Phase 07 | Planned |
+| REQ-14 | Phase 07 | Planned |
+| REQ-15 | Phase 07 | Planned |
+| REQ-16 | Phase 07 | Planned |
+| REQ-17 | Phase 08 | Planned |
+| REQ-18 | Phase 08 | Planned |
+| REQ-19 | Phase 09 | Planned |
+| REQ-20 | Phase 09 | Planned |
+| REQ-21 | Phase 10 | Planned |
+| REQ-22 | Phase 10 | Planned |
+| REQ-23 | Phase 10 | Planned |
+| REQ-24 | Phase 11 | Planned |
+| REQ-25 | Phase 11 | Planned |
 
 **Coverage:**
-- v1 requirements: 12 total
-- Mapped to phases: 12
+- v2.0 requirements: 12 total — all complete
+- v2.1 requirements: 13 total — all planned
+- Future: 5 deferred
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-27*
-*Last updated: 2026-03-27 after GSD audit initialization*
+*Last updated: 2026-03-31 — v2.1 Admin Console requirements added*

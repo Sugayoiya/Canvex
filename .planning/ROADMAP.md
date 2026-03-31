@@ -1,5 +1,88 @@
 # Roadmap: Canvas Studio
 
+## Canvex Roadmap v2.1: Admin Console
+
+- [ ] **Phase 07: Admin API Foundation** — Admin user endpoints, audit log model, log scope lifts, dashboard stats, team overview API
+- [ ] **Phase 08: Admin Frontend Shell** — AdminGuard, admin layout/sidebar, new deps, adminApi/quotaApi client, Toaster setup
+- [ ] **Phase 09: User & Team Management UI** — TanStack Table user directory, status/admin toggles, team overview table, confirmation modals
+- [ ] **Phase 10: Quota & Pricing & Provider Management UI** — Quota editor, pricing CRUD table, system AI Provider management
+- [ ] **Phase 11: Monitoring Dashboard & Polish** — Admin dashboard KPIs, global task/AI/skill logs, billing reuse, empty/error states, design consistency
+
+### Phase 07: Admin API Foundation
+**Goal**: Build all backend admin endpoints and data models needed by the admin console — user management, audit trail, log scope lifts, team overview, and dashboard aggregation.
+**Depends on**: Phase 06
+**UI hint**: no
+**Requirements:** [REQ-13, REQ-14, REQ-15, REQ-16]
+
+**Success Criteria**:
+1. `GET /admin/users` returns paginated user list with search/filter/sort; response excludes `password_hash` and `refresh_token`.
+2. `PATCH /admin/users/{id}/status` toggles user status (active/banned) and invalidates refresh token on ban.
+3. `PATCH /admin/users/{id}/admin` toggles `is_admin` with last-admin and self-demotion safeguards.
+4. `AdminAuditLog` model exists; all admin mutations emit audit events.
+5. `/logs/skills`, `/logs/ai-calls`, `/logs/ai-calls/stats`, `/logs/trace/{trace_id}` support admin cross-user queries.
+6. `GET /admin/teams` returns all teams with aggregate member counts.
+7. `GET /admin/dashboard` returns aggregate KPIs (user count, team count, task stats, cost).
+8. All `/admin/*` endpoints return 403 for non-admin tokens (automated test).
+
+### Phase 08: Admin Frontend Shell
+**Goal**: Establish the admin frontend foundation — route guard, layout, navigation, API client extensions, and new dependencies.
+**Depends on**: Phase 07
+**UI hint**: yes
+**Requirements:** [REQ-17, REQ-18]
+
+**Success Criteria**:
+1. `AdminGuard` blocks non-admin users from `/admin/*` routes; redirects to `/projects`.
+2. `AdminShell` layout with `AdminSidebar` (Dashboard/Users/Quotas/Pricing/Providers/Monitoring/Teams + "Back to App") renders correctly.
+3. `adminApi` and `quotaApi` namespaces added to `api.ts` with all admin endpoint methods.
+4. `@tanstack/react-table` and `sonner` installed; `<Toaster>` mounted in admin layout with Obsidian Lens theming.
+5. Admin pages are code-split (dynamic imports); non-admin bundles don't include admin components.
+6. Sidebar gains conditional "Admin Console" link when `user.is_admin`.
+7. Admin route entry re-validates `user.is_admin` via `/auth/me` fetch.
+
+### Phase 09: User & Team Management UI
+**Goal**: Build the admin user directory and team overview pages with full CRUD interactions.
+**Depends on**: Phase 08
+**UI hint**: yes
+**Requirements:** [REQ-19, REQ-20]
+
+**Success Criteria**:
+1. User management page: paginated TanStack Table with server-side sort, search (debounced 300ms), status filter; columns: name, email, status, admin flag, teams, last login, created.
+2. Status toggle (enable/disable) with confirmation modal and toast feedback.
+3. Admin role toggle (grant/revoke) with confirmation modal and toast feedback; UI shows "last admin" warning when applicable.
+4. Team overview page: all-teams table with name, member count, owner, created date.
+5. Both tables handle loading states (skeletons), error states (retry), and empty states (contextual message + CTA).
+6. All data flows through React Query with `['admin', ...]` query keys.
+
+### Phase 10: Quota & Pricing & Provider Management UI
+**Goal**: Wire existing backend quota/pricing/provider APIs into admin management pages.
+**Depends on**: Phase 08
+**UI hint**: yes
+**Requirements:** [REQ-21, REQ-22, REQ-23]
+
+**Success Criteria**:
+1. Quota management page: user/team picker with search; displays current quota vs usage; inline edit form to set limits via existing PUT endpoints; toast on success.
+2. Pricing management page: TanStack Table listing model pricing rules (provider, model, unit, rate, status); create/edit form; deactivate with confirmation; wired to existing POST/PATCH/DELETE billing/pricing endpoints.
+3. System AI Provider page: list system-scope providers; create/edit/delete provider configs; key management (add/remove, masked display); isolated from team/personal console.
+4. All forms validate inputs before submission; error feedback via toast or inline messages.
+5. Obsidian Lens design tokens used consistently (--ob-* variables, Space Grotesk + Manrope fonts).
+
+### Phase 11: Monitoring Dashboard & Polish
+**Goal**: Build the admin dashboard landing page and global monitoring views; polish all admin pages for production quality.
+**Depends on**: Phase 09, Phase 10
+**UI hint**: yes
+**Requirements:** [REQ-24, REQ-25]
+
+**Success Criteria**:
+1. Admin dashboard: 4-6 KPI cards (total users, total teams, active tasks, failed tasks last 24h, total cost, providers with errors); actionable items above fold; links to sub-pages.
+2. Global monitoring: task list (admin scope), AI call logs, skill execution logs with cross-user filtering and pagination.
+3. Usage/cost time-series and breakdowns reusing billing components with admin-global data.
+4. All admin pages have consistent Obsidian Lens styling, loading skeletons, error boundaries, and empty states.
+5. Admin actions have sonner toast feedback.
+6. Admin dashboard fits in one viewport without scrolling; actionable items prioritized.
+7. Bundle analysis confirms admin chunks are not loaded for non-admin users.
+
+---
+
 ## Canvex Roadmap v2.0: Skill + Celery Refactor
 
 - [x] **Phase 01: Foundation + SkillRegistry + Celery + Logging**

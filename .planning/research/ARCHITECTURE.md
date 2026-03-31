@@ -1,106 +1,356 @@
-# Architecture Research — Admin Console
+# Architecture Research
 
-## Integration Points
+**Domain:** SaaS admin console for AI creative tool platform
+**Researched:** 2026-03-31
+**Confidence:** HIGH
 
-### Backend
+## Standard Architecture
 
-- **统一鉴权入口**：所有需登录的管理能力已通过 `get_current_user` 注入 `User`；系统级权限在路由内调用 `require_admin(user)`（`api/app/core/deps.py`），失败返回 **403**、`detail: "System administrator privileges required"`。
-- **已存在的 admin 相关行为**（无需新造轮子即可部分对接前端）：
-  - **配额**：`api/app/api/v1/quota.py` — `GET/PUT /quota/user/{user_id}`、`GET/PUT /quota/team/{team_id}` 均 `require_admin`；`/quota/my` 为普通用户。
-  - **定价**：`api/app/api/v1/billing.py` — `POST/PATCH/DELETE /billing/pricing/` 需 admin；`GET /billing/pricing/` 对任意登录用户可读（`active_only`）；用量统计与时间序列在 **非 admin** 时按 `AICallLog.user_id == user.id` 过滤，**admin 可见全站聚合**。
-  - **系统级 AI Provider**：`api/app/api/v1/ai_providers.py` — `owner_type == "system"` 的 list/create/update/delete 路径经 `_verify_config_ownership` / 分支内 `require_admin` 保护。
-  - **任务监控**：`api/app/api/v1/logs.py` — `GET /logs/tasks` 与 `/logs/tasks/counts` 在 `user.is_admin` 时可不按 `user_id` 过滤，并支持 `user_id` 查询参数；**技能日志、AI 调用列表、trace** 仍 **固定按当前用户** 过滤，尚无全站管理员视图。
-- **路由聚合**：新 admin 专用模块应通过 `api/app/api/v1/router.py` 的 `include_router` 注册，前缀建议 **`/admin`** 或保持 REST 资源路径但在标签与文档上归类为 admin，与现有 `/quota`、`/billing`、`/logs` 并列，便于 OpenAPI 分组。
-
-### Frontend
-
-- **身份字段**：`User.is_admin` 已在 `web/src/stores/auth-store.ts` 的 `User` 类型与持久化 store 中定义；登录/OAuth 回调通过 `authApi.me()`（`GET /api/v1/auth/me`）写入用户对象，`UserResponse` 含 `is_admin`（`api/app/schemas/auth.py`）。
-- **全局壳层**：`web/src/components/providers.tsx` 用 `AuthGuard` 包住整棵应用树，目前仅校验 **是否登录**，不区分 admin。
-- **布局与导航**：`AppShell`（`sidebar` + `topbar` + `main`）与 **空间切换器**（personal / team）是正交的维度；`sidebar.tsx` 中 `NAV_ITEMS` / `BOTTOM_ITEMS` 为静态列表，**无 admin 入口**。`topbar.tsx` 的 `SEGMENT_LABELS` 按路径段映射面包屑，需为 `admin` 段补充文案。
-- **API 客户端**：`web/src/lib/api.ts` 已有 `billingApi`（用量与 **只读** `pricing`）、`taskApi`、`logsApi`、`aiProvidersApi`；**没有** `quotaApi`，也没有 billing 定价的 **写操作** 方法。
-- **现状分散能力**：`/settings/ai` 按 `currentSpace` 拉取 `owner_type` 为 team 或 system 的 providers（system 仅 admin 可过）；`/billing` 自建 `Sidebar` 未用 `AppShell`；`/tasks` 使用已有 `taskApi`。Admin 控制台的目标之一是把 **用户/配额/定价/系统 Provider/全站监控/团队概览** 收拢到统一信息架构，而不是继续散落在底部导航与设置页。
-
-### 与空间切换器的关系
-
-- **Admin 不是第三种 space**：`currentSpace` 表示 **数据归属上下文**（个人资源 vs 某团队资源）；系统管理是 **全局角色能力**，不应写入 `SpaceContext`。
-- **推荐 UX**：在侧栏增加 **仅当 `user?.is_admin` 时可见** 的分区（例如 `ADMIN` 标签下「Admin Console」链到 `/admin`），或空间下拉底部固定一项「系统管理」；进入 `/admin/*` 后仍保留顶部/侧栏壳子，但可在 admin 子布局中用 **二级侧栏** 展示用户/配额/定价/监控等，避免与 `WORKSPACE` 主导航混淆。
-- **可选强化**：进入 admin 路由时在 UI 上弱化或禁用空间相关操作（或显示提示「全局管理视图」），防止误以为配额/团队操作仅作用于当前 space；具体产品取舍可在实现阶段定。
-
----
-
-## New Components Needed
-
-### Backend
-
-| 领域 | 现状缺口 | 建议 |
-|------|----------|------|
-| **用户管理** | `users.py` 仅有 `/search`、`/me`；无列表、禁用/启用、`is_admin` 变更 | 新增 `api/app/api/v1/admin_users.py`（或 `admin.py` 下子路由）：分页列表+搜索、`PATCH` 更新 `status`（active/banned）、`is_admin`；全部 `require_admin`；响应使用专用 schema（勿把敏感字段暴露给普通 `/users`）。 |
-| **团队概览** | `teams.py` 为成员视角 | 新增 admin 列表端点：全站团队分页、成员数摘要；`require_admin`。 |
-| **监控 / 日志** | `logs.py` 中 skill/ai-call/trace 仍 user-scoped | 方案 A：在同文件为 admin 增加查询参数 `global=true` 或省略用户过滤；方案 B：新增 `/admin/logs/skills`、`/admin/logs/ai-calls`、`/admin/logs/trace/{id}` 避免改变现有客户端语义。**Trace** 需能按 `trace_id` 跨用户加载时校验 admin。 |
-| **模型 / Schema** | `User` 已有 `status`、`is_admin` | 新增 Pydantic：`AdminUserListItem`、`AdminUserUpdate`、`AdminTeamSummary` 等；列表注意性能（索引 email/nickname/status）。 |
-
-不在此里程碑强制要求、但可预留：**审计查询 API**（若 `QuotaUsageLog`、skill/ai 日志已足够可先只做只读导出）。
-
-### Frontend
-
-| 类型 | 建议 |
-|------|------|
-| **路由保护** | `AdminGuard`（或 `auth-guard` 内分支）：`useAuthStore` 的 `user?.is_admin`；未登录走现有逻辑；已登录非 admin 访问 `/admin` → 重定向 `/projects` 或专用 403 页。 |
-| **布局** | `admin/layout.tsx`（App Router）：嵌套在根 layout 下，内层使用 `AppShell` 或 `AdminShell`（复用 `Topbar`/`Sidebar` 样式 token，侧栏第二列给 admin 子导航）。 |
-| **页面** | `src/app/admin/page.tsx`（概览）、`admin/users`、`admin/quotas`、`admin/pricing`、`admin/providers`、`admin/monitoring`、`admin/teams` 等与 `PROJECT.md` 功能对齐。 |
-| **组件** | `components/admin/*`：用户表、配额表单、定价表 CRUD、系统 provider 管理（可抽取与 `settings/ai` 共享的表格/卡片，通过 `owner_type="system"` 区分）。 |
-| **API 层** | `api.ts` 增加 `quotaApi`、`billingApi` 的 pricing 变更方法；`logsApi`/`taskApi` 增加 admin 全局查询参数（与后端契约一致）；可选 `adminApi` 聚合用户/团队 admin 端点。 |
-| **React Query** | `queryKey` 显式包含 `['admin', ...]`，与普通 workspace 查询隔离，避免缓存混淆。 |
-| **状态** | **无需**新 Zustand store；`is_admin` 以 `auth-store` 为准。若后台修改了 admin 标志，需依赖 **重新登录** 或 **显式 refetch `/auth/me`** 刷新（可在进入 `/admin` 时 `useQuery` 拉一次 profile）。 |
-
----
-
-## Route Structure
-
-建议的 **Next.js App Router** 层级（与现有 `src/app/projects/`、`settings/ai/` 并列）：
+### System Overview
 
 ```
-src/app/admin/
-  layout.tsx          # AdminGuard + 管理区壳层（+ admin 子导航）
-  page.tsx            # 仪表盘：快捷入口、关键指标（可聚合 billing stats / task counts）
-  users/page.tsx      # 用户列表 / 搜索 / 状态与 is_admin
-  quotas/page.tsx     # 按 user_id / team_id 查询与编辑配额（对接 /quota/...）
-  pricing/page.tsx    # 模型定价 CRUD（对接 /billing/pricing/）
-  providers/page.tsx  # 系统级 AI Provider（aiProvidersApi list owner_type=system）
-  monitoring/page.tsx # 全站任务 +（后端就绪后）技能/AI 日志
-  teams/page.tsx      # 全站团队概览
+┌─────────────────────────────────────────────────────────────────────┐
+│  Browser                                                            │
+│                                                                     │
+│  ┌──────────────────────┐     ┌──────────────────────────────────┐  │
+│  │ Regular App           │     │ Admin Console                    │  │
+│  │ /projects, /teams,    │     │ /admin/users, /admin/quotas,     │  │
+│  │ /billing, /tasks,     │     │ /admin/pricing, /admin/providers │  │
+│  │ /settings/ai, /canvas │     │ /admin/monitoring, /admin/teams  │  │
+│  │                       │     │                                  │  │
+│  │ AppShell (Sidebar +   │     │ AdminShell (AdminSidebar +       │  │
+│  │  Topbar)              │     │  Topbar — reused)                │  │
+│  │ AuthGuard             │     │ AuthGuard + AdminGuard           │  │
+│  └───────────┬───────────┘     └──────────────┬───────────────────┘  │
+│              │                                │                     │
+│              └──────────┬─────────────────────┘                     │
+│                         │ Axios (JWT auto-attach)                   │
+└─────────────────────────┼───────────────────────────────────────────┘
+                          │
+              ┌───────────▼───────────┐
+              │   FastAPI /api/v1/    │
+              │                       │
+              │  Existing routes:     │       New route:
+              │  /quota/* (admin)     │    ┌──────────────┐
+              │  /billing/* (mixed)   │    │ /admin/*     │
+              │  /logs/* (mixed)      │    │ user list    │
+              │  /ai-providers/*      │    │ user toggle  │
+              │  /teams/*             │    │ admin grant  │
+              │                       │    │ team overview│
+              │  Guard: require_admin │    │ audit log    │
+              │  Scope: is_admin →    │    │ dashboard KPI│
+              │    bypass user_id     │    └──────┬───────┘
+              └───────────┬───────────┘           │
+                          │                       │
+              ┌───────────▼───────────────────────▼──┐
+              │  SQLAlchemy async                     │
+              │  User (is_admin, status)              │
+              │  UserQuota / TeamQuota                │
+              │  ModelPricing                         │
+              │  AIProviderConfig / AIProviderKey      │
+              │  SkillExecutionLog / AICallLog         │
+              │  Team / TeamMember                    │
+              │  QuotaUsageLog (audit)                │
+              └──────────────────────────────────────┘
 ```
 
-**后端** 可选两种风格（二选一保持一致即可）：
+### Component Responsibilities
 
-- **前缀聚合**：`APIRouter(prefix="/admin")`，下挂 `users`、`teams`、`logs` 等；或
-- **资源保持**：继续用 `/quota`、`/billing`、`/ai-providers`，仅新增真正缺失的 `/admin/users` 类资源。
+| Component | Responsibility | Current State |
+|---|---|---|
+| `require_admin` (deps.py) | Backend gate — checks `User.is_admin` | ✅ Exists, used in quota/billing/provider routes |
+| `User.is_admin` | System admin boolean flag | ✅ Exists on model, exposed in JWT profile, in auth store |
+| `User.status` | Account lifecycle (active/banned) | ✅ Exists, enforced in `get_current_user` |
+| `AuthGuard` | Frontend route protection (redirect to /login) | ✅ Exists, wraps all routes via Providers |
+| `AdminGuard` | Frontend admin gate (redirect non-admins) | ❌ New — reads `user.is_admin` from auth store |
+| `AdminShell` | Admin-specific layout (sidebar + topbar) | ❌ New — parallel to AppShell |
+| `admin.py` router | Backend admin-only aggregate endpoints | ❌ New — user CRUD, team overview, dashboard KPIs |
+| `adminApi` | Frontend API client for admin endpoints | ❌ New — added to `lib/api.ts` |
+| Billing endpoints | Usage stats + timeseries | ✅ Already admin-aware (bypass user_id when is_admin) |
+| Logs endpoints | Tasks + AI calls + traces | ✅ Partially admin-aware (/tasks, /tasks/counts bypass user_id) |
+| Quota endpoints | User/team quota CRUD | ✅ Already admin-guarded |
+| Pricing endpoints | Model pricing CRUD | ✅ Already admin-guarded |
+| AI Provider endpoints | System/team/personal provider CRUD | ✅ Already ownership-scoped, system = admin |
 
----
+## Recommended Project Structure
+
+New files/folders within existing structure:
+
+```
+web/src/
+├── app/
+│   └── admin/                          # NEW — admin route tree
+│       ├── layout.tsx                  # AdminShell + AdminGuard wrapper
+│       ├── page.tsx                    # Dashboard — KPIs, at-a-glance
+│       ├── users/
+│       │   └── page.tsx               # User management table
+│       ├── quotas/
+│       │   └── page.tsx               # Quota management (user + team)
+│       ├── pricing/
+│       │   └── page.tsx               # Model pricing CRUD
+│       ├── providers/
+│       │   └── page.tsx               # System-level AI provider management
+│       ├── monitoring/
+│       │   └── page.tsx               # Global task + AI call logs
+│       └── teams/
+│           └── page.tsx               # All-teams overview
+├── components/
+│   └── admin/                          # NEW — admin-specific components
+│       ├── admin-guard.tsx            # Redirect non-admins to /projects
+│       ├── admin-shell.tsx            # Layout: AdminSidebar + Topbar
+│       ├── admin-sidebar.tsx          # Admin navigation
+│       ├── admin-kpi-cards.tsx        # Dashboard KPI cards (4-6 metrics)
+│       ├── user-table.tsx             # Paginated user directory
+│       ├── user-status-toggle.tsx     # Enable/disable user action
+│       ├── admin-role-toggle.tsx      # Grant/revoke admin
+│       ├── quota-editor.tsx           # Inline quota edit form
+│       └── team-overview-table.tsx    # All-teams list with member counts
+└── lib/
+    └── api.ts                          # MODIFIED — add adminApi namespace
+
+api/app/
+├── api/v1/
+│   ├── admin.py                        # NEW — admin-only endpoints
+│   └── router.py                       # MODIFIED — register admin router
+├── models/
+│   └── admin_audit_log.py              # NEW (optional) — structured admin action log
+└── schemas/
+    └── admin.py                        # NEW — admin request/response schemas
+```
+
+## Architectural Patterns
+
+### 1. Dual Guard Pattern (Frontend)
+
+```
+AuthGuard (exists)          AdminGuard (new)
+    │                           │
+    ▼                           ▼
+Check isAuthenticated       Check user.is_admin
+→ redirect to /login        → redirect to /projects (or 403 page)
+```
+
+`admin/layout.tsx` nests both guards:
+
+```tsx
+// web/src/app/admin/layout.tsx
+export default function AdminLayout({ children }) {
+  return (
+    <AdminGuard>
+      <AdminShell>{children}</AdminShell>
+    </AdminGuard>
+  );
+}
+```
+
+`AdminGuard` reads from the existing Zustand `useAuthStore` — no new store needed.
+
+### 2. Backend Admin Scope Pattern
+
+Existing routes already demonstrate two patterns for admin scope:
+
+**Pattern A — Explicit guard** (used in quota.py, billing.py pricing):
+```python
+@router.put("/user/{user_id}")
+async def set_user_quota(user_id: str, user=Depends(get_current_user), ...):
+    require_admin(user)  # 403 if not admin
+    ...
+```
+
+**Pattern B — Conditional scope lift** (used in billing.py timeseries, logs.py tasks):
+```python
+if not getattr(user, "is_admin", False):
+    stmt = stmt.where(AICallLog.user_id == user.id)
+# admin sees all rows
+```
+
+For the new `/api/v1/admin/*` router, use **Pattern A exclusively** — every endpoint calls `require_admin`. No mixed-scope endpoints in the admin router.
+
+### 3. Component Reuse Strategy
+
+| Existing Component | Reuse in Admin | Adaptation Needed |
+|---|---|---|
+| `KPICards` (billing) | Admin dashboard KPIs | Parameterize labels/icons; wrap with admin-global data |
+| `UsageChart` (billing) | Admin monitoring charts | Already admin-aware via backend scope lift |
+| `ProviderPieChart` (billing) | Admin provider stats | Already admin-aware |
+| `UsageTable` (billing) | Admin usage breakdown | Already admin-aware |
+| `TaskList` (tasks) | Admin task monitoring | Already accepts `isAdmin` prop |
+| `StatusBadge` (tasks) | Admin user status display | Reuse directly for status badges |
+| `Topbar` (layout) | Admin topbar | Reuse as-is; add admin indicator badge |
+| `BillingDashboard` | Admin billing view | Embed directly — already shows global data for admins |
+| `TaskMonitorPage` | Admin task monitoring | Embed directly — already shows global data for admins |
+
+### 4. Sidebar Navigation Isolation
+
+Regular sidebar (existing):
+```
+WORKSPACE
+├── Projects
+├── Team & Roles
+├── AI Console
+├── ─────────
+├── Tasks
+└── Billing
+```
+
+Admin sidebar (new):
+```
+ADMIN CONSOLE
+├── Dashboard        → /admin
+├── Users            → /admin/users
+├── Quotas           → /admin/quotas
+├── Pricing          → /admin/pricing
+├── Providers        → /admin/providers
+├── Monitoring       → /admin/monitoring
+├── Teams            → /admin/teams
+├── ─────────
+└── ← Back to App   → /projects
+```
+
+Regular sidebar gains a conditional admin link:
+```
+(if user.is_admin)
+├── Admin Console    → /admin
+```
 
 ## Data Flow
 
-1. **登录** → `authApi.login` / OAuth → `authApi.me()` → `setAuth(user, ...)`，`user.is_admin` 进入 Zustand（并持久化）。
-2. **访问 `/admin/*`** → `AdminGuard` 读取 store；通过则渲染 admin layout。
-3. **拉取数据** → React Query 调用 `api.ts` 封装的方法；Axios 拦截器附带 JWT；**403** 时可在 admin 页面统一 `onError` 提示无权限（并建议 refetch `/auth/me` 以防角色变更）。
-4. **写操作**（配额、定价、用户状态）→ `PUT/PATCH/POST` → 后端 `require_admin` → 成功则 `invalidateQueries` 相关 `queryKey`。
-5. **与普通控制台并存**：`/settings/ai` 仍服务 **当前 space** 的 team/personal provider；`/admin/providers` 专注 **system** 行，权限与数据面与 `owner_type` 一致，符合 `PROJECT.md` 的「权限隔离」约束。
+### Admin Request Flow
 
----
+```
+1. User navigates to /admin/users
+2. AdminGuard checks useAuthStore().user.is_admin
+   → false: redirect to /projects
+   → true: render AdminShell > page
+3. Page calls adminApi.listUsers({ search, status, page })
+4. Axios interceptor attaches JWT
+5. FastAPI /api/v1/admin/users:
+   a. get_current_user() — validates JWT, checks status != "banned"
+   b. require_admin(user) — checks is_admin, else 403
+   c. Query: SELECT users with pagination, no user_id filter
+6. Response → React Query cache → table render
+```
 
-## Build Order
+### State Management Approach
 
-1. **后端优先 — 用户与列表能力**：admin 用户列表 + 更新接口（否则前端无数据源）。可与 **logs 全站查询** 并行设计，但用户管理通常为 P0。
-2. **前端基础 — 路由与守卫**：`/admin/layout.tsx` + `AdminGuard` + 侧栏入口（`user.is_admin`）+ `topbar` 面包屑 `admin` 标签。
-3. **API 客户端**：`quotaApi`、billing pricing 写方法、扩展 `logsApi`/`taskApi`（与后端同步）。
-4. **垂直切片按依赖**：
-   - **配额页**（依赖 quota API + 用户/团队标识搜索，可先依赖用户页选 id）。
-   - **定价页**（依赖 billing 已有 CRUD）。
-   - **系统 Provider 页**（依赖现有 `ai-providers`，以 UI 聚合为主）。
-   - **监控页**（依赖 logs 扩展；在接口未就绪前可先用已有 admin `taskApi` 做全局任务视图）。
-   - **团队概览**（依赖 admin teams 列表接口）。
-5. **打磨**：403/空状态、Obsidian Lens 样式统一、与 `AppShell`/`BillingPage` 布局不一致处逐步收敛（可选，非阻塞 admin MVP）。
+**No new Zustand store.** Rationale:
 
----
+- Admin pages are read-heavy dashboards with server-authoritative data.
+- React Query handles caching, background refresh, and pagination state.
+- The only client state needed is UI-local (search filters, active tab, pagination offset) — `useState` is sufficient.
+- The existing `useAuthStore` already exposes `user.is_admin` for guard logic.
 
-*Research date: 2026-03-31 — Canvas Studio v2.1 Admin Console milestone. Sources: `api/app/core/deps.py`, `api/app/api/v1/router.py`, `quota.py`, `billing.py`, `logs.py`, `ai_providers.py`, `users.py`, `web/src/stores/auth-store.ts`, `web/src/lib/api.ts`, `web/src/components/layout/*`, `web/src/components/auth/auth-guard.tsx`, `.planning/PROJECT.md`.*
+Query key structure for admin:
+```typescript
+["admin", "users", { page, search, status }]
+["admin", "teams", { page }]
+["admin", "dashboard-kpis"]
+["admin", "audit-log", { page, action_type }]
+```
+
+## Integration Points
+
+### Internal Boundaries
+
+| Boundary | Integration Strategy |
+|---|---|
+| Admin routes ↔ Regular routes | Separate layouts, separate sidebars. Shared Topbar, shared auth store. No shared page state. |
+| Admin API ↔ Existing API | New `/admin/*` router for new endpoints. Existing admin-guarded endpoints (quota, billing, providers) called directly — no duplication. |
+| Admin components ↔ Existing components | Import and reuse billing/task components. Admin-specific components in `components/admin/`. |
+| Design system | Admin pages use same Obsidian Lens tokens (`--ob-*`), same fonts (Space Grotesk + Manrope), same glassmorphism card patterns. |
+
+### What's Reused vs New
+
+| Layer | Reused | New |
+|---|---|---|
+| **Backend models** | User, Team, TeamMember, UserQuota, TeamQuota, ModelPricing, AIProviderConfig, SkillExecutionLog, AICallLog, QuotaUsageLog | AdminAuditLog (optional — structured admin action events) |
+| **Backend routes** | `/quota/*`, `/billing/*`, `/logs/*`, `/ai-providers/*` | `/admin/users`, `/admin/teams`, `/admin/dashboard`, `/admin/audit-log` |
+| **Backend deps** | `get_current_user`, `require_admin`, `get_db` | None new |
+| **Frontend lib** | `api.ts` axios instance, JWT interceptors | `adminApi` namespace in same file |
+| **Frontend stores** | `auth-store.ts` (user.is_admin) | None new |
+| **Frontend components** | KPICards, UsageChart, ProviderPieChart, UsageTable, TaskList, StatusBadge, Topbar | AdminGuard, AdminShell, AdminSidebar, UserTable, QuotaEditor, TeamOverviewTable, AdminKPICards |
+| **Frontend pages** | None directly | 7 new pages under `/admin/*` |
+
+### New Backend Endpoints Needed
+
+```
+GET    /api/v1/admin/users              — paginated user list (search, filter by status/admin)
+PATCH  /api/v1/admin/users/{id}/status  — enable/disable (set status active/banned)
+PATCH  /api/v1/admin/users/{id}/admin   — grant/revoke is_admin
+GET    /api/v1/admin/teams              — all teams with member counts
+GET    /api/v1/admin/dashboard          — aggregate KPIs (user count, team count, task stats, cost)
+GET    /api/v1/admin/audit-log          — admin action history (paginated)
+```
+
+Existing endpoints used as-is by admin frontend:
+```
+GET    /api/v1/quota/user/{id}          — view user quota (already admin-guarded)
+PUT    /api/v1/quota/user/{id}          — set user quota (already admin-guarded)
+GET    /api/v1/quota/team/{id}          — view team quota (already admin-guarded)
+PUT    /api/v1/quota/team/{id}          — set team quota (already admin-guarded)
+POST   /api/v1/billing/pricing/         — create pricing (already admin-guarded)
+GET    /api/v1/billing/pricing/         — list pricing (any auth)
+PATCH  /api/v1/billing/pricing/{id}     — update pricing (already admin-guarded)
+DELETE /api/v1/billing/pricing/{id}     — deactivate pricing (already admin-guarded)
+GET    /api/v1/billing/usage-stats/     — usage stats (admin sees global)
+GET    /api/v1/billing/usage-timeseries/— timeseries (admin sees global)
+GET    /api/v1/ai-providers/?owner_type=system — system providers (admin-guarded)
+POST   /api/v1/ai-providers/            — create provider (admin when system)
+GET    /api/v1/logs/tasks               — task list (admin sees all)
+GET    /api/v1/logs/tasks/counts        — task counts (admin sees all)
+```
+
+## Anti-Patterns
+
+### 1. Don't Duplicate Admin Logic in Frontend
+
+The frontend should never filter data client-side to enforce admin scope. If a React Query response contains user-scoped data, the *backend* is wrong — fix the query, don't add `if (isAdmin)` branches in JSX to hide rows.
+
+### 2. Don't Create a Separate Axios Instance for Admin
+
+The existing `api` axios instance already handles JWT, token refresh, and 401 redirects. Creating a second instance (`adminApi = axios.create(...)`) would duplicate interceptor logic. Instead, add an `adminApi` namespace object that uses the shared instance:
+
+```typescript
+export const adminApi = {
+  listUsers: (params) => api.get("/admin/users", { params }),
+  ...
+};
+```
+
+### 3. Don't Put Admin State in Zustand
+
+Admin pages have no cross-page shared state that isn't already handled by React Query caching. Adding an admin Zustand store would create sync problems (stale cache vs store) and unnecessary complexity. Use React Query + `useState` for local UI state.
+
+### 4. Don't Build a Generic "Admin Framework"
+
+Avoid building configurable table/form generators, dynamic column renderers, or admin-specific component libraries. The admin console has ~7 pages with known schemas. Use direct, purpose-built components.
+
+### 5. Don't Mix Admin and Regular Nav in One Sidebar
+
+Admin navigation has different IA and different user intent. Hiding admin links behind a collapsible section in the regular sidebar creates confusion. Use a separate admin layout with its own sidebar. Connect the two with a clear "Back to App" / "Admin Console" link.
+
+### 6. Don't Forget the "Last Admin" Safeguard
+
+When revoking admin or disabling a user, the backend must check that at least one active admin remains. The existing team code does this for `team_admin` removal — apply the same pattern for `is_admin` revocation.
+
+### 7. Don't Lift Log Scope Without Pagination Safety
+
+Admin queries that remove `user_id` filters can return massive result sets. Every admin-scoped list endpoint must enforce `limit` (with a reasonable max, e.g., 100) and return `X-Total-Count` for pagination — same pattern already used in `/logs/tasks`.
+
+## Sources
+
+- `api/app/core/deps.py` — `require_admin`, `get_current_user`, role priority maps
+- `api/app/models/user.py` — `User.is_admin`, `User.status`
+- `api/app/api/v1/quota.py` — admin-guarded quota CRUD with audit logging pattern
+- `api/app/api/v1/billing.py` — admin scope lift pattern (bypass user_id filter)
+- `api/app/api/v1/logs.py` — mixed admin/user scope, pagination with X-Total-Count
+- `api/app/api/v1/ai_providers.py` — ownership-scoped provider management (system/team/personal)
+- `api/app/api/v1/router.py` — route registration pattern
+- `web/src/components/auth/auth-guard.tsx` — route protection pattern
+- `web/src/components/layout/app-shell.tsx` — layout composition (Sidebar + Topbar)
+- `web/src/components/layout/sidebar.tsx` — nav structure, Obsidian Lens tokens
+- `web/src/components/billing/billing-dashboard.tsx` — KPI + chart + table composition
+- `web/src/components/tasks/task-monitor-page.tsx` — paginated list with admin awareness
+- `web/src/stores/auth-store.ts` — `user.is_admin` already in client state
+- `web/src/lib/api.ts` — API client pattern, namespace exports
+- `web/src/components/providers.tsx` — QueryClient + AuthGuard wrapper
