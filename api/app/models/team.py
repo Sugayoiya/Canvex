@@ -4,7 +4,7 @@ from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.mixins import TimestampMixin, SoftDeleteMixin
+from app.models.mixins import TimestampMixin, SoftDeleteMixin, _utcnow
 
 
 class Team(Base, TimestampMixin, SoftDeleteMixin):
@@ -27,7 +27,7 @@ class TeamMember(Base):
     team_id: Mapped[str] = mapped_column(String(36), ForeignKey("teams.id"), nullable=False, index=True)
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(20), default="member")  # team_admin / member (legacy: owner/admin/editor)
-    joined_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     team = relationship("Team", back_populates="members")
     user = relationship("User", back_populates="team_memberships")
@@ -43,7 +43,7 @@ class TeamInvitation(Base):
     token: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
     is_used: Mapped[bool] = mapped_column(Boolean, default=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     team = relationship("Team", back_populates="invitations")
 
@@ -68,7 +68,7 @@ class GroupMember(Base):
     group_id: Mapped[str] = mapped_column(String(36), ForeignKey("groups.id"), nullable=False, index=True)
     user_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     role: Mapped[str] = mapped_column(String(20), default="editor")  # leader / editor / reviewer / viewer
-    joined_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    joined_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     group = relationship("Group", back_populates="members")
     user = relationship("User")
@@ -80,6 +80,6 @@ class GroupProject(Base):
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     group_id: Mapped[str] = mapped_column(String(36), ForeignKey("groups.id"), nullable=False, index=True)
     project_id: Mapped[str] = mapped_column(String(36), ForeignKey("projects.id"), nullable=False, index=True)
-    assigned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    assigned_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     group = relationship("Group", back_populates="projects")

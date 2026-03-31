@@ -65,7 +65,7 @@ async def update_pricing(
 
     for field, value in body.model_dump(exclude_unset=True).items():
         setattr(pricing, field, value)
-    pricing.updated_at = datetime.utcnow()
+    pricing.updated_at = datetime.now(timezone.utc)
     await db.flush()
     await db.refresh(pricing)
     return pricing
@@ -86,7 +86,7 @@ async def delete_pricing(
         raise HTTPException(status_code=404, detail="Pricing not found")
 
     pricing.is_active = False
-    pricing.updated_at = datetime.utcnow()
+    pricing.updated_at = datetime.now(timezone.utc)
     await db.flush()
     return {"detail": "Pricing deactivated"}
 
@@ -123,7 +123,7 @@ async def get_usage_timeseries(
         ).label("tokens"),
     )
 
-    if not getattr(user, "is_admin", False):
+    if not user.is_admin:
         stmt = stmt.where(AICallLog.user_id == user.id)
 
     stmt = stmt.where(
@@ -170,7 +170,7 @@ async def get_usage_stats(
         func.coalesce(func.sum(AICallLog.cost), 0).label("total_cost"),
     )
 
-    if not getattr(user, "is_admin", False):
+    if not user.is_admin:
         stmt = stmt.where(AICallLog.user_id == user.id)
 
     if start_date:

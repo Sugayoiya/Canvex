@@ -5,6 +5,7 @@ from sqlalchemy import String, DateTime, Text, Integer, Numeric, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
+from app.models.mixins import _utcnow
 
 
 class AICallLog(Base):
@@ -62,4 +63,4 @@ class AICallLog(Base):
 
     credential_source: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)

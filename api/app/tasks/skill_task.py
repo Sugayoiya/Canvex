@@ -3,7 +3,7 @@ import json
 import logging
 import time
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 
 import structlog
 
@@ -111,7 +111,7 @@ def _update_log(celery_task_id: str, result: SkillResult, duration_ms: int, ctx:
                 if row is None:
                     return
                 row.status = result.status
-                row.completed_at = datetime.utcnow()
+                row.completed_at = datetime.now(timezone.utc)
                 row.duration_ms = duration_ms
                 if result.message:
                     row.output_summary = result.message[:2000]

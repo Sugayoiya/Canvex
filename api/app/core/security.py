@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -44,6 +45,11 @@ def create_access_token(
 
 def create_refresh_token() -> str:
     return secrets.token_hex(32)
+
+
+def hash_refresh_token(token: str) -> str:
+    """One-way SHA-256 hash for refresh token storage."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def decode_access_token(token: str) -> dict[str, Any]:

@@ -4,6 +4,7 @@ from sqlalchemy import String, Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.mixins import _utcnow
 
 
 class User(Base):
@@ -19,10 +20,10 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
 
-    refresh_token: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    refresh_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     refresh_token_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     team_memberships = relationship("TeamMember", back_populates="user", cascade="all, delete-orphan")

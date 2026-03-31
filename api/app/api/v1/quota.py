@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -68,7 +68,7 @@ async def set_user_quota(
     new_values = req.model_dump(exclude_unset=True)
     for k, v in new_values.items():
         setattr(quota, k, v)
-    quota.updated_at = datetime.utcnow()
+    quota.updated_at = datetime.now(timezone.utc)
 
     db.add(QuotaUsageLog(
         user_id=user_id,
@@ -123,7 +123,7 @@ async def set_team_quota(
     new_values = req.model_dump(exclude_unset=True)
     for k, v in new_values.items():
         setattr(quota, k, v)
-    quota.updated_at = datetime.utcnow()
+    quota.updated_at = datetime.now(timezone.utc)
 
     db.add(QuotaUsageLog(
         user_id=user.id,

@@ -19,11 +19,15 @@ async def list_skill_logs(
     offset: int = 0,
     skill_name: str | None = None,
     status: str | None = None,
+    user_id: str | None = Query(None),
 ):
-    """Query Skill execution logs."""
-    stmt = select(SkillExecutionLog).where(
-        SkillExecutionLog.user_id == user.id
-    ).order_by(desc(SkillExecutionLog.queued_at))
+    """Query Skill execution logs. Admins can see all users' logs."""
+    stmt = select(SkillExecutionLog).order_by(desc(SkillExecutionLog.queued_at))
+
+    if not user.is_admin:
+        stmt = stmt.where(SkillExecutionLog.user_id == user.id)
+    elif user_id:
+        stmt = stmt.where(SkillExecutionLog.user_id == user_id)
 
     if skill_name:
         stmt = stmt.where(SkillExecutionLog.skill_name == skill_name)
@@ -61,11 +65,15 @@ async def list_ai_call_logs(
     offset: int = 0,
     provider: str | None = None,
     model: str | None = None,
+    user_id: str | None = Query(None),
 ):
-    """Query AI call logs."""
-    stmt = select(AICallLog).where(
-        AICallLog.user_id == user.id
-    ).order_by(desc(AICallLog.created_at))
+    """Query AI call logs. Admins can see all users' logs."""
+    stmt = select(AICallLog).order_by(desc(AICallLog.created_at))
+
+    if not user.is_admin:
+        stmt = stmt.where(AICallLog.user_id == user.id)
+    elif user_id:
+        stmt = stmt.where(AICallLog.user_id == user_id)
 
     if provider:
         stmt = stmt.where(AICallLog.provider == provider)
@@ -98,14 +106,20 @@ async def list_ai_call_logs(
 async def ai_call_stats(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    user_id: str | None = Query(None),
 ):
-    """Aggregate statistics for AI calls."""
+    """Aggregate statistics for AI calls. Admins see global stats."""
     stmt = select(
         func.count(AICallLog.id).label("total_calls"),
         func.sum(AICallLog.input_tokens).label("total_input_tokens"),
         func.sum(AICallLog.output_tokens).label("total_output_tokens"),
         func.sum(AICallLog.cost).label("total_cost"),
-    ).where(AICallLog.user_id == user.id)
+    )
+
+    if not user.is_admin:
+        stmt = stmt.where(AICallLog.user_id == user.id)
+    elif user_id:
+        stmt = stmt.where(AICallLog.user_id == user_id)
 
     result = await db.execute(stmt)
     row = result.one()
@@ -128,7 +142,7 @@ async def list_tasks(
     project_id: str | None = Query(None),
     user_id: str | None = Query(None),
 ):
-    is_admin = getattr(user, "is_admin", False)
+    is_admin = user.is_admin
 
     stmt = select(SkillExecutionLog)
     count_stmt = select(func.count(SkillExecutionLog.id))
@@ -183,7 +197,7 @@ async def task_status_counts(
     db: AsyncSession = Depends(get_db),
     project_id: str | None = Query(None),
 ):
-    is_admin = getattr(user, "is_admin", False)
+    is_admin = user.is_admin
 
     stmt = select(
         SkillExecutionLog.status,
@@ -245,7 +259,7 @@ async def get_node_execution_history(
         .limit(limit)
     )
 
-    if not getattr(user, "is_admin", False):
+    if not user.is_admin:
         stmt = stmt.where(SkillExecutionLog.user_id == user.id)
 
     result = await db.execute(stmt)
@@ -271,18 +285,22 @@ async def get_trace(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Get complete trace: Skill execution + all child AI calls."""
+    """Get complete trace: Skill execution + all child AI calls. Admins can see any trace."""
+    is_admin = user.is_admin
+
     skill_stmt = select(SkillExecutionLog).where(
         SkillExecutionLog.trace_id == trace_id,
-        SkillExecutionLog.user_id == user.id,
     )
+    if not is_admin:
+        skill_stmt = skill_stmt.where(SkillExecutionLog.user_id == user.id)
     skill_result = await db.execute(skill_stmt)
     skill_logs = skill_result.scalars().all()
 
     ai_stmt = select(AICallLog).where(
         AICallLog.trace_id == trace_id,
-        AICallLog.user_id == user.id,
     ).order_by(AICallLog.created_at)
+    if not is_admin:
+        ai_stmt = ai_stmt.where(AICallLog.user_id == user.id)
     ai_result = await db.execute(ai_stmt)
     ai_logs = ai_result.scalars().all()
 

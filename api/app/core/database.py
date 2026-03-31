@@ -1,8 +1,12 @@
+import logging
+
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import event
+from sqlalchemy import event, inspect, text
 
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 _sqlite_connect_args = {
     "check_same_thread": False,
@@ -37,6 +41,39 @@ class Base(DeclarativeBase):
     pass
 
 
+def _migrate_refresh_token_column(connection):
+    """Migrate refresh_token → refresh_token_hash for existing databases."""
+    insp = inspect(connection)
+    if "users" not in insp.get_table_names():
+        return
+
+    columns = {col["name"] for col in insp.get_columns("users")}
+
+    if "refresh_token_hash" in columns:
+        return
+
+    if "refresh_token" in columns:
+        if settings.USE_SQLITE:
+            connection.execute(
+                text("ALTER TABLE users ADD COLUMN refresh_token_hash VARCHAR(64)")
+            )
+            connection.execute(text("UPDATE users SET refresh_token_hash = NULL"))
+            logger.info("Migrated users.refresh_token → refresh_token_hash (SQLite: added new column)")
+        else:
+            connection.execute(
+                text("ALTER TABLE users RENAME COLUMN refresh_token TO refresh_token_hash")
+            )
+            connection.execute(
+                text("ALTER TABLE users ALTER COLUMN refresh_token_hash TYPE VARCHAR(64)")
+            )
+            logger.info("Migrated users.refresh_token → refresh_token_hash (PostgreSQL: renamed)")
+    else:
+        connection.execute(
+            text("ALTER TABLE users ADD COLUMN refresh_token_hash VARCHAR(64)")
+        )
+        logger.info("Added users.refresh_token_hash column")
+
+
 async def init_db():
     """Create all tables and seed defaults."""
     from app.models.user import User  # noqa
@@ -53,6 +90,7 @@ async def init_db():
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_migrate_refresh_token_column)
 
     await _seed_default_admin()
     await _seed_demo_project()

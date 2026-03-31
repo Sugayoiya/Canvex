@@ -4,7 +4,7 @@ from sqlalchemy import String, Text, Integer, Float, DateTime, ForeignKey, JSON,
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.mixins import SoftDeleteMixin
+from app.models.mixins import SoftDeleteMixin, _utcnow
 
 
 class Canvas(Base, SoftDeleteMixin):
@@ -26,9 +26,9 @@ class Canvas(Base, SoftDeleteMixin):
     viewport: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=False)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=_utcnow, onupdate=_utcnow
     )
 
     nodes = relationship(
@@ -65,9 +65,9 @@ class CanvasNode(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=_utcnow, onupdate=_utcnow
     )
 
     canvas = relationship("Canvas", back_populates="nodes")
@@ -91,7 +91,7 @@ class CanvasEdge(Base):
     source_handle: Mapped[str] = mapped_column(String(50), default="output")
     target_handle: Mapped[str] = mapped_column(String(50), default="input")
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
 
     canvas = relationship("Canvas", back_populates="edges")
     source_node = relationship("CanvasNode", foreign_keys=[source_node_id])

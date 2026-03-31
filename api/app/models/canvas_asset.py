@@ -4,7 +4,7 @@ from sqlalchemy import String, Text, DateTime, JSON, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.models.mixins import SoftDeleteMixin
+from app.models.mixins import SoftDeleteMixin, _utcnow
 
 
 class CanvasAsset(Base, SoftDeleteMixin):
@@ -24,7 +24,7 @@ class CanvasAsset(Base, SoftDeleteMixin):
     source_node_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=_utcnow, onupdate=_utcnow
     )

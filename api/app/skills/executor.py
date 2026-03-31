@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.skills.context import SkillContext
@@ -113,8 +113,8 @@ class SkillExecutor:
             trigger_source=ctx.trigger_source,
             status="running",
             input_summary=input_summary,
-            queued_at=datetime.utcnow(),
-            started_at=datetime.utcnow(),
+            queued_at=datetime.now(timezone.utc),
+            started_at=datetime.now(timezone.utc),
         )
 
         try:
@@ -146,7 +146,7 @@ class SkillExecutor:
                 if row is None:
                     return
                 row.status = result.status
-                row.completed_at = datetime.utcnow()
+                row.completed_at = datetime.now(timezone.utc)
                 row.duration_ms = duration_ms
                 if result.message:
                     row.output_summary = result.message[:2000]

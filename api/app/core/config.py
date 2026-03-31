@@ -1,4 +1,8 @@
+import warnings
+
 from pydantic_settings import BaseSettings
+
+_INSECURE_DEFAULT_KEY = "your-secret-key-change-in-production"
 
 
 class Settings(BaseSettings):
@@ -27,7 +31,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     # JWT
-    SECRET_KEY: str = "your-secret-key-change-in-production"
+    SECRET_KEY: str = _INSECURE_DEFAULT_KEY
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
@@ -59,3 +63,10 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+if settings.SECRET_KEY == _INSECURE_DEFAULT_KEY:
+    warnings.warn(
+        "SECRET_KEY is using the insecure default value! "
+        "Set a strong random SECRET_KEY in .env before deploying to production.",
+        stacklevel=1,
+    )

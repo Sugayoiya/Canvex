@@ -1,6 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
+
+
+def _utcnow():
+    return datetime.now(timezone.utc)
 
 
 class SoftDeleteMixin:
@@ -9,7 +13,7 @@ class SoftDeleteMixin:
 
     def soft_delete(self):
         self.is_deleted = True
-        self.deleted_at = datetime.utcnow()
+        self.deleted_at = _utcnow()
 
     def restore(self):
         self.is_deleted = False
@@ -17,7 +21,7 @@ class SoftDeleteMixin:
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+        DateTime, default=_utcnow, onupdate=_utcnow
     )

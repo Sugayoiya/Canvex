@@ -5,6 +5,7 @@ from sqlalchemy import String, DateTime, Text, Integer, Numeric
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
+from app.models.mixins import _utcnow
 
 
 class SkillExecutionLog(Base):
@@ -31,7 +32,7 @@ class SkillExecutionLog(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
-    queued_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    queued_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
     started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)

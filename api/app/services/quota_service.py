@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 from sqlalchemy import select
@@ -19,7 +19,7 @@ class QuotaService:
         """Pre-execution quota gate.  Returns allowed=False on ANY error (fail-closed)."""
         try:
             async with AsyncSessionLocal() as session:
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc)
 
                 stmt = select(UserQuota).where(UserQuota.user_id == user_id).with_for_update()
                 uq = (await session.execute(stmt)).scalar_one_or_none()
@@ -111,7 +111,7 @@ class QuotaService:
                 if existing:
                     return False
 
-                now = datetime.utcnow()
+                now = datetime.now(timezone.utc)
 
                 stmt = select(UserQuota).where(UserQuota.user_id == user_id).with_for_update()
                 uq = (await session.execute(stmt)).scalar_one_or_none()

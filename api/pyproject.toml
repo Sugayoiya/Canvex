@@ -23,6 +23,7 @@ dependencies = [
     "uvicorn[standard]>=0.40.0",
     "pydantic-ai-slim[google,openai,xai]>=1.73.0",
     "sse-starlette>=3.3.0",
+    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]

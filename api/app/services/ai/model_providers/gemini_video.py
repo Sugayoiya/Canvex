@@ -56,8 +56,7 @@ class GeminiVideoProvider:
             if not operation.response or not operation.response.generated_videos:
                 raise ContentBlockedError("No video generated — content may have been blocked")
 
-            video = operation.response.generated_videos[0]
-            video_bytes = video.video.video_bytes
+            generated_video = operation.response.generated_videos[0]
 
             filename = f"video_{uuid.uuid4().hex[:12]}.mp4"
             from app.core.config import settings
@@ -66,10 +65,10 @@ class GeminiVideoProvider:
             os.makedirs(gen_dir, exist_ok=True)
             filepath = os.path.join(gen_dir, filename)
 
-            with open(filepath, "wb") as f:
-                f.write(video_bytes)
+            await self.client.aio.files.download(file=generated_video.video)
+            generated_video.video.save(filepath)
 
-            file_size = len(video_bytes)
+            file_size = os.path.getsize(filepath)
             url = f"/api/v1/files/generated/{filename}"
 
             logger.info("Video generated: %s (%d bytes)", filename, file_size)

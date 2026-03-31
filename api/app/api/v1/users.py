@@ -73,9 +73,10 @@ async def update_my_profile(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    update_data = data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(user, key, value)
+    if data.nickname is not None:
+        user.nickname = data.nickname
+    if data.avatar is not None:
+        user.avatar = data.avatar
     await db.flush()
 
     result = await db.execute(
