@@ -155,8 +155,13 @@ async def delete_node(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    node = await _load_node_with_access(node_id, user, db)
-    # Cascade-delete edges referencing this node within the same transaction
+    result = await db.execute(select(CanvasNode).where(CanvasNode.id == node_id))
+    node = result.scalar_one_or_none()
+    if node is None:
+        return  # idempotent: already deleted
+    canvas = await _load_canvas(node.canvas_id, db)
+    await resolve_project_access(canvas.project_id, user, db)
+    # Explicitly delete edges referencing this node before removing the node
     edges = await db.execute(
         select(CanvasEdge).where(
             CanvasEdge.canvas_id == node.canvas_id,
@@ -225,7 +230,7 @@ async def delete_edge(
     result = await db.execute(select(CanvasEdge).where(CanvasEdge.id == edge_id))
     edge = result.scalar_one_or_none()
     if edge is None:
-        raise HTTPException(status_code=404, detail="Edge not found")
+        return  # idempotent: already deleted (e.g. via node cascade)
     canvas = await _load_canvas(edge.canvas_id, db)
     await resolve_project_access(canvas.project_id, user, db)
     await db.delete(edge)

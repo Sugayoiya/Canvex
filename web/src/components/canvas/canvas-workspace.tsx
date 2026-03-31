@@ -125,6 +125,7 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const { clearFocus } = useCanvasStore();
   const [showAssets, setShowAssets] = useState(false);
   const { screenToFlowPosition } = useReactFlow();
+  const deletingNodeIds = useRef<Set<string>>(new Set());
 
   const {
     selectedNodes: batchSelectedNodes,
@@ -174,8 +175,12 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
       for (const change of changes) {
         if (change.type === "remove") {
           if (focusedNodeId === change.id) clearFocus();
+          if (deletingNodeIds.current.has(change.id)) continue;
+          deletingNodeIds.current.add(change.id);
           canvasApi.deleteNode(change.id).catch((err) => {
             console.warn("[canvas] node deletion sync failed:", err);
+          }).finally(() => {
+            deletingNodeIds.current.delete(change.id);
           });
         }
       }
@@ -206,13 +211,21 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
       onEdgesChange(changes);
       for (const change of changes) {
         if (change.type === "remove") {
+          const edgeBeingRemoved = edges.find((e) => e.id === change.id);
+          if (
+            edgeBeingRemoved &&
+            (deletingNodeIds.current.has(edgeBeingRemoved.source) ||
+              deletingNodeIds.current.has(edgeBeingRemoved.target))
+          ) {
+            continue;
+          }
           canvasApi.deleteEdge(change.id).catch((err) => {
             console.warn("[canvas] edge deletion sync failed:", err);
           });
         }
       }
     },
-    [onEdgesChange],
+    [onEdgesChange, edges],
   );
 
   const handleNodeDragStop = useCallback(
@@ -376,13 +389,21 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
   const handleNodeContextMenuDelete = useCallback(() => {
     if (!nodeContextMenu) return;
     const nodeId = nodeContextMenu.nodeId;
+
+    deletingNodeIds.current.add(nodeId);
+
+    setEdges((eds) => eds.filter((e) => e.source !== nodeId && e.target !== nodeId));
     setNodes((nds) => nds.filter((n) => n.id !== nodeId));
-    if (focusedNodeId === nodeId) clearFocus();
+
     canvasApi.deleteNode(nodeId).catch((err) => {
       console.warn("[canvas] node deletion sync failed:", err);
+    }).finally(() => {
+      deletingNodeIds.current.delete(nodeId);
     });
+
+    if (focusedNodeId === nodeId) clearFocus();
     setNodeContextMenu(null);
-  }, [nodeContextMenu, setNodes, focusedNodeId, clearFocus]);
+  }, [nodeContextMenu, setNodes, setEdges, focusedNodeId, clearFocus]);
 
   const handleContextMenuAddNode = useCallback(
     (nodeType: string) => {
@@ -474,6 +495,14 @@ function InnerWorkspace({ canvasId, initialData }: InnerWorkspaceProps) {
           position={contextMenu.screenPos}
           onAddNode={handleContextMenuAddNode}
           onClose={() => setContextMenu(null)}
+        />
+      )}
+      {nodeContextMenu && (
+        <NodeContextMenu
+          position={nodeContextMenu.screenPos}
+          nodeId={nodeContextMenu.nodeId}
+          onDelete={handleNodeContextMenuDelete}
+          onClose={() => setNodeContextMenu(null)}
         />
       )}
       {canBatchExecute && (

@@ -33,11 +33,12 @@ class Canvas(Base, SoftDeleteMixin):
 
     nodes = relationship(
         "CanvasNode", back_populates="canvas",
-        cascade="all, delete-orphan", order_by="CanvasNode.sort_order",
+        cascade="save-update, merge", passive_deletes=True,
+        order_by="CanvasNode.sort_order",
     )
     edges = relationship(
         "CanvasEdge", back_populates="canvas",
-        cascade="all, delete-orphan",
+        cascade="save-update, merge", passive_deletes=True,
     )
 
 
@@ -82,10 +83,10 @@ class CanvasEdge(Base):
         String(36), ForeignKey("canvases.id", ondelete="CASCADE"), nullable=False
     )
     source_node_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("canvas_nodes.id", ondelete="CASCADE"), nullable=False
+        String(36), ForeignKey("canvas_nodes.id", ondelete="RESTRICT"), nullable=False
     )
     target_node_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("canvas_nodes.id", ondelete="CASCADE"), nullable=False
+        String(36), ForeignKey("canvas_nodes.id", ondelete="RESTRICT"), nullable=False
     )
     source_handle: Mapped[str] = mapped_column(String(50), default="output")
     target_handle: Mapped[str] = mapped_column(String(50), default="input")
