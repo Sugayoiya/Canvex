@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { canvasApi } from "@/lib/api";
+import { getAccessToken } from "@/stores/auth-store";
 
 const DEBOUNCE_MS = 2000;
 
@@ -91,7 +92,7 @@ export function useNodePersistence(nodeId: string) {
         timerRef.current = null;
       }
       if (pendingDataRef.current) {
-        const token = localStorage.getItem("access_token");
+        const token = getAccessToken();
         const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
         fetch(`${baseUrl}/api/v1/canvas/nodes/${nodeId}`, {
           method: "PATCH",

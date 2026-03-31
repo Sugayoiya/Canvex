@@ -26,8 +26,7 @@ export default function RegisterPage() {
         password,
         nickname,
       });
-      localStorage.setItem("access_token", tokens.access_token);
-      localStorage.setItem("refresh_token", tokens.refresh_token);
+      setAuth({ id: "", email: "", nickname: "", is_admin: false }, tokens.access_token, tokens.refresh_token);
       const { data: user } = await authApi.me();
       setAuth(user, tokens.access_token, tokens.refresh_token);
       router.push("/projects");
@@ -83,7 +82,7 @@ export default function RegisterPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          minLength={6}
+          minLength={8}
           className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>

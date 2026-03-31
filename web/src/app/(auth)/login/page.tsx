@@ -65,20 +65,19 @@ function LoginContent() {
   }, [hydrated, isAuthenticated, router]);
 
   useEffect(() => {
-    const accessToken = searchParams.get("access_token");
-    const refreshToken = searchParams.get("refresh_token");
-    if (accessToken && refreshToken) {
-      localStorage.setItem("access_token", accessToken);
-      localStorage.setItem("refresh_token", refreshToken);
+    const oauthCode = searchParams.get("oauth_code");
+    if (oauthCode) {
       window.history.replaceState({}, "", "/login");
       authApi
-        .me()
-        .then((res) => {
-          setAuth(res.data, accessToken, refreshToken);
+        .exchangeOAuthCode(oauthCode)
+        .then(async ({ data: tokens }) => {
+          setAuth({ id: "", email: "", nickname: "", is_admin: false }, tokens.access_token, tokens.refresh_token);
+          const { data: user } = await authApi.me();
+          setAuth(user, tokens.access_token, tokens.refresh_token);
           router.replace("/projects");
         })
         .catch(() => {
-          router.replace("/login");
+          setError("OAuth login failed. Please try again.");
         });
     }
   }, [searchParams, setAuth, router]);
@@ -89,8 +88,7 @@ function LoginContent() {
     setLoading(true);
     try {
       const { data: tokens } = await authApi.login({ email, password });
-      localStorage.setItem("access_token", tokens.access_token);
-      localStorage.setItem("refresh_token", tokens.refresh_token);
+      setAuth({ id: "", email: "", nickname: "", is_admin: false }, tokens.access_token, tokens.refresh_token);
       const { data: user } = await authApi.me();
       setAuth(user, tokens.access_token, tokens.refresh_token);
       router.push("/projects");

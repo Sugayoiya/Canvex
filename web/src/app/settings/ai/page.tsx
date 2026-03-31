@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/app-shell";
+import { AdminGuard } from "@/components/auth/admin-guard";
 import { useAuthStore } from "@/stores/auth-store";
 import { aiProvidersApi, billingApi } from "@/lib/api";
 import { Plus, Zap } from "lucide-react";
@@ -55,6 +56,7 @@ export default function AIConsolePage() {
   ];
 
   return (
+    <AdminGuard>
     <AppShell>
       {/* Header */}
       <div
@@ -376,5 +378,6 @@ export default function AIConsolePage() {
         ))}
       </div>
     </AppShell>
+    </AdminGuard>
   );
 }

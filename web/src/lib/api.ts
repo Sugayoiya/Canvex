@@ -8,10 +8,20 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// Auto-attach JWT
+function _getStore() {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    return require("@/stores/auth-store");
+  } catch {
+    return null;
+  }
+}
+
+// Auto-attach JWT from Zustand store (single source of truth)
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("access_token");
+    const mod = _getStore();
+    const token = mod?.getAccessToken?.() ?? null;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,12 +33,8 @@ let refreshPromise: Promise<string> | null = null;
 
 function clearAuthAndRedirect() {
   refreshPromise = null;
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("refresh_token");
-  try {
-    const { useAuthStore } = require("@/stores/auth-store");
-    useAuthStore.getState().logout();
-  } catch { /* SSR or store not ready */ }
+  const mod = _getStore();
+  mod?.useAuthStore?.getState()?.logout();
   if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
     window.location.href = "/login";
   }
@@ -42,7 +48,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true;
 
-      const refreshToken = localStorage.getItem("refresh_token");
+      const mod = _getStore();
+      const refreshToken = mod?.getRefreshToken?.() ?? null;
       if (!refreshToken) {
         clearAuthAndRedirect();
         return Promise.reject(error);
@@ -52,8 +59,7 @@ api.interceptors.response.use(
         refreshPromise = axios
           .post(`${API_BASE_URL}/api/v1/auth/refresh`, { refresh_token: refreshToken })
           .then(({ data }) => {
-            localStorage.setItem("access_token", data.access_token);
-            localStorage.setItem("refresh_token", data.refresh_token);
+            mod?.useAuthStore?.getState()?.setTokens(data.access_token, data.refresh_token);
             refreshPromise = null;
             return data.access_token as string;
           })
@@ -85,6 +91,8 @@ export const authApi = {
     api.post("/auth/refresh", { refresh_token }),
   googleLogin: () => api.get("/auth/oauth/google/login"),
   githubLogin: () => api.get("/auth/oauth/github/login"),
+  exchangeOAuthCode: (code: string) =>
+    api.post("/auth/oauth/exchange", { code }),
 };
 
 export const skillsApi = {

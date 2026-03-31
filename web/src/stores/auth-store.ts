@@ -30,6 +30,7 @@ interface AuthState {
   teams: Team[];
   currentSpace: SpaceContext;
   setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string, refreshToken: string) => void;
   setTeams: (teams: Team[]) => void;
   switchSpace: (space: SpaceContext) => void;
   logout: () => void;
@@ -47,15 +48,14 @@ export const useAuthStore = create<AuthState>()(
       teams: [],
       currentSpace: { type: "personal" } as SpaceContext,
       setAuth: (user, accessToken, refreshToken) => {
-        localStorage.setItem("access_token", accessToken);
-        localStorage.setItem("refresh_token", refreshToken);
         set({ user, accessToken, refreshToken, isAuthenticated: true });
+      },
+      setTokens: (accessToken, refreshToken) => {
+        set({ accessToken, refreshToken });
       },
       setTeams: (teams) => set({ teams }),
       switchSpace: (space) => set({ currentSpace: space }),
       logout: () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
         set({
           user: null,
           accessToken: null,
@@ -69,6 +69,16 @@ export const useAuthStore = create<AuthState>()(
     { name: "canvas-studio-auth" }
   )
 );
+
+/** Read access token from the single source of truth (Zustand persist). */
+export function getAccessToken(): string | null {
+  return useAuthStore.getState().accessToken;
+}
+
+/** Read refresh token from the single source of truth (Zustand persist). */
+export function getRefreshToken(): string | null {
+  return useAuthStore.getState().refreshToken;
+}
 
 export function useAuthHydrated() {
   const [hydrated, setHydrated] = useState(false);

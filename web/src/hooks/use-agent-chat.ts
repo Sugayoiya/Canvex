@@ -8,6 +8,7 @@ import {
   type ToolResultData,
 } from "@/stores/chat-store";
 import { API_BASE_URL, agentApi } from "@/lib/api";
+import { getAccessToken, getRefreshToken, useAuthStore } from "@/stores/auth-store";
 
 class StreamClosedError extends Error {
   constructor() {
@@ -17,7 +18,7 @@ class StreamClosedError extends Error {
 }
 
 async function getFreshAccessToken(): Promise<string | null> {
-  let token = localStorage.getItem("access_token");
+  let token = getAccessToken();
   if (!token) return null;
 
   try {
@@ -29,7 +30,7 @@ async function getFreshAccessToken(): Promise<string | null> {
     return token;
   }
 
-  const refreshToken = localStorage.getItem("refresh_token");
+  const refreshToken = getRefreshToken();
   if (!refreshToken) return token;
 
   try {
@@ -37,8 +38,7 @@ async function getFreshAccessToken(): Promise<string | null> {
       `${API_BASE_URL}/api/v1/auth/refresh`,
       { refresh_token: refreshToken },
     );
-    localStorage.setItem("access_token", data.access_token);
-    localStorage.setItem("refresh_token", data.refresh_token);
+    useAuthStore.getState().setTokens(data.access_token, data.refresh_token);
     return data.access_token;
   } catch {
     return token;
