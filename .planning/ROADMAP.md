@@ -76,6 +76,13 @@ Plans:
 **Depends on**: Phase 08
 **UI hint**: yes
 **Requirements:** [REQ-21, REQ-22, REQ-23]
+**Plans:** 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — [W1] Backend gaps (key_hint, key list response, pricing physical delete) + billingApi extension + TabBar + ProgressBar
+- [ ] 10-02-PLAN.md — [W2] Quota Management page (dual tabs, search, expandable row editing, ProgressBar)
+- [ ] 10-03-PLAN.md — [W2] Pricing Management page (TanStack Table, CRUD modal, status filter, summary cards)
+- [ ] 10-04-PLAN.md — [W2] Provider Management page (card list, key management, create/edit/delete modals)
 
 **Success Criteria**:
 1. Quota management page: user/team picker with search; displays current quota vs usage; inline edit form to set limits via existing PUT endpoints; toast on success.
