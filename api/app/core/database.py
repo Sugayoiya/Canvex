@@ -87,6 +87,7 @@ async def init_db():
     from app.models.quota import UserQuota, TeamQuota, QuotaUsageLog  # noqa
     from app.models.oauth_account import OAuthAccount  # noqa
     from app.models.ai_provider_config import AIProviderConfig, AIProviderKey, AIModelConfig, AIModelProviderMapping  # noqa
+    from app.models.admin_audit_log import AdminAuditLog  # noqa
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)

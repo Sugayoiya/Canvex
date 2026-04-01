@@ -5,6 +5,7 @@ from app.models.skill_execution_log import SkillExecutionLog
 from app.models.ai_call_log import AICallLog
 from app.models.canvas import Canvas, CanvasNode, CanvasEdge
 from app.models.batch_execution import BatchExecution
+from app.models.admin_audit_log import AdminAuditLog
 
 __all__ = [
     "User",
@@ -14,4 +15,5 @@ __all__ = [
     "AICallLog",
     "Canvas", "CanvasNode", "CanvasEdge",
     "BatchExecution",
+    "AdminAuditLog",
 ]
