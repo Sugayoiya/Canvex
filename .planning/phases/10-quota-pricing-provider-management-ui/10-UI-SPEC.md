@@ -1,7 +1,7 @@
 ---
 phase: 10
 slug: quota-pricing-provider-management-ui
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-01
@@ -429,7 +429,7 @@ Reuse `RowDropdownMenu` from Phase 09:
 | # | Icon | Label | Variant | Behavior |
 |---|------|-------|---------|----------|
 | 1 | `pencil` | "Edit Rule" | default | Opens PricingFormModal in edit mode |
-| 2 | `toggle-left` / `toggle-right` | "Deactivate" / "Activate" | default / default | Opens ConfirmationModal (D-11) |
+| 2 | `toggle-left` / `toggle-right` | "Deactivate Rule" / "Activate Rule" | default / default | Opens ConfirmationModal (D-11) |
 | 3 | `trash-2` | "Delete Rule" | destructive | Opens ConfirmationModal (destructive) |
 
 #### B6. PricingFormModal (NEW — D-09)
@@ -735,6 +735,8 @@ Transition: `color 100ms, border-color 100ms`.
 | Reset link | `role="button"` since it triggers an action |
 | Pricing table | Same as Phase 09 DataTable accessibility |
 | Provider card | Collapse/expand triggers are `<button>` with `aria-expanded` |
+| Provider edit button | `aria-label="Edit {display_name}"` — icon-only button requires accessible label |
+| Provider delete button | `aria-label="Delete {display_name}"` — icon-only button requires accessible label |
 | Key table | `<table>` with proper `<thead>`/`<tbody>` semantics |
 | Add key form | Inputs with `<label>` elements or `aria-label` |
 | Toggle group | `role="radiogroup"`, each option `role="radio"`, `aria-checked` |
@@ -804,16 +806,16 @@ Transition: `color 100ms, border-color 100ms`.
 | Action | Label | Variant |
 |--------|-------|---------|
 | Edit | "Edit Rule" | default |
-| Deactivate (when active) | "Deactivate" | default |
-| Activate (when inactive) | "Activate" | default |
+| Deactivate (when active) | "Deactivate Rule" | default |
+| Activate (when inactive) | "Activate Rule" | default |
 | Delete | "Delete Rule" | destructive |
 
 ### Confirmation Modal Copy
 
 | Action | Icon | Title | Body | Warning | Cancel | Confirm |
 |--------|------|-------|------|---------|--------|---------|
-| Deactivate pricing | `toggle-left` | "Deactivate Rule" | "Deactivate pricing for **{model}**? New API calls will not be billed against this rule." | — | "Cancel" | "Deactivate" (primary) |
-| Activate pricing | `toggle-right` | "Activate Rule" | "Activate pricing for **{model}**? API calls will be billed against this rule." | — | "Cancel" | "Activate" (primary) |
+| Deactivate pricing | `toggle-left` | "Deactivate Rule" | "Deactivate pricing for **{model}**? New API calls will not be billed against this rule." | — | "Cancel" | "Deactivate Rule" (primary) |
+| Activate pricing | `toggle-right` | "Activate Rule" | "Activate pricing for **{model}**? API calls will be billed against this rule." | — | "Cancel" | "Activate Rule" (primary) |
 | Delete pricing | `trash-2` | "Delete Rule" | "Permanently delete pricing rule for **{model}**? This cannot be undone." | — | "Cancel" | "Delete Rule" (destructive) |
 | Delete provider | `trash-2` | "Delete Provider" | "Delete **{display_name}** and all associated API keys? This cannot be undone." | "All API keys for this provider will be permanently deleted." | "Cancel" | "Delete Provider" (destructive) |
 | Revoke key | `key` | "Revoke Key" | "Revoke API key **{label or 'Untitled'}** (sk-••••{last4})? The key will be permanently deleted." | — | "Cancel" | "Revoke Key" (destructive) |
@@ -1021,14 +1023,14 @@ Table: 10 skeleton rows same as Phase 09 pattern.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS — All CTAs verb+noun (post-R1 fix); empty/error states with solution paths; Chinese toasts
+- [x] Dimension 2 Visuals: PASS — Focal points declared per page; visual hierarchy clear; aria-labels added for icon-only buttons (post-R1 fix)
+- [x] Dimension 3 Color: PASS — 60/30/10 inherited; accent reserved-for specific; semantic additions justified
+- [x] Dimension 4 Typography: PASS — 4 sizes, 2 weights; no new additions; all roles documented
+- [x] Dimension 5 Spacing: PASS — All values ×4; exceptions documented with justification
+- [x] Dimension 6 Registry Safety: PASS — No shadcn, no third-party
 
-**Approval:** pending
+**Approval:** approved by gsd-ui-checker (2026-04-01)
 
 ---
 
