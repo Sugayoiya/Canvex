@@ -3,7 +3,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, attributes
 
 from app.core.deps import get_db, get_current_user, require_admin, require_team_member
 from app.models.ai_provider_config import (
@@ -13,6 +13,7 @@ from app.models.ai_provider_config import (
     AIModelProviderMapping,
 )
 from app.services.ai.provider_manager import encrypt_api_key
+from app.services.admin_audit import record_admin_audit
 from app.schemas.ai_provider import (
     ProviderConfigCreate,
     ProviderConfigUpdate,
@@ -117,7 +118,18 @@ async def create_provider(
     db.add(config)
     await db.flush()
 
-    config.keys = []
+    attributes.set_committed_value(config, "keys", [])
+
+    if data.owner_type == "system":
+        await record_admin_audit(
+            db,
+            admin_user_id=user.id,
+            action_type="provider.create",
+            target_type="ai_provider_config",
+            target_id=config.id,
+            changes={"provider": {"old": None, "new": {"provider_name": config.provider_name, "display_name": config.display_name, "is_enabled": config.is_enabled}}},
+        )
+
     return _config_to_response(config)
 
 
@@ -140,9 +152,21 @@ async def update_provider(
     await _verify_config_ownership(config, user, db)
 
     update_data = data.model_dump(exclude_unset=True)
+    old_snapshot = {k: getattr(config, k) for k in update_data}
     for key, value in update_data.items():
         setattr(config, key, value)
     await db.flush()
+
+    if config.owner_type == "system":
+        await record_admin_audit(
+            db,
+            admin_user_id=user.id,
+            action_type="provider.update",
+            target_type="ai_provider_config",
+            target_id=provider_id,
+            changes={"provider": {"old": old_snapshot, "new": update_data}},
+        )
+
     return _config_to_response(config)
 
 
@@ -160,6 +184,17 @@ async def delete_provider(
         raise HTTPException(status_code=404, detail="Provider config not found")
 
     await _verify_config_ownership(config, user, db)
+
+    if config.owner_type == "system":
+        await record_admin_audit(
+            db,
+            admin_user_id=user.id,
+            action_type="provider.delete",
+            target_type="ai_provider_config",
+            target_id=provider_id,
+            changes={"provider": {"old": {"provider_name": config.provider_name, "display_name": config.display_name}, "new": None}},
+        )
+
     await db.delete(config)
     await db.flush()
 
@@ -187,6 +222,17 @@ async def add_provider_key(
     )
     db.add(key)
     await db.flush()
+
+    if config.owner_type == "system":
+        await record_admin_audit(
+            db,
+            admin_user_id=user.id,
+            action_type="provider.key.add",
+            target_type="ai_provider_key",
+            target_id=key.id,
+            changes={"key": {"old": None, "new": {"label": key.label, "provider_config_id": provider_id}}},
+        )
+
     return ProviderKeyResponse(
         id=key.id,
         label=key.label,
@@ -222,6 +268,17 @@ async def delete_provider_key(
     key = key_result.scalar_one_or_none()
     if not key:
         raise HTTPException(status_code=404, detail="Key not found")
+
+    if config.owner_type == "system":
+        await record_admin_audit(
+            db,
+            admin_user_id=user.id,
+            action_type="provider.key.delete",
+            target_type="ai_provider_key",
+            target_id=key_id,
+            changes={"key": {"old": {"label": key.label, "provider_config_id": provider_id}, "new": None}},
+        )
+
     await db.delete(key)
     await db.flush()
 
