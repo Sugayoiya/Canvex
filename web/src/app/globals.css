@@ -85,6 +85,7 @@ body {
   --cv4-btn-primary-text: #131313;
   --cv4-btn-secondary: #2A2A2A;
   --cv4-btn-secondary-text: #BBC9CF;
+  --cv4-btn-secondary-border: #3c494e30;
   --cv4-active-highlight: #E5E2E115;
   --cv4-hover-highlight: #E5E2E110;
   --cv4-shadow-sm: 0 2px 10px #00000040;
@@ -146,6 +147,7 @@ body {
   --cv4-btn-primary-text: #FFFFFF;
   --cv4-btn-secondary: #F0F0F0;
   --cv4-btn-secondary-text: #4A5A62;
+  --cv4-btn-secondary-border: #D0D0D040;
   --cv4-active-highlight: #1A1A1A08;
   --cv4-hover-highlight: #1A1A1A05;
   --cv4-shadow-sm: 0 1px 8px #00000010;
