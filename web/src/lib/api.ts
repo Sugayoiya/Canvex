@@ -311,7 +311,7 @@ export const aiProvidersApi = {
   deleteKey: (providerId: string, keyId: string) =>
     api.delete(`/ai-providers/${providerId}/keys/${keyId}`),
   listModels: (params?: { model_type?: string }) =>
-    api.get("/ai-models/", { params }),
+    api.get("/ai-providers/models", { params }),
 };
 
 export const adminApi = {

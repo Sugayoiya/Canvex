@@ -20,12 +20,13 @@ import {
   ToggleLeft,
   ToggleRight,
 } from "lucide-react";
-import { billingApi } from "@/lib/api";
+import { billingApi, aiProvidersApi } from "@/lib/api";
 import { AdminDataTable } from "@/components/admin/admin-data-table";
 import { FilterToolbar } from "@/components/admin/filter-toolbar";
 import { RowDropdownMenu } from "@/components/admin/row-dropdown-menu";
 import { ConfirmationModal } from "@/components/admin/confirmation-modal";
 import { PricingFormModal } from "@/components/admin/pricing-form-modal";
+import type { ProviderOption, ModelOption } from "@/components/admin/pricing-form-modal";
 
 interface PricingRule {
   id: string;
@@ -188,6 +189,16 @@ export default function AdminPricingPage() {
   const { data: allRules, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "pricing"],
     queryFn: () => billingApi.pricing().then((r) => r.data as PricingRule[]),
+  });
+
+  const { data: providersList } = useQuery({
+    queryKey: ["ai-providers", "system"],
+    queryFn: () => aiProvidersApi.list({ owner_type: "system" }).then((r) => r.data as ProviderOption[]),
+  });
+
+  const { data: modelsList } = useQuery({
+    queryKey: ["ai-providers", "models"],
+    queryFn: () => aiProvidersApi.listModels().then((r) => r.data as ModelOption[]),
   });
 
   const filteredRules = useMemo(() => {
@@ -574,6 +585,8 @@ export default function AdminPricingPage() {
         onSubmit={handleFormSubmit}
         isLoading={createMutation.isPending || updateMutation.isPending}
         editData={formModal.editData}
+        providers={providersList}
+        models={modelsList}
       />
 
       {/* Confirmation Modal */}

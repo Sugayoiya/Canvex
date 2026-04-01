@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { X, ChevronDown } from "lucide-react";
 
 interface PricingRule {
   id: string;
@@ -19,12 +19,28 @@ interface PricingRule {
   notes: string | null;
 }
 
+export interface ProviderOption {
+  id: string;
+  provider_name: string;
+  display_name: string;
+}
+
+export interface ModelOption {
+  id: string;
+  model_name: string;
+  display_name: string;
+  model_type: string;
+  providers: string[];
+}
+
 interface PricingFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: Record<string, unknown>) => void;
   isLoading?: boolean;
   editData?: PricingRule | null;
+  providers?: ProviderOption[];
+  models?: ModelOption[];
 }
 
 const PRICING_FIELDS: Record<string, { key: string; label: string }[]> = {
@@ -86,6 +102,8 @@ export function PricingFormModal({
   onSubmit,
   isLoading,
   editData,
+  providers = [],
+  models = [],
 }: PricingFormModalProps) {
   const [mounted, setMounted] = useState(false);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
@@ -93,6 +111,20 @@ export function PricingFormModal({
   const submitRef = useRef<HTMLButtonElement>(null);
 
   const isEdit = !!editData;
+
+  const providerNames = useMemo(() => {
+    const names = providers.map((p) => p.display_name);
+    return [...new Set(names)];
+  }, [providers]);
+
+  const filteredModels = useMemo(() => {
+    if (!form.provider) return models;
+    return models.filter(
+      (m) =>
+        m.providers.length === 0 ||
+        m.providers.some((p) => p.toLowerCase() === form.provider.toLowerCase())
+    );
+  }, [models, form.provider]);
 
   useEffect(() => {
     if (isOpen) {
@@ -311,33 +343,59 @@ export function PricingFormModal({
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <div>
             <label style={labelStyle}>Provider</label>
-            <input
-              type="text"
-              value={form.provider}
-              onChange={(e) => updateField("provider", e.target.value)}
-              placeholder="e.g. OpenAI"
-              required
-              readOnly={isEdit}
-              style={{
-                ...inputStyle,
-                ...(isEdit ? { opacity: 0.6 } : {}),
-              }}
-            />
+            {isEdit ? (
+              <input type="text" value={form.provider} readOnly style={{ ...inputStyle, opacity: 0.6 }} />
+            ) : providerNames.length > 0 ? (
+              <div style={{ position: "relative" }}>
+                <select
+                  value={form.provider}
+                  onChange={(e) => {
+                    updateField("provider", e.target.value);
+                    updateField("model", "");
+                  }}
+                  style={{ ...inputStyle, appearance: "none", paddingRight: 32, cursor: "pointer" }}
+                >
+                  <option value="">Select a provider...</option>
+                  {providerNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--cv4-text-muted)", pointerEvents: "none" }} />
+              </div>
+            ) : (
+              <input type="text" value={form.provider} onChange={(e) => updateField("provider", e.target.value)} placeholder="e.g. OpenAI" required style={inputStyle} />
+            )}
           </div>
           <div>
             <label style={labelStyle}>Model</label>
-            <input
-              type="text"
-              value={form.model}
-              onChange={(e) => updateField("model", e.target.value)}
-              placeholder="e.g. gpt-4o"
-              required
-              readOnly={isEdit}
-              style={{
-                ...inputStyle,
-                ...(isEdit ? { opacity: 0.6 } : {}),
-              }}
-            />
+            {isEdit ? (
+              <input type="text" value={form.model} readOnly style={{ ...inputStyle, opacity: 0.6 }} />
+            ) : filteredModels.length > 0 ? (
+              <div style={{ position: "relative" }}>
+                <select
+                  value={form.model}
+                  onChange={(e) => {
+                    const selected = e.target.value;
+                    updateField("model", selected);
+                    const matched = models.find((m) => m.model_name === selected);
+                    if (matched) {
+                      updateField("model_type", matched.model_type);
+                    }
+                  }}
+                  style={{ ...inputStyle, appearance: "none", paddingRight: 32, cursor: "pointer" }}
+                >
+                  <option value="">Select a model...</option>
+                  {filteredModels.map((m) => (
+                    <option key={m.id} value={m.model_name}>
+                      {m.display_name} ({m.model_name})
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", color: "var(--cv4-text-muted)", pointerEvents: "none" }} />
+              </div>
+            ) : (
+              <input type="text" value={form.model} onChange={(e) => updateField("model", e.target.value)} placeholder="e.g. gpt-4o" required style={inputStyle} />
+            )}
           </div>
           <div>
             <label style={labelStyle}>Model Type</label>
