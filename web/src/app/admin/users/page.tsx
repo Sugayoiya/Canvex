@@ -23,6 +23,7 @@ import { AdminBadge } from "@/components/admin/admin-badge";
 import { RowDropdownMenu } from "@/components/admin/row-dropdown-menu";
 import { ConfirmationModal } from "@/components/admin/confirmation-modal";
 import { useAuthStore } from "@/stores/auth-store";
+import { AdminErrorBoundary } from "@/components/admin/admin-error-boundary";
 
 interface AdminUser {
   id: string;
@@ -494,6 +495,7 @@ export default function AdminUsersPage() {
         </p>
       </div>
 
+      <AdminErrorBoundary>
       {/* FilterToolbar */}
       <FilterToolbar
         searchValue={searchValue}
@@ -566,6 +568,7 @@ export default function AdminUsersPage() {
           isLoading={toggleStatus.isPending || toggleAdmin.isPending}
         />
       )}
+      </AdminErrorBoundary>
     </div>
   );
 }

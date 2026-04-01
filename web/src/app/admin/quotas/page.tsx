@@ -8,6 +8,7 @@ import { adminApi, quotaApi } from "@/lib/api";
 import { TabBar } from "@/components/admin/tab-bar";
 import { FilterToolbar } from "@/components/admin/filter-toolbar";
 import { AdminPagination } from "@/components/admin/admin-pagination";
+import { AdminErrorBoundary } from "@/components/admin/admin-error-boundary";
 
 
 interface AdminUser {
@@ -295,6 +296,7 @@ export default function AdminQuotasPage() {
         </p>
       </div>
 
+      <AdminErrorBoundary>
       {/* TabBar */}
       <TabBar tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
@@ -884,6 +886,7 @@ export default function AdminQuotasPage() {
           })()}
         </>
       )}
+      </AdminErrorBoundary>
     </div>
   );
 }

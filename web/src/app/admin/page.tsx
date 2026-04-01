@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { User, Users, CircleCheck, Wallet, Activity, AlertTriangle, RefreshCw } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { adminApi } from "@/lib/api";
+import { AdminErrorBoundary } from "@/components/admin/admin-error-boundary";
 
 interface DashboardWindowStats {
   tasks_total: number;
@@ -305,6 +306,7 @@ export default function AdminDashboardPage() {
         </button>
       </div>
 
+      <AdminErrorBoundary>
       {isError && (
         <div
           style={{
@@ -534,6 +536,7 @@ export default function AdminDashboardPage() {
           </div>
         </div>
       </div>
+      </AdminErrorBoundary>
     </div>
   );
 }

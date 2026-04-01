@@ -12,6 +12,7 @@ import { adminApi } from "@/lib/api";
 import { AdminDataTable } from "@/components/admin/admin-data-table";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { FilterToolbar } from "@/components/admin/filter-toolbar";
+import { AdminErrorBoundary } from "@/components/admin/admin-error-boundary";
 
 interface AdminTeam {
   id: string;
@@ -192,6 +193,7 @@ export default function AdminTeamsPage() {
         </p>
       </div>
 
+      <AdminErrorBoundary>
       <FilterToolbar
         searchValue={searchValue}
         onSearchChange={setSearchValue}
@@ -235,6 +237,7 @@ export default function AdminTeamsPage() {
           entityName="teams"
         />
       )}
+      </AdminErrorBoundary>
     </div>
   );
 }

@@ -27,6 +27,7 @@ import { RowDropdownMenu } from "@/components/admin/row-dropdown-menu";
 import { ConfirmationModal } from "@/components/admin/confirmation-modal";
 import { PricingFormModal } from "@/components/admin/pricing-form-modal";
 import type { ProviderOption, ModelOption } from "@/components/admin/pricing-form-modal";
+import { AdminErrorBoundary } from "@/components/admin/admin-error-boundary";
 
 interface PricingRule {
   id: string;
@@ -460,6 +461,7 @@ export default function AdminPricingPage() {
         </button>
       </div>
 
+      <AdminErrorBoundary>
       {/* FilterToolbar */}
       <FilterToolbar
         searchValue={searchValue}
@@ -605,6 +607,7 @@ export default function AdminPricingPage() {
           isLoading={toggleMutation.isPending}
         />
       )}
+      </AdminErrorBoundary>
     </div>
   );
 }

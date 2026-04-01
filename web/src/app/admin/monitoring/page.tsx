@@ -7,6 +7,7 @@ import { TaskLogTable } from "@/components/admin/task-log-table";
 import { AiCallLogTable } from "@/components/admin/ai-call-log-table";
 import { SkillLogTable } from "@/components/admin/skill-log-table";
 import { AdminUsageCostTab } from "@/components/admin/admin-usage-cost-tab";
+import { AdminErrorBoundary } from "@/components/admin/admin-error-boundary";
 
 const MONITORING_TABS = [
   { id: "tasks", label: "Tasks", icon: <ListTodo size={14} /> },
@@ -47,15 +48,17 @@ export default function AdminMonitoringPage() {
           Task execution, AI calls, skill logs, and usage analytics
         </p>
       </div>
-      <TabBar
-        tabs={MONITORING_TABS}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      {activeTab === "tasks" && <TaskLogTable />}
-      {activeTab === "ai-calls" && <AiCallLogTable />}
-      {activeTab === "skills" && <SkillLogTable />}
-      {activeTab === "usage" && <AdminUsageCostTab />}
+      <AdminErrorBoundary>
+        <TabBar
+          tabs={MONITORING_TABS}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        {activeTab === "tasks" && <TaskLogTable />}
+        {activeTab === "ai-calls" && <AiCallLogTable />}
+        {activeTab === "skills" && <SkillLogTable />}
+        {activeTab === "usage" && <AdminUsageCostTab />}
+      </AdminErrorBoundary>
     </div>
   );
 }

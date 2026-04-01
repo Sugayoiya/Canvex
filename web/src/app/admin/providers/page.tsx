@@ -13,6 +13,7 @@ import { ProviderCard } from "@/components/admin/provider-card";
 import type { Provider } from "@/components/admin/provider-card";
 import { ProviderFormModal } from "@/components/admin/provider-form-modal";
 import { ConfirmationModal } from "@/components/admin/confirmation-modal";
+import { AdminErrorBoundary } from "@/components/admin/admin-error-boundary";
 
 export default function AdminProvidersPage() {
   const queryClient = useQueryClient();
@@ -174,31 +175,33 @@ export default function AdminProvidersPage() {
 
   // --- Render ---
 
-  if (isLoading) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <PageHeader onAdd={() => setFormModal({ isOpen: true, editData: null })} disabled={anyPending} />
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            style={{
-              height: 64,
-              borderRadius: 12,
-              background: "var(--cv4-surface-primary)",
-              border: "1px solid var(--cv4-border-subtle)",
-              animation: "pulse 1.5s ease-in-out infinite",
-            }}
-          />
-        ))}
-        <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
-      </div>
-    );
-  }
+  const providerList = providers ?? [];
 
-  if (isError) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <PageHeader onAdd={() => setFormModal({ isOpen: true, editData: null })} disabled={anyPending} />
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <PageHeader
+        onAdd={() => setFormModal({ isOpen: true, editData: null })}
+        disabled={anyPending}
+      />
+
+      <AdminErrorBoundary>
+      {isLoading ? (
+        <>
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              style={{
+                height: 64,
+                borderRadius: 12,
+                background: "var(--cv4-surface-primary)",
+                border: "1px solid var(--cv4-border-subtle)",
+                animation: "pulse 1.5s ease-in-out infinite",
+              }}
+            />
+          ))}
+          <style>{`@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }`}</style>
+        </>
+      ) : isError ? (
         <div
           style={{
             display: "flex",
@@ -252,20 +255,7 @@ export default function AdminProvidersPage() {
             Retry
           </button>
         </div>
-      </div>
-    );
-  }
-
-  const providerList = providers ?? [];
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <PageHeader
-        onAdd={() => setFormModal({ isOpen: true, editData: null })}
-        disabled={anyPending}
-      />
-
-      {providerList.length === 0 ? (
+      ) : providerList.length === 0 ? (
         <div
           style={{
             display: "flex",
@@ -377,6 +367,7 @@ export default function AdminProvidersPage() {
           ))}
         </div>
       )}
+      </AdminErrorBoundary>
 
       {/* Provider Form Modal */}
       <ProviderFormModal
