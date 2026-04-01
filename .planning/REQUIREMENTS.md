@@ -115,13 +115,60 @@ Deferred to next milestone. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (To be filled by roadmapper) | | |
+| CONV-01 | Phase 12 | Pending |
+| CONV-02 | Phase 12 | Pending |
+| CONV-03 | Phase 12 | Pending |
+| CONV-04 | Phase 12 | Pending |
+| CONV-05 | Phase 12 | Pending |
+| CONV-06 | Phase 12 | Pending |
+| CONV-07 | Phase 12 | Pending |
+| CONV-08 | Phase 12 | Pending |
+| CONV-09 | Phase 12 | Pending |
+| CONV-10 | Phase 12 | Pending |
+| CONV-11 | Phase 12 | Pending |
+| DESC-01 | Phase 13 | Pending |
+| DESC-02 | Phase 13 | Pending |
+| DESC-03 | Phase 13 | Pending |
+| DESC-04 | Phase 13 | Pending |
+| DESC-05 | Phase 13 | Pending |
+| DESC-06 | Phase 13 | Pending |
+| DESC-07 | Phase 13 | Pending |
+| DESC-08 | Phase 13 | Pending |
+| PIPE-01 | Phase 13 | Pending |
+| PIPE-02 | Phase 13 | Pending |
+| PIPE-04 | Phase 13 | Pending |
+| ARTS-01 | Phase 14 | Pending |
+| ARTS-02 | Phase 14 | Pending |
+| ARTS-03 | Phase 14 | Pending |
+| ARTS-04 | Phase 14 | Pending |
+| ARTS-05 | Phase 14 | Pending |
+| ARTS-06 | Phase 14 | Pending |
+| PIPE-03 | Phase 14 | Pending |
+| QENG-01 | Phase 15 | Pending |
+| QENG-02 | Phase 15 | Pending |
+| QENG-03 | Phase 15 | Pending |
+| QENG-04 | Phase 15 | Pending |
+| QENG-05 | Phase 15 | Pending |
+| QENG-06 | Phase 15 | Pending |
+| QENG-07 | Phase 15 | Pending |
+| COST-01 | Phase 15 | Pending |
+| COST-02 | Phase 15 | Pending |
+| COST-03 | Phase 15 | Pending |
+| COST-04 | Phase 15 | Pending |
+| COST-05 | Phase 15 | Pending |
+| COST-06 | Phase 15 | Pending |
+| ADMN-01 | Phase 16 | Pending |
+| ADMN-02 | Phase 16 | Pending |
+| ADMN-03 | Phase 16 | Pending |
+| ADMN-04 | Phase 16 | Pending |
+| ADMN-05 | Phase 16 | Pending |
+| ADMN-06 | Phase 16 | Pending |
 
 **Coverage:**
-- v3.0 requirements: 42 total
-- Mapped to phases: 0
-- Unmapped: 42 ⚠️
+- v3.0 requirements: 48 total
+- Mapped to phases: 48 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-02*
-*Last updated: 2026-04-02 after initial definition*
+*Last updated: 2026-04-02 after roadmap creation*
