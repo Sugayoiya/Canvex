@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { User, Users as UsersIcon, ChevronRight, ChevronDown, Gauge, Search } from "lucide-react";
+import { User, Users as UsersIcon, ChevronUp, ChevronDown, Gauge, Search } from "lucide-react";
 import { adminApi, quotaApi } from "@/lib/api";
 import { TabBar } from "@/components/admin/tab-bar";
 import { FilterToolbar } from "@/components/admin/filter-toolbar";
 import { AdminPagination } from "@/components/admin/admin-pagination";
-import { ProgressBar } from "@/components/admin/progress-bar";
+
 
 interface AdminUser {
   id: string;
@@ -511,7 +511,7 @@ export default function AdminQuotasPage() {
 
               return (
                 <div key={item.id}>
-                  {/* Collapsed row */}
+                  {/* Row header */}
                   <div
                     role="button"
                     tabIndex={0}
@@ -523,11 +523,11 @@ export default function AdminQuotasPage() {
                       }
                     }}
                     style={{
-                      height: 56,
-                      padding: "0 16px",
+                      height: 72,
+                      padding: "0 20px",
                       display: "flex",
                       alignItems: "center",
-                      gap: 16,
+                      justifyContent: "space-between",
                       cursor: "pointer",
                       borderBottom: isLast && !isExpanded
                         ? "none"
@@ -541,100 +541,70 @@ export default function AdminQuotasPage() {
                       e.currentTarget.style.background = "transparent";
                     }}
                   >
-                    {/* Expand indicator */}
-                    {isExpanded ? (
-                      <ChevronDown
-                        size={14}
-                        style={{ color: "var(--cv4-text-muted)", flexShrink: 0 }}
-                      />
-                    ) : (
-                      <ChevronRight
-                        size={14}
-                        style={{ color: "var(--cv4-text-muted)", flexShrink: 0 }}
-                      />
-                    )}
-
-                    {/* Name */}
-                    <span
-                      style={{
-                        minWidth: 180,
-                        fontFamily: "Manrope, sans-serif",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "var(--cv4-text-primary)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {user ? user.nickname : team?.name}
-                    </span>
-
-                    {/* Secondary */}
-                    <span
-                      style={{
-                        minWidth: 200,
-                        fontFamily: "Manrope, sans-serif",
-                        fontSize: 12,
-                        fontWeight: 400,
-                        color: "var(--cv4-text-secondary)",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {user
-                        ? user.email
-                        : `${team?.member_count ?? 0} members`}
-                    </span>
-
-                    {/* Quota summary */}
-                    <span
-                      style={{
-                        flex: 1,
-                        fontFamily: "Manrope, sans-serif",
-                        fontSize: 12,
-                        fontWeight: 400,
-                        color: "var(--cv4-text-muted)",
-                      }}
-                    >
-                      {item.monthly_credit_limit !== null
-                        ? `Monthly: ${Math.round(item.current_month_usage)}/${Math.round(item.monthly_credit_limit)} credits`
-                        : (
-                          <span style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            height: 24,
-                            padding: "4px 8px",
-                            borderRadius: 6,
-                            background: "var(--cv4-hover-highlight)",
-                            color: "var(--cv4-text-secondary)",
-                            fontSize: 12,
-                            fontWeight: 400,
-                          }}>
-                            Unlimited
-                          </span>
-                        )}
-                    </span>
-
-                    {/* Status dot */}
-                    {item.monthly_credit_limit !== null && (() => {
-                      const pct = item.monthly_credit_limit > 0
-                        ? (item.current_month_usage / item.monthly_credit_limit) * 100
-                        : 0;
-                      const dotColor = pct >= 85 ? "var(--ob-error)"
-                        : pct >= 60 ? "var(--ob-tertiary)"
-                        : "var(--ob-success)";
-                      return (
+                    {/* Left: Name + secondary */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <span style={{
-                          width: 8,
-                          height: 8,
-                          borderRadius: "50%",
-                          background: dotColor,
-                          flexShrink: 0,
-                        }} />
-                      );
-                    })()}
+                          fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700,
+                          color: "var(--cv4-text-primary)", whiteSpace: "nowrap",
+                        }}>
+                          {user ? user.nickname : team?.name}
+                        </span>
+                        <span style={{
+                          fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 400,
+                          color: "var(--cv4-text-muted)", letterSpacing: "0.3px",
+                          overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        }}>
+                          {user ? user.email : `${team?.member_count ?? 0} members`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Right: Usage info + chevron */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+                        <span style={{
+                          fontFamily: "Manrope, sans-serif", fontSize: 11, fontWeight: 400,
+                          color: "var(--cv4-text-muted)",
+                        }}>
+                          {isExpanded ? "Monthly Usage Summary" : "Monthly Usage"}
+                        </span>
+                        <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                          {item.monthly_credit_limit !== null ? (
+                            <>
+                              <span style={{
+                                fontFamily: "'Space Grotesk', sans-serif",
+                                fontSize: isExpanded ? 20 : 18, fontWeight: 700,
+                                color: "var(--cv4-text-primary)",
+                              }}>
+                                {Math.round(item.current_month_usage).toLocaleString()}
+                              </span>
+                              <span style={{
+                                fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 400,
+                                color: "var(--cv4-text-muted)",
+                              }}>
+                                / {Math.round(item.monthly_credit_limit).toLocaleString()} credits
+                              </span>
+                            </>
+                          ) : (
+                            <span style={{
+                              display: "inline-flex", alignItems: "center",
+                              height: 24, padding: "4px 8px", borderRadius: 6,
+                              background: "var(--cv4-hover-highlight)",
+                              color: "var(--cv4-text-secondary)",
+                              fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 400,
+                            }}>
+                              Unlimited
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {isExpanded ? (
+                        <ChevronUp size={16} style={{ color: "var(--cv4-text-muted)", flexShrink: 0 }} />
+                      ) : (
+                        <ChevronDown size={16} style={{ color: "var(--cv4-text-muted)", flexShrink: 0 }} />
+                      )}
+                    </div>
                   </div>
 
                   {/* QuotaDetailArea */}
@@ -642,187 +612,149 @@ export default function AdminQuotasPage() {
                     <div
                       style={{
                         background: "var(--cv4-canvas-bg)",
-                        padding: 24,
+                        padding: "16px 24px 20px",
                         borderTop: "1px solid var(--cv4-border-subtle)",
                         borderBottom: isLast
                           ? "none"
                           : "1px solid var(--cv4-border-subtle)",
                         display: "flex",
                         flexDirection: "column",
-                        gap: 24,
+                        gap: 16,
                       }}
                     >
                       {quotaQuery.isLoading && (
-                        <>
-                          <div style={{ height: 60, borderRadius: 8, background: "var(--cv4-border-default)", animation: "pulse 1.5s ease-in-out infinite" }} />
-                          <div style={{ height: 60, borderRadius: 8, background: "var(--cv4-border-default)", animation: "pulse 1.5s ease-in-out infinite" }} />
-                        </>
+                        <div style={{ display: "flex", gap: 24 }}>
+                          <div style={{ flex: 1, height: 90, borderRadius: 8, background: "var(--cv4-border-default)", animation: "pulse 1.5s ease-in-out infinite" }} />
+                          <div style={{ flex: 1, height: 90, borderRadius: 8, background: "var(--cv4-border-default)", animation: "pulse 1.5s ease-in-out infinite" }} />
+                        </div>
                       )}
                       {quotaQuery.isError && (
                         <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--cv4-text-muted)", margin: 0 }}>
                           Failed to load quota data.
                         </p>
                       )}
-                      {quotaQuery.data && (
-                        <>
-                          {/* Monthly Credit Limit */}
-                          <div>
-                            <ProgressBar
-                              current={quotaQuery.data.current_month_usage}
-                              limit={quotaQuery.data.monthly_credit_limit}
-                              label="Monthly Credit Limit"
-                            />
-                            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-                              <input
-                                type="number"
-                                min="0"
-                                aria-label="Monthly credit limit"
-                                placeholder="Set limit..."
-                                value={editValues.monthly_credit_limit}
-                                onChange={(e) => setEditValues((prev) => ({ ...prev, monthly_credit_limit: e.target.value }))}
-                                readOnly={saveMutation.isPending}
-                                style={{
-                                  height: 36,
-                                  width: 120,
-                                  border: "1px solid var(--cv4-border-default)",
-                                  borderRadius: 8,
-                                  background: "var(--cv4-canvas-bg)",
-                                  fontFamily: "Manrope, sans-serif",
-                                  fontSize: 12,
-                                  fontWeight: 400,
-                                  color: "var(--cv4-text-primary)",
-                                  padding: "0 8px",
-                                  outline: "none",
-                                }}
-                              />
-                              {quotaQuery.data.monthly_credit_limit !== null && (
-                                <span
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={() => !saveMutation.isPending && handleReset("monthly_credit_limit")}
-                                  onKeyDown={(e) => {
-                                    if ((e.key === "Enter" || e.key === " ") && !saveMutation.isPending) {
-                                      e.preventDefault();
-                                      handleReset("monthly_credit_limit");
-                                    }
-                                  }}
-                                  style={{
-                                    fontFamily: "Manrope, sans-serif",
-                                    fontSize: 12,
-                                    fontWeight: 400,
-                                    color: "var(--cv4-text-secondary)",
-                                    cursor: saveMutation.isPending ? "not-allowed" : "pointer",
-                                    opacity: saveMutation.isPending ? 0.4 : 1,
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (!saveMutation.isPending) {
-                                      e.currentTarget.style.textDecoration = "underline";
-                                      e.currentTarget.style.color = "var(--cv4-text-primary)";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.textDecoration = "none";
-                                    e.currentTarget.style.color = "var(--cv4-text-secondary)";
-                                  }}
-                                >
-                                  Reset
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                      {quotaQuery.data && (() => {
+                        const qd = quotaQuery.data;
+                        const monthPct = qd.monthly_credit_limit && qd.monthly_credit_limit > 0 ? (qd.current_month_usage / qd.monthly_credit_limit) * 100 : 0;
+                        const dayPct = qd.daily_call_limit && qd.daily_call_limit > 0 ? (qd.current_day_calls / qd.daily_call_limit) * 100 : 0;
+                        const monthColor = monthPct >= 85 ? "var(--ob-error)" : monthPct >= 60 ? "var(--ob-tertiary)" : "var(--ob-success)";
+                        const dayColor = dayPct >= 85 ? "var(--ob-error)" : dayPct >= 60 ? "var(--ob-tertiary)" : "var(--ob-success)";
+                        const showWarning = dayPct >= 85 || monthPct >= 85;
 
-                          {/* Daily Call Limit */}
-                          <div>
-                            <ProgressBar
-                              current={quotaQuery.data.current_day_calls}
-                              limit={quotaQuery.data.daily_call_limit}
-                              label="Daily Call Limit"
-                            />
-                            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
-                              <input
-                                type="number"
-                                min="0"
-                                aria-label="Daily call limit"
-                                placeholder="Set limit..."
-                                value={editValues.daily_call_limit}
-                                onChange={(e) => setEditValues((prev) => ({ ...prev, daily_call_limit: e.target.value }))}
-                                readOnly={saveMutation.isPending}
-                                style={{
-                                  height: 36,
-                                  width: 120,
-                                  border: "1px solid var(--cv4-border-default)",
-                                  borderRadius: 8,
-                                  background: "var(--cv4-canvas-bg)",
-                                  fontFamily: "Manrope, sans-serif",
-                                  fontSize: 12,
-                                  fontWeight: 400,
-                                  color: "var(--cv4-text-primary)",
-                                  padding: "0 8px",
-                                  outline: "none",
-                                }}
-                              />
-                              {quotaQuery.data.daily_call_limit !== null && (
-                                <span
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={() => !saveMutation.isPending && handleReset("daily_call_limit")}
-                                  onKeyDown={(e) => {
-                                    if ((e.key === "Enter" || e.key === " ") && !saveMutation.isPending) {
-                                      e.preventDefault();
-                                      handleReset("daily_call_limit");
-                                    }
-                                  }}
-                                  style={{
-                                    fontFamily: "Manrope, sans-serif",
-                                    fontSize: 12,
-                                    fontWeight: 400,
-                                    color: "var(--cv4-text-secondary)",
-                                    cursor: saveMutation.isPending ? "not-allowed" : "pointer",
-                                    opacity: saveMutation.isPending ? 0.4 : 1,
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    if (!saveMutation.isPending) {
-                                      e.currentTarget.style.textDecoration = "underline";
-                                      e.currentTarget.style.color = "var(--cv4-text-primary)";
-                                    }
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.textDecoration = "none";
-                                    e.currentTarget.style.color = "var(--cv4-text-secondary)";
-                                  }}
-                                >
-                                  Reset
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                        const labelStyle = { fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700 as const, color: "var(--cv4-text-muted)", letterSpacing: "0.5px", textTransform: "uppercase" as const };
+                        const pctStyle = (color: string) => ({ fontFamily: "Manrope, sans-serif", fontSize: 11, fontWeight: 600 as const, color });
+                        const inputStyle = {
+                          height: 32, border: "1px solid var(--cv4-border-subtle)", borderRadius: 6,
+                          background: "var(--cv4-surface-primary)", fontFamily: "Manrope, sans-serif", fontSize: 12,
+                          fontWeight: 400 as const, color: "var(--cv4-text-primary)", padding: "0 10px", outline: "none", flex: 1,
+                        };
+                        const resetBtnStyle = {
+                          height: 32, padding: "0 12px", borderRadius: 6,
+                          border: "1px solid var(--cv4-border-subtle)", background: "var(--cv4-surface-primary)",
+                          fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700 as const,
+                          color: "var(--cv4-text-secondary)", letterSpacing: "0.5px",
+                          cursor: saveMutation.isPending ? "not-allowed" as const : "pointer" as const,
+                          opacity: saveMutation.isPending ? 0.4 : 1,
+                        };
 
-                          {/* Save button */}
-                          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                            <button
-                              type="button"
-                              disabled={!isDirty || saveMutation.isPending}
-                              onClick={handleSave}
-                              style={{
-                                height: 36,
-                                padding: "0 16px",
-                                borderRadius: 8,
-                                border: "none",
-                                background: "var(--cv4-btn-primary)",
-                                color: "var(--cv4-btn-primary-text)",
-                                fontFamily: "Manrope, sans-serif",
-                                fontSize: 12,
-                                fontWeight: 700,
-                                cursor: !isDirty || saveMutation.isPending ? "not-allowed" : "pointer",
-                                opacity: !isDirty || saveMutation.isPending ? 0.4 : 1,
-                                transition: "opacity 100ms",
-                              }}
-                            >
-                              {saveMutation.isPending ? "..." : "Save Changes"}
-                            </button>
-                          </div>
-                        </>
-                      )}
+                        return (
+                          <>
+                            {/* Dual-column layout */}
+                            <div style={{ display: "flex", gap: 24 }}>
+                              {/* Monthly Column */}
+                              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <span style={labelStyle}>MONTHLY CREDIT LIMIT (TOTAL)</span>
+                                  {qd.monthly_credit_limit !== null && (
+                                    <span style={pctStyle(monthColor)}>{monthPct.toFixed(1)}% Used</span>
+                                  )}
+                                </div>
+                                {qd.monthly_credit_limit !== null ? (
+                                  <div style={{ height: 6, borderRadius: 3, background: "#3c494e40", overflow: "hidden" }}>
+                                    <div style={{ height: 6, borderRadius: 3, width: `${Math.min(100, monthPct)}%`, background: monthColor, transition: "width 300ms ease" }} />
+                                  </div>
+                                ) : (
+                                  <span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "4px 8px", borderRadius: 6, background: "var(--cv4-hover-highlight)", color: "var(--cv4-text-secondary)", fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 400, width: "fit-content" }}>Unlimited</span>
+                                )}
+                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                  <span style={labelStyle}>LIMIT</span>
+                                  <input
+                                    type="number" min="0" aria-label="Monthly credit limit" placeholder="Set limit..."
+                                    value={editValues.monthly_credit_limit}
+                                    onChange={(e) => setEditValues((prev) => ({ ...prev, monthly_credit_limit: e.target.value }))}
+                                    readOnly={saveMutation.isPending}
+                                    style={inputStyle}
+                                  />
+                                  {qd.monthly_credit_limit !== null && (
+                                    <button type="button" onClick={() => !saveMutation.isPending && handleReset("monthly_credit_limit")} style={resetBtnStyle}>RESET</button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Daily Column */}
+                              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <span style={labelStyle}>DAILY CALL LIMIT (TOTAL)</span>
+                                  {qd.daily_call_limit !== null && (
+                                    <span style={pctStyle(dayColor)}>{dayPct.toFixed(1)}% Used</span>
+                                  )}
+                                </div>
+                                {qd.daily_call_limit !== null ? (
+                                  <div style={{ height: 6, borderRadius: 3, background: "#3c494e40", overflow: "hidden" }}>
+                                    <div style={{ height: 6, borderRadius: 3, width: `${Math.min(100, dayPct)}%`, background: dayColor, transition: "width 300ms ease" }} />
+                                  </div>
+                                ) : (
+                                  <span style={{ display: "inline-flex", alignItems: "center", height: 24, padding: "4px 8px", borderRadius: 6, background: "var(--cv4-hover-highlight)", color: "var(--cv4-text-secondary)", fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 400, width: "fit-content" }}>Unlimited</span>
+                                )}
+                                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                  <span style={labelStyle}>LIMIT</span>
+                                  <input
+                                    type="number" min="0" aria-label="Daily call limit" placeholder="Set limit..."
+                                    value={editValues.daily_call_limit}
+                                    onChange={(e) => setEditValues((prev) => ({ ...prev, daily_call_limit: e.target.value }))}
+                                    readOnly={saveMutation.isPending}
+                                    style={inputStyle}
+                                  />
+                                  {qd.daily_call_limit !== null && (
+                                    <button type="button" onClick={() => !saveMutation.isPending && handleReset("daily_call_limit")} style={resetBtnStyle}>RESET</button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Warning banner */}
+                            {showWarning && (
+                              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                                <span style={{ color: "var(--ob-tertiary)", display: "flex" }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                                </span>
+                                <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 11, fontWeight: 700, color: "var(--ob-tertiary)", letterSpacing: "0.5px", textTransform: "uppercase" }}>
+                                  {dayPct >= 85 ? "USER IS APPROACHING THE DAILY RATE LIMIT." : "USER IS APPROACHING THE MONTHLY CREDIT LIMIT."}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Save button */}
+                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                              <button
+                                type="button"
+                                disabled={!isDirty || saveMutation.isPending}
+                                onClick={handleSave}
+                                style={{
+                                  height: 36, padding: "0 16px", borderRadius: 8, border: "none",
+                                  background: "var(--cv4-btn-primary)", color: "var(--cv4-btn-primary-text)",
+                                  fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 700,
+                                  cursor: !isDirty || saveMutation.isPending ? "not-allowed" : "pointer",
+                                  opacity: !isDirty || saveMutation.isPending ? 0.4 : 1,
+                                  transition: "opacity 100ms",
+                                }}
+                              >
+                                {saveMutation.isPending ? "..." : "Save Changes"}
+                              </button>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
