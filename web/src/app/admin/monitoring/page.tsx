@@ -1,8 +1,23 @@
 "use client";
 
-import { Activity } from "lucide-react";
+import { useState } from "react";
+import { ListTodo, Cpu, Zap, TrendingUp } from "lucide-react";
+import { TabBar } from "@/components/admin/tab-bar";
+import { TaskLogTable } from "@/components/admin/task-log-table";
+import { AiCallLogTable } from "@/components/admin/ai-call-log-table";
+import { SkillLogTable } from "@/components/admin/skill-log-table";
+import { AdminUsageCostTab } from "@/components/admin/admin-usage-cost-tab";
+
+const MONITORING_TABS = [
+  { id: "tasks", label: "Tasks", icon: <ListTodo size={14} /> },
+  { id: "ai-calls", label: "AI Calls", icon: <Cpu size={14} /> },
+  { id: "skills", label: "Skills", icon: <Zap size={14} /> },
+  { id: "usage", label: "Usage & Cost", icon: <TrendingUp size={14} /> },
+];
 
 export default function AdminMonitoringPage() {
+  const [activeTab, setActiveTab] = useState<string>("tasks");
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
       <div>
@@ -29,45 +44,18 @@ export default function AdminMonitoringPage() {
             margin: "4px 0 0",
           }}
         >
-          Manage monitoring settings and configurations
+          Task execution, AI calls, skill logs, and usage analytics
         </p>
       </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 64,
-          borderRadius: 12,
-          background: "var(--cv4-surface-primary)",
-          border: "1px solid var(--cv4-border-subtle)",
-        }}
-      >
-        <Activity size={48} style={{ color: "var(--cv4-text-muted)", marginBottom: 16, opacity: 0.5 }} />
-        <p
-          style={{
-            fontFamily: "var(--font-headline)",
-            fontSize: 14,
-            fontWeight: 700,
-            color: "var(--cv4-text-primary)",
-            margin: 0,
-          }}
-        >
-          Coming in Phase 11
-        </p>
-        <p
-          style={{
-            fontFamily: "var(--font-body)",
-            fontSize: 12,
-            fontWeight: 400,
-            color: "var(--cv4-text-muted)",
-            margin: "8px 0 0",
-          }}
-        >
-          This section will be available after the current phase is complete.
-        </p>
-      </div>
+      <TabBar
+        tabs={MONITORING_TABS}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      />
+      {activeTab === "tasks" && <TaskLogTable />}
+      {activeTab === "ai-calls" && <AiCallLogTable />}
+      {activeTab === "skills" && <SkillLogTable />}
+      {activeTab === "usage" && <AdminUsageCostTab />}
     </div>
   );
 }
