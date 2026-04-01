@@ -10,6 +10,7 @@ import {
   ListTodo,
   BarChart3,
   ChevronDown,
+  Shield,
   type LucideIcon,
 } from "lucide-react";
 import { useAuthStore, type Team } from "@/stores/auth-store";
@@ -315,6 +316,38 @@ export function Sidebar() {
         <div style={{ height: 1, background: "var(--ob-glass-border)", margin: "8px 12px" }} />
 
         {BOTTOM_ITEMS.map(renderNavLink)}
+
+        {user?.is_admin && (
+          <>
+            <div style={{ height: 1, background: "var(--ob-glass-border)", margin: "8px 12px" }} />
+            <Link
+              href="/admin"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "7px 12px",
+                borderRadius: 8,
+                textDecoration: "none",
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                fontWeight: pathname?.startsWith("/admin") ? 700 : 400,
+                color: pathname?.startsWith("/admin") ? "var(--ob-text-primary)" : "var(--ob-text-muted)",
+                background: pathname?.startsWith("/admin") ? "var(--ob-surface-high)" : "transparent",
+                transition: "background 100ms, color 100ms",
+              }}
+              onMouseEnter={(e) => {
+                if (!pathname?.startsWith("/admin")) e.currentTarget.style.background = "var(--ob-surface-high)";
+              }}
+              onMouseLeave={(e) => {
+                if (!pathname?.startsWith("/admin")) e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <Shield size={16} />
+              Admin Console
+            </Link>
+          </>
+        )}
       </nav>
     </aside>
   );
