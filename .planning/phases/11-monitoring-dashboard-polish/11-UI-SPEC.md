@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-01
+revised: 2026-04-01
 ---
 
 # Phase 11 — UI Design Contract
@@ -43,8 +44,8 @@ Declared values (must be multiples of 4):
 | 3xl | 64px | Empty state vertical padding |
 
 Exceptions:
-- `12px` — Used for stat card grid gap and inner gaps (established Phase 08 pattern, keep consistent)
-- `20px` — Used for stat card and provider status card inner padding (established pattern)
+- `12px` — Used for stat card grid gap and inner gaps (established Phase 08 pattern, keep consistent; future migration candidate)
+- `20px` — Used for stat card and provider status card inner padding (established pattern; future migration candidate)
 - KPI card height fixed at `160px` (D-01: reuse existing height for alert badge space)
 
 **Source:** Extracted from `admin/page.tsx` KpiCard/StatCard/ProviderStatus existing patterns.
@@ -53,18 +54,18 @@ Exceptions:
 
 ## Typography
 
-| Role | Size | Weight | Line Height | Font | Usage |
-|------|------|--------|-------------|------|-------|
-| Page title | 24px | 700 | 1.2 | Space Grotesk | Page heading (`<h1>`) |
-| Section heading | 14px | 700 | 1.3 | Space Grotesk | Section labels ("Activity Overview", "AI Providers") |
-| KPI value (large) | 36px | 700 | 1.1 | Space Grotesk | Primary KPI card numbers |
-| KPI value (medium) | 24px | 700 | 1.2 | Space Grotesk | StatCard numbers |
-| KPI value (small) | 20px | 700 | 1.2 | Space Grotesk | Provider count numbers |
-| Body | 14px | 400 | 1.5 | Manrope | Page subtitle, descriptions |
-| Label | 12px | 400 | 1.3 | Space Grotesk | KPI card labels (uppercase, letter-spacing: 1px) |
-| Table body | 12px | 400 | 1.5 | Manrope | Table cell text, filter inputs, badges |
-| Table header | 12px | 700 | 1.5 | Manrope | Table column headers |
-| Caption | 11px | 400 | 1.5 | Manrope | Stat card subtitles, chart axis labels |
+**4 font sizes, 2 weights.** Reduced from 6 sizes per checker feedback — differentiate roles via weight, opacity, letter-spacing, and font family instead of additional sizes.
+
+| Role | Size | Weight | Line Height | Font | Usage | Differentiation |
+|------|------|--------|-------------|------|-------|-----------------|
+| Display KPI | 36px | 700 | 1.1 | Space Grotesk | Primary KPI card numbers (Total Users, Total Cost) | — |
+| Heading / KPI value | 24px | 700 | 1.2 | Space Grotesk | Page title (`<h1>`), StatCard numbers, provider count numbers | Page title: normal letter-spacing; KPI values: tabular-nums |
+| Body / Section heading | 14px | 400 / 700 | 1.5 / 1.3 | Manrope / Space Grotesk | Body text (weight 400, Manrope, line-height 1.5), section labels (weight 700, Space Grotesk, line-height 1.3) | Font family + weight distinguish body from heading |
+| Label / Caption / Table | 12px | 400 / 700 | 1.3 / 1.5 | Space Grotesk / Manrope | KPI labels (Space Grotesk, 700, uppercase, letter-spacing 1px), table headers (Manrope, 700), table body (Manrope, 400), stat card subtitles (Manrope, 400, `--cv4-text-muted`), chart axis (Manrope, 400, `--cv4-text-muted`) | Uppercase + letter-spacing for labels; muted color for captions; font family for context |
+
+**Migration notes:**
+- Former 11px caption → 12px: stat card subtitles and chart axis labels now use 12px with `color: var(--cv4-text-muted)` for visual de-emphasis
+- Former 20px KPI small → 24px: provider count numbers now match StatCard size; differentiate via card layout context (smaller card = visually smaller despite same font size)
 
 **Source:** Extracted from `admin/page.tsx`, `admin-data-table.tsx`, `status-badge.tsx`, `tab-bar.tsx`.
 
@@ -82,14 +83,14 @@ Exceptions:
 | Warning | #FF9500 | `--cv5-status-blocked` | Active task warning badges |
 | Text primary | #E5E2E1 | `--cv4-text-primary` | Headings, KPI values, active tab labels |
 | Text secondary | #BBC9CF | `--cv4-text-secondary` | Body text, hover state for inactive tabs |
-| Text muted | #8E9192 | `--cv4-text-muted` | Labels, placeholders, icons, subtitles |
+| Text muted | #8E9192 | `--cv4-text-muted` | Labels, placeholders, icons, subtitles, captions |
 | Border default | #3c494e20 | `--cv4-border-default` | Table borders, input borders |
 | Border subtle | #3c494e15 | `--cv4-border-subtle` | Card borders, section dividers |
 
 **Accent reserved for:**
 1. KPI card hover border glow (new — `--ob-glass-hover-border` / `rgba(0,209,255,0.3)`)
 2. Recharts chart series primary line (`--cv5-chart-series-1: #007AFF`)
-3. Primary CTA buttons if needed (currently only Refresh uses secondary style)
+3. Primary CTA buttons if needed (currently only Refresh Data uses secondary style)
 
 **Alert badge color mapping (D-01):**
 
@@ -145,11 +146,13 @@ Exceptions:
 
 **Layout:** Single column, no scroll (REQ-25: fits one viewport).
 
+**Focal point:** KPI Grid (2×2) — the 4 KPI cards are the primary visual anchor; 36px display numbers draw the eye first, alert badges create urgency hierarchy.
+
 **Structure (top to bottom):**
 
 ```
 ┌─ Page Header ─────────────────────────────────────────────────┐
-│  h1 "Dashboard" + subtitle + [Refresh] button                │
+│  h1 "Dashboard" + subtitle + [Refresh Data] button            │
 ├─ KPI Grid (2×2) ──────────────────────────────────────────────┤
 │  [Total Users]  [Active Teams]                                │
 │  [Active Tasks] [Total Cost]                                  │
@@ -187,6 +190,8 @@ Exceptions:
 ### Screen 2: Monitoring Page (`admin/monitoring/page.tsx`)
 
 **Layout:** Single column, scrollable content area below tab bar.
+
+**Focal point:** TabBar — the 4-tab navigation is the primary visual anchor at the top of the content area; active tab underline (accent color) signals current context. Within each tab, the data table dominates the view.
 
 **Structure:**
 
@@ -321,14 +326,14 @@ All admin pages MUST show loading skeletons during initial data fetch.
 │  ⚠ AlertTriangle icon (48px, muted, opacity 0.5)             │
 │  "Something went wrong"                                       │
 │  "An unexpected error occurred. Try refreshing the page."     │
-│  [Retry] button (primary style)                               │
+│  [Try Again] button (primary style)                           │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 - Container: `padding: 64px, borderRadius: 12px, background: var(--cv4-surface-primary), border: 1px solid var(--cv4-border-subtle)`
 - Heading: Space Grotesk 14px 700
 - Body: Manrope 12px 400 muted
-- Retry button: `height: 36px, padding: 0 16px, borderRadius: 8px, background: var(--cv4-btn-primary), color: var(--cv4-btn-primary-text)`
+- Try Again button: `height: 36px, padding: 0 16px, borderRadius: 8px, background: var(--cv4-btn-primary), color: var(--cv4-btn-primary-text)`
 
 **Placement:** Wrap each admin page's content area (below header). The AdminShell layout + sidebar remain visible during errors.
 
@@ -349,13 +354,13 @@ For API fetch failures (not uncaught exceptions), use the existing inline error 
 
 ```
 ┌─ Error Banner ────────────────────────────────────────────────┐
-│  ⚠ "Failed to load [resource]." .................. [Retry]   │
+│  ⚠ "Failed to load [resource]." .............. [Try Again]   │
 └───────────────────────────────────────────────────────────────┘
 ```
 
 - Background: `#FFB4AB10`, border: `1px solid #FFB4AB20`, borderRadius: 8px
 - Icon + text: `var(--ob-error)`, Manrope 12px
-- Retry button: primary style, height 28px
+- Try Again button: primary style, height 28px
 
 ### Polish Audit Checklist (D-06)
 
@@ -379,9 +384,9 @@ For API fetch failures (not uncaught exceptions), use the existing inline error 
 |---------|------|
 | Page title | Dashboard |
 | Page subtitle | System overview and key metrics |
-| Refresh button | Refresh |
+| Refresh button | Refresh Data |
 | Error banner | Failed to load dashboard data. |
-| Retry button | Retry |
+| Retry button | Try Again |
 
 ### Dashboard KPI Cards
 
