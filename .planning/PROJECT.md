@@ -32,10 +32,12 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ v2.0 Phase 5 canvas/video experience + billing dashboard
 - ✓ v2.0 Phase 6 collaboration + OAuth + Obsidian Lens UI
 - ✓ v2.1 Phase 7 admin API foundation — audit model, user management, log scope lifts, dashboard
+- ✓ v2.1 Phase 8 admin frontend shell — layout, sidebar, routing, dashboard page
+- ✓ v2.1 Phase 9 user & team management UI — Users table (ban/enable, admin grant/revoke, search/filter/sort) + Teams read-only directory
 
 ### Active
 
-- [ ] Admin Console Frontend — admin shell, user/team/quota/pricing/provider/monitoring UI (Phases 08–11)
+- [ ] Admin Console Frontend — quota/pricing/provider/monitoring UI (Phases 10–11)
 
 ### Out of Scope
 
@@ -50,7 +52,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - UI: Obsidian Lens design system (--ob-* tokens, Space Grotesk + Manrope).
 - Auth: JWT HS256 + Google/GitHub OAuth, `User.is_admin` boolean for system admin.
 - Existing admin backend: `require_admin` guard, quota CRUD API, pricing CRUD API, system-level AI Provider config.
-- Missing admin frontend: no /admin route, no admin-specific pages, quota/pricing APIs not wired to UI.
+- Admin frontend: shell + dashboard (Phase 08), user management + team overview (Phase 09) complete. Quota/pricing/provider/monitoring UI pending (Phases 10–11).
 - Admin backend: complete — user management, audit trail, dashboard, log scope lifts, team overview API (Phase 07).
 
 ## Constraints
@@ -87,4 +89,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 — Phase 08 Admin Frontend Shell complete*
+*Last updated: 2026-04-01 — Phase 09 User & Team Management UI complete*
