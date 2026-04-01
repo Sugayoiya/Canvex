@@ -56,10 +56,10 @@ Plans:
 **Depends on**: Phase 08
 **UI hint**: yes
 **Requirements:** [REQ-19, REQ-20]
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
-- [ ] 09-01-PLAN.md — [W1] Backend extensions (teams field, admin_count, owner_name) + AdminDataTable/AdminPagination/FilterToolbar reusable components
+- [x] 09-01-PLAN.md — [W1] Backend extensions (teams field, admin_count, owner_name) + AdminDataTable/AdminPagination/FilterToolbar reusable components
 - [ ] 09-02-PLAN.md — [W2] StatusBadge/AdminBadge/RowDropdownMenu/ConfirmationModal + Users page full implementation
 - [ ] 09-03-PLAN.md — [W2] Teams overview page (read-only table with search + pagination)
 
