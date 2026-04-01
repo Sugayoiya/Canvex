@@ -1,7 +1,7 @@
 ---
 phase: 09
 slug: user-team-management-ui
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-04-01
@@ -143,7 +143,9 @@ Inherited from Phase 08 UI-SPEC: 60/30/10 split with `--cv4-*` tokens.
 
 ### Page Layout Pattern
 
-Both Users and Teams pages follow this identical structure inside AdminShell `<main>`:
+Both Users and Teams pages follow this identical structure inside AdminShell `<main>`.
+
+**Focal point:** The `AdminDataTable` is the primary visual anchor on both pages. The FilterToolbar serves as secondary navigation above the table. PageHeader provides context but should not compete with the table for attention.
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -815,14 +817,14 @@ All icons from lucide-react. Standard size 16px for UI, 14px for secondary.
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS — All CTAs verb+noun; empty/error states with solution paths; Chinese toasts
+- [x] Dimension 2 Visuals: PASS — Focal point declared (DataTable); mockups align with spec; visual hierarchy clear
+- [x] Dimension 3 Color: PASS — 60/30/10 inherited; accent reserved-for specific; semantic additions justified
+- [x] Dimension 4 Typography: PASS — 4 sizes, 2 weights; no orphans; all roles documented
+- [x] Dimension 5 Spacing: PASS — All ×4; one documented 12px exception
+- [x] Dimension 6 Registry Safety: PASS — No shadcn, no third-party
 
-**Approval:** pending
+**Approval:** approved by gsd-ui-checker (2026-04-01)
 
 ---
 
