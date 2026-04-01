@@ -13,13 +13,13 @@
 **Depends on**: Phase 06
 **UI hint**: no
 **Requirements:** [REQ-13, REQ-14, REQ-15, REQ-16]
-**Plans:** 2/4 plans executed
+**Plans:** 3/4 plans executed
 
 Plans:
 - [x] 07-01-PLAN.md — [W1] AdminAuditLog model + record_admin_audit service + schemas + unit tests
 - [x] 07-02-PLAN.md — [W2] Admin user management endpoints (list/status/admin toggles) + nullslast sort + tests
 - [ ] 07-03-PLAN.md — [W3] Admin observability: /logs/* scope lifts (all 6 endpoints) + paginated /admin/teams + /admin/dashboard + tests
-- [ ] 07-04-PLAN.md — [W2] Audit wiring: record_admin_audit into quota/billing/AI-provider admin endpoints + tests
+- [x] 07-04-PLAN.md — [W2] Audit wiring: record_admin_audit into quota/billing/AI-provider admin endpoints + tests
 
 **Success Criteria**:
 1. `GET /admin/users` returns paginated user list with search/filter/sort; response excludes `password_hash` and `refresh_token`.

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Admin Console
 status: executing
-stopped_at: Completed 07-02-PLAN.md
-last_updated: "2026-04-01T03:16:42.917Z"
+stopped_at: Completed 07-04-PLAN.md
+last_updated: "2026-04-01T03:30:41.286Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 5
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 07 (admin-api-foundation) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-01
 
@@ -132,6 +132,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 07]: JSON string storage for audit changes with Pydantic field_validator deserialize on read
 - [Phase 07]: nullslast() for cross-DB NULL sort consistency on last_login_at
 - [Phase 07]: Audit log emitted before HTTPException on rejection paths for reliable audit trail
+- [Phase 07]: AI provider audit scoped to system-type only (team/personal not admin operations)
+- [Phase 07]: set_committed_value for async-safe relationship init in create_provider
 
 ### Pending Todos
 
@@ -150,6 +152,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-01T03:16:42.914Z
-Stopped at: Completed 07-02-PLAN.md
+Last session: 2026-04-01T03:30:41.283Z
+Stopped at: Completed 07-04-PLAN.md
 Resume file: None
