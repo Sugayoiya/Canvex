@@ -25,27 +25,36 @@ async def list_skill_logs(
 ):
     """Query Skill execution logs. Admins can see all users' logs."""
     stmt = select(SkillExecutionLog).order_by(desc(SkillExecutionLog.queued_at))
+    count_stmt = select(func.count(SkillExecutionLog.id))
 
     if not user.is_admin:
         stmt = stmt.where(SkillExecutionLog.user_id == user.id)
+        count_stmt = count_stmt.where(SkillExecutionLog.user_id == user.id)
     elif user_id:
         stmt = stmt.where(SkillExecutionLog.user_id == user_id)
+        count_stmt = count_stmt.where(SkillExecutionLog.user_id == user_id)
 
     if user.is_admin and team_id:
         stmt = stmt.where(SkillExecutionLog.team_id == team_id)
+        count_stmt = count_stmt.where(SkillExecutionLog.team_id == team_id)
     if user.is_admin and project_id:
         stmt = stmt.where(SkillExecutionLog.project_id == project_id)
+        count_stmt = count_stmt.where(SkillExecutionLog.project_id == project_id)
 
     if skill_name:
         stmt = stmt.where(SkillExecutionLog.skill_name == skill_name)
+        count_stmt = count_stmt.where(SkillExecutionLog.skill_name == skill_name)
     if status:
         stmt = stmt.where(SkillExecutionLog.status == status)
+        count_stmt = count_stmt.where(SkillExecutionLog.status == status)
+
+    total = (await db.execute(count_stmt)).scalar() or 0
 
     stmt = stmt.offset(offset).limit(limit)
     result = await db.execute(stmt)
     rows = result.scalars().all()
 
-    return [
+    data = [
         {
             "id": r.id,
             "trace_id": r.trace_id,
@@ -62,6 +71,9 @@ async def list_skill_logs(
         }
         for r in rows
     ]
+    response = JSONResponse(content=data)
+    response.headers["X-Total-Count"] = str(total)
+    return response
 
 
 @router.get("/ai-calls")
@@ -78,27 +90,36 @@ async def list_ai_call_logs(
 ):
     """Query AI call logs. Admins can see all users' logs."""
     stmt = select(AICallLog).order_by(desc(AICallLog.created_at))
+    count_stmt = select(func.count(AICallLog.id))
 
     if not user.is_admin:
         stmt = stmt.where(AICallLog.user_id == user.id)
+        count_stmt = count_stmt.where(AICallLog.user_id == user.id)
     elif user_id:
         stmt = stmt.where(AICallLog.user_id == user_id)
+        count_stmt = count_stmt.where(AICallLog.user_id == user_id)
 
     if user.is_admin and team_id:
         stmt = stmt.where(AICallLog.team_id == team_id)
+        count_stmt = count_stmt.where(AICallLog.team_id == team_id)
     if user.is_admin and project_id:
         stmt = stmt.where(AICallLog.project_id == project_id)
+        count_stmt = count_stmt.where(AICallLog.project_id == project_id)
 
     if provider:
         stmt = stmt.where(AICallLog.provider == provider)
+        count_stmt = count_stmt.where(AICallLog.provider == provider)
     if model:
         stmt = stmt.where(AICallLog.model == model)
+        count_stmt = count_stmt.where(AICallLog.model == model)
+
+    total = (await db.execute(count_stmt)).scalar() or 0
 
     stmt = stmt.offset(offset).limit(limit)
     result = await db.execute(stmt)
     rows = result.scalars().all()
 
-    return [
+    data = [
         {
             "id": r.id,
             "trace_id": r.trace_id,
@@ -114,6 +135,9 @@ async def list_ai_call_logs(
         }
         for r in rows
     ]
+    response = JSONResponse(content=data)
+    response.headers["X-Total-Count"] = str(total)
+    return response
 
 
 @router.get("/ai-calls/stats")

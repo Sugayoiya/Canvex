@@ -94,6 +94,26 @@ class AdminTeamListResponse(BaseModel):
     offset: int
 
 
+class AdminAlertsResponse(BaseModel):
+    """Actionable alert counts for admin dashboard KPI card badges.
+
+    Contract:
+    - quota_warning_users: count of users where monthly_credit_limit IS NOT NULL
+      AND monthly_credit_limit > 0 AND current_month_usage >= 80% of limit.
+      NULL limits (unlimited quota) are excluded. Stale month counters accepted
+      (lazy reset happens on user access, not in DB directly).
+    - failed_tasks_24h: count of SkillExecutionLog rows with status='failed'
+      AND queued_at >= now - 24 hours (UTC).
+    - error_providers: count of AIProviderConfig rows with owner_type='system'
+      AND is_enabled=False. This reflects admin-disabled providers, not runtime
+      health — runtime errors surface via AI call log failure rates.
+    """
+
+    quota_warning_users: int
+    failed_tasks_24h: int
+    error_providers: int
+
+
 class AdminDashboardWindowStats(BaseModel):
     tasks_total: int
     tasks_failed: int

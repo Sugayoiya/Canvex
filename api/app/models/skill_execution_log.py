@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import String, DateTime, Text, Integer, Numeric
+from sqlalchemy import String, DateTime, Text, Integer, Numeric, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -10,6 +10,9 @@ from app.models.mixins import _utcnow
 
 class SkillExecutionLog(Base):
     __tablename__ = "skill_execution_logs"
+    __table_args__ = (
+        Index("ix_sel_status_queued", "status", "queued_at"),
+    )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     trace_id: Mapped[str] = mapped_column(String(36), nullable=False, index=True)

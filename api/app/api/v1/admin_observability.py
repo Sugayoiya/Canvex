@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func, case
@@ -7,11 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.ai_call_log import AICallLog
 from app.models.ai_provider_config import AIProviderConfig
-from app.models.quota import TeamQuota
+from app.models.quota import TeamQuota, UserQuota
 from app.models.skill_execution_log import SkillExecutionLog
 from app.models.team import Team, TeamMember
 from app.models.user import User
 from app.schemas.admin import (
+    AdminAlertsResponse,
     AdminDashboardResponse,
     AdminDashboardWindowStats,
     AdminProviderStatus,
@@ -97,6 +99,42 @@ async def list_teams(
             current_day_calls=tq.current_day_calls if tq else 0,
         ))
     return AdminTeamListResponse(items=items, total=total, limit=limit, offset=offset)
+
+
+@router.get("/alerts", response_model=AdminAlertsResponse)
+async def get_alerts(
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Actionable alert counts for admin dashboard KPI card badges."""
+    require_admin(user)
+
+    quota_stmt = select(func.count(UserQuota.id)).where(
+        UserQuota.monthly_credit_limit.isnot(None),
+        UserQuota.monthly_credit_limit > 0,
+        UserQuota.current_month_usage >= UserQuota.monthly_credit_limit * Decimal("0.8"),
+    )
+    quota_warning = (await db.execute(quota_stmt)).scalar() or 0
+
+    now = datetime.now(timezone.utc)
+    h24 = now - timedelta(hours=24)
+    failed_stmt = select(func.count(SkillExecutionLog.id)).where(
+        SkillExecutionLog.status == "failed",
+        SkillExecutionLog.queued_at >= h24,
+    )
+    failed_24h = (await db.execute(failed_stmt)).scalar() or 0
+
+    error_prov_stmt = select(func.count(AIProviderConfig.id)).where(
+        AIProviderConfig.owner_type == "system",
+        AIProviderConfig.is_enabled == False,  # noqa: E712
+    )
+    error_providers = (await db.execute(error_prov_stmt)).scalar() or 0
+
+    return AdminAlertsResponse(
+        quota_warning_users=quota_warning,
+        failed_tasks_24h=failed_24h,
+        error_providers=error_providers,
+    )
 
 
 @router.get("/dashboard", response_model=AdminDashboardResponse)
