@@ -13,7 +13,7 @@ from app.models.ai_provider_config import (
     AIModelProviderMapping,
 )
 from app.services.ai.provider_manager import encrypt_api_key
-from app.services.admin_audit import record_admin_audit
+from app.services.admin_audit import AuditContext
 from app.schemas.ai_provider import (
     ProviderConfigCreate,
     ProviderConfigUpdate,
@@ -37,6 +37,20 @@ async def _verify_config_ownership(config: AIProviderConfig, user, db: AsyncSess
     elif config.owner_type == "personal":
         if config.owner_id != user.id:
             raise HTTPException(status_code=403, detail="Access denied")
+
+
+async def _get_config_or_404(
+    provider_id: str, user, db: AsyncSession, *, load_keys: bool = False,
+) -> AIProviderConfig:
+    """Fetch config, verify ownership, raise 404 if missing."""
+    stmt = select(AIProviderConfig).where(AIProviderConfig.id == provider_id)
+    if load_keys:
+        stmt = stmt.options(selectinload(AIProviderConfig.keys))
+    config = (await db.execute(stmt)).scalar_one_or_none()
+    if not config:
+        raise HTTPException(status_code=404, detail="Provider config not found")
+    await _verify_config_ownership(config, user, db)
+    return config
 
 
 def _config_to_response(config: AIProviderConfig) -> ProviderConfigResponse:
@@ -120,15 +134,11 @@ async def create_provider(
 
     attributes.set_committed_value(config, "keys", [])
 
-    if data.owner_type == "system":
-        await record_admin_audit(
-            db,
-            admin_user_id=user.id,
-            action_type="provider.create",
-            target_type="ai_provider_config",
-            target_id=config.id,
-            changes={"provider": {"old": None, "new": {"provider_name": config.provider_name, "display_name": config.display_name, "is_enabled": config.is_enabled}}},
-        )
+    audit = AuditContext(db, user.id)
+    await audit.log_if(data.owner_type == "system",
+        action_type="provider.create", target_type="ai_provider_config",
+        target_id=config.id,
+        changes={"provider": {"old": None, "new": {"provider_name": config.provider_name, "display_name": config.display_name, "is_enabled": config.is_enabled}}})
 
     return _config_to_response(config)
 
@@ -140,16 +150,7 @@ async def update_provider(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(AIProviderConfig)
-        .where(AIProviderConfig.id == provider_id)
-        .options(selectinload(AIProviderConfig.keys))
-    )
-    config = result.scalar_one_or_none()
-    if not config:
-        raise HTTPException(status_code=404, detail="Provider config not found")
-
-    await _verify_config_ownership(config, user, db)
+    config = await _get_config_or_404(provider_id, user, db, load_keys=True)
 
     update_data = data.model_dump(exclude_unset=True)
     old_snapshot = {k: getattr(config, k) for k in update_data}
@@ -157,15 +158,11 @@ async def update_provider(
         setattr(config, key, value)
     await db.flush()
 
-    if config.owner_type == "system":
-        await record_admin_audit(
-            db,
-            admin_user_id=user.id,
-            action_type="provider.update",
-            target_type="ai_provider_config",
-            target_id=provider_id,
-            changes={"provider": {"old": old_snapshot, "new": update_data}},
-        )
+    audit = AuditContext(db, user.id)
+    await audit.log_if(config.owner_type == "system",
+        action_type="provider.update", target_type="ai_provider_config",
+        target_id=provider_id,
+        changes={"provider": {"old": old_snapshot, "new": update_data}})
 
     return _config_to_response(config)
 
@@ -176,24 +173,13 @@ async def delete_provider(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(AIProviderConfig).where(AIProviderConfig.id == provider_id)
-    )
-    config = result.scalar_one_or_none()
-    if not config:
-        raise HTTPException(status_code=404, detail="Provider config not found")
+    config = await _get_config_or_404(provider_id, user, db)
 
-    await _verify_config_ownership(config, user, db)
-
-    if config.owner_type == "system":
-        await record_admin_audit(
-            db,
-            admin_user_id=user.id,
-            action_type="provider.delete",
-            target_type="ai_provider_config",
-            target_id=provider_id,
-            changes={"provider": {"old": {"provider_name": config.provider_name, "display_name": config.display_name}, "new": None}},
-        )
+    audit = AuditContext(db, user.id)
+    await audit.log_if(config.owner_type == "system",
+        action_type="provider.delete", target_type="ai_provider_config",
+        target_id=provider_id,
+        changes={"provider": {"old": {"provider_name": config.provider_name, "display_name": config.display_name}, "new": None}})
 
     await db.delete(config)
     await db.flush()
@@ -206,14 +192,7 @@ async def add_provider_key(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(AIProviderConfig).where(AIProviderConfig.id == provider_id)
-    )
-    config = result.scalar_one_or_none()
-    if not config:
-        raise HTTPException(status_code=404, detail="Provider config not found")
-
-    await _verify_config_ownership(config, user, db)
+    config = await _get_config_or_404(provider_id, user, db)
 
     key = AIProviderKey(
         provider_config_id=provider_id,
@@ -223,15 +202,11 @@ async def add_provider_key(
     db.add(key)
     await db.flush()
 
-    if config.owner_type == "system":
-        await record_admin_audit(
-            db,
-            admin_user_id=user.id,
-            action_type="provider.key.add",
-            target_type="ai_provider_key",
-            target_id=key.id,
-            changes={"key": {"old": None, "new": {"label": key.label, "provider_config_id": provider_id}}},
-        )
+    audit = AuditContext(db, user.id)
+    await audit.log_if(config.owner_type == "system",
+        action_type="provider.key.add", target_type="ai_provider_key",
+        target_id=key.id,
+        changes={"key": {"old": None, "new": {"label": key.label, "provider_config_id": provider_id}}})
 
     return ProviderKeyResponse(
         id=key.id,
@@ -250,14 +225,7 @@ async def delete_provider_key(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    result = await db.execute(
-        select(AIProviderConfig).where(AIProviderConfig.id == provider_id)
-    )
-    config = result.scalar_one_or_none()
-    if not config:
-        raise HTTPException(status_code=404, detail="Provider config not found")
-
-    await _verify_config_ownership(config, user, db)
+    config = await _get_config_or_404(provider_id, user, db)
 
     key_result = await db.execute(
         select(AIProviderKey).where(
@@ -269,15 +237,11 @@ async def delete_provider_key(
     if not key:
         raise HTTPException(status_code=404, detail="Key not found")
 
-    if config.owner_type == "system":
-        await record_admin_audit(
-            db,
-            admin_user_id=user.id,
-            action_type="provider.key.delete",
-            target_type="ai_provider_key",
-            target_id=key_id,
-            changes={"key": {"old": {"label": key.label, "provider_config_id": provider_id}, "new": None}},
-        )
+    audit = AuditContext(db, user.id)
+    await audit.log_if(config.owner_type == "system",
+        action_type="provider.key.delete", target_type="ai_provider_key",
+        target_id=key_id,
+        changes={"key": {"old": {"label": key.label, "provider_config_id": provider_id}, "new": None}})
 
     await db.delete(key)
     await db.flush()

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.model_pricing import ModelPricing
-from app.services.admin_audit import record_admin_audit
+from app.services.admin_audit import AuditContext, serialize_changes
 from app.models.ai_call_log import AICallLog
 from app.schemas.billing import (
     PricingCreate,
@@ -34,14 +34,9 @@ async def create_pricing(
     await db.flush()
     await db.refresh(pricing)
 
-    await record_admin_audit(
-        db,
-        admin_user_id=user.id,
-        action_type="pricing.create",
-        target_type="model_pricing",
-        target_id=pricing.id,
-        changes={"pricing": {"old": None, "new": {"provider": pricing.provider, "model": pricing.model, "pricing_model": pricing.pricing_model}}},
-    )
+    audit = AuditContext(db, user.id)
+    await audit.log("pricing.create", "model_pricing", pricing.id,
+        changes={"pricing": {"old": None, "new": {"provider": pricing.provider, "model": pricing.model, "pricing_model": pricing.pricing_model}}})
 
     return pricing
 
@@ -76,7 +71,7 @@ async def update_pricing(
         raise HTTPException(status_code=404, detail="Pricing not found")
 
     update_fields = body.model_dump(exclude_unset=True)
-    old_values = {k: str(v) if isinstance(v, Decimal) else v for k, v in ((k, getattr(pricing, k)) for k in update_fields)}
+    old_values = serialize_changes({k: getattr(pricing, k) for k in update_fields})
 
     for field, value in update_fields.items():
         setattr(pricing, field, value)
@@ -84,15 +79,9 @@ async def update_pricing(
     await db.flush()
     await db.refresh(pricing)
 
-    new_values = {k: str(v) if isinstance(v, Decimal) else v for k, v in update_fields.items()}
-    await record_admin_audit(
-        db,
-        admin_user_id=user.id,
-        action_type="pricing.update",
-        target_type="model_pricing",
-        target_id=pricing_id,
-        changes={"pricing": {"old": old_values, "new": new_values}},
-    )
+    audit = AuditContext(db, user.id)
+    await audit.log("pricing.update", "model_pricing", pricing_id,
+        changes={"pricing": {"old": old_values, "new": serialize_changes(update_fields)}})
 
     return pricing
 
@@ -115,14 +104,9 @@ async def delete_pricing(
     pricing.updated_at = datetime.now(timezone.utc)
     await db.flush()
 
-    await record_admin_audit(
-        db,
-        admin_user_id=user.id,
-        action_type="pricing.deactivate",
-        target_type="model_pricing",
-        target_id=pricing_id,
-        changes={"is_active": {"old": True, "new": False}},
-    )
+    audit = AuditContext(db, user.id)
+    await audit.log("pricing.deactivate", "model_pricing", pricing_id,
+        changes={"is_active": {"old": True, "new": False}})
 
     return {"detail": "Pricing deactivated"}
 

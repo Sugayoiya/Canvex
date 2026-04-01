@@ -13,7 +13,7 @@ from app.schemas.admin import (
     AdminUserRoleUpdate,
     AdminUserStatusUpdate,
 )
-from app.services.admin_audit import record_admin_audit
+from app.services.admin_audit import AuditContext
 
 logger = logging.getLogger(__name__)
 
@@ -104,14 +104,9 @@ async def update_user_status(
 
     await db.flush()
 
-    await record_admin_audit(
-        db,
-        admin_user_id=user.id,
-        action_type="user.status.update",
-        target_type="user",
-        target_id=user_id,
-        changes={"status": {"old": old_status, "new": body.status}},
-    )
+    audit = AuditContext(db, user.id)
+    await audit.log("user.status.update", "user", user_id,
+        changes={"status": {"old": old_status, "new": body.status}})
 
     return AdminUserListItem.model_validate(target)
 
@@ -130,19 +125,13 @@ async def update_user_admin(
         raise HTTPException(status_code=404, detail="User not found")
 
     old_is_admin = target.is_admin
+    audit = AuditContext(db, user.id)
+    changes = {"is_admin": {"old": old_is_admin, "new": body.is_admin}}
 
     if not body.is_admin:
         if user_id == user.id:
-            await record_admin_audit(
-                db,
-                admin_user_id=user.id,
-                action_type="user.admin.update",
-                target_type="user",
-                target_id=user_id,
-                changes={"is_admin": {"old": old_is_admin, "new": body.is_admin}},
-                success=False,
-                error_message="self_demotion_blocked",
-            )
+            await audit.log("user.admin.update", "user", user_id,
+                changes=changes, success=False, error_message="self_demotion_blocked")
             raise HTTPException(status_code=400, detail="Cannot demote yourself")
 
         active_admin_count = (
@@ -155,29 +144,13 @@ async def update_user_admin(
         ).scalar() or 0
 
         if active_admin_count <= 1 and target.is_admin:
-            await record_admin_audit(
-                db,
-                admin_user_id=user.id,
-                action_type="user.admin.update",
-                target_type="user",
-                target_id=user_id,
-                changes={"is_admin": {"old": old_is_admin, "new": body.is_admin}},
-                success=False,
-                error_message="last_admin_blocked",
-            )
+            await audit.log("user.admin.update", "user", user_id,
+                changes=changes, success=False, error_message="last_admin_blocked")
             raise HTTPException(status_code=400, detail="Cannot remove the last active admin")
 
     target.is_admin = body.is_admin
     await db.flush()
 
-    await record_admin_audit(
-        db,
-        admin_user_id=user.id,
-        action_type="user.admin.update",
-        target_type="user",
-        target_id=user_id,
-        changes={"is_admin": {"old": old_is_admin, "new": body.is_admin}},
-        success=True,
-    )
+    await audit.log("user.admin.update", "user", user_id, changes=changes)
 
     return AdminUserListItem.model_validate(target)

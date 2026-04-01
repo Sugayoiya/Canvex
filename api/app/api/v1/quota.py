@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.quota import UserQuota, TeamQuota, QuotaUsageLog
 from app.schemas.quota import QuotaResponse, QuotaUpdate
-from app.services.admin_audit import record_admin_audit
+from app.services.admin_audit import AuditContext, serialize_changes
 
 router = APIRouter(prefix="/quota", tags=["quota"])
 
@@ -58,10 +58,10 @@ async def set_user_quota(
 
     old_values = {}
     if quota:
-        old_values = {
-            "monthly_credit_limit": str(quota.monthly_credit_limit) if quota.monthly_credit_limit is not None else None,
+        old_values = serialize_changes({
+            "monthly_credit_limit": quota.monthly_credit_limit,
             "daily_call_limit": quota.daily_call_limit,
-        }
+        })
     else:
         quota = UserQuota(user_id=user_id)
         db.add(quota)
@@ -71,24 +71,20 @@ async def set_user_quota(
         setattr(quota, k, v)
     quota.updated_at = datetime.now(timezone.utc)
 
+    new_serialized = serialize_changes(new_values)
     db.add(QuotaUsageLog(
         user_id=user_id,
         skill_execution_id=str(uuid.uuid4()),
         credit_amount=Decimal("0"),
         action="admin_set",
-        details=json.dumps({"old": old_values, "new": {k: str(v) if isinstance(v, Decimal) else v for k, v in new_values.items()}, "admin_user_id": user.id}, ensure_ascii=False),
+        details=json.dumps({"old": old_values, "new": new_serialized, "admin_user_id": user.id}, ensure_ascii=False),
     ))
 
     await db.flush()
 
-    await record_admin_audit(
-        db,
-        admin_user_id=user.id,
-        action_type="quota.user.set",
-        target_type="user_quota",
-        target_id=user_id,
-        changes={"quota": {"old": old_values, "new": {k: str(v) if isinstance(v, Decimal) else v for k, v in new_values.items()}}},
-    )
+    audit = AuditContext(db, user.id)
+    await audit.log("quota.user.set", "user_quota", user_id,
+        changes={"quota": {"old": old_values, "new": new_serialized}})
 
     return quota
 
@@ -123,10 +119,10 @@ async def set_team_quota(
 
     old_values = {}
     if quota:
-        old_values = {
-            "monthly_credit_limit": str(quota.monthly_credit_limit) if quota.monthly_credit_limit is not None else None,
+        old_values = serialize_changes({
+            "monthly_credit_limit": quota.monthly_credit_limit,
             "daily_call_limit": quota.daily_call_limit,
-        }
+        })
     else:
         quota = TeamQuota(team_id=team_id)
         db.add(quota)
@@ -136,24 +132,20 @@ async def set_team_quota(
         setattr(quota, k, v)
     quota.updated_at = datetime.now(timezone.utc)
 
+    new_serialized = serialize_changes(new_values)
     db.add(QuotaUsageLog(
         user_id=user.id,
         team_id=team_id,
         skill_execution_id=str(uuid.uuid4()),
         credit_amount=Decimal("0"),
         action="admin_set",
-        details=json.dumps({"old": old_values, "new": {k: str(v) if isinstance(v, Decimal) else v for k, v in new_values.items()}, "admin_user_id": user.id}, ensure_ascii=False),
+        details=json.dumps({"old": old_values, "new": new_serialized, "admin_user_id": user.id}, ensure_ascii=False),
     ))
 
     await db.flush()
 
-    await record_admin_audit(
-        db,
-        admin_user_id=user.id,
-        action_type="quota.team.set",
-        target_type="team_quota",
-        target_id=team_id,
-        changes={"quota": {"old": old_values, "new": {k: str(v) if isinstance(v, Decimal) else v for k, v in new_values.items()}}},
-    )
+    audit = AuditContext(db, user.id)
+    await audit.log("quota.team.set", "team_quota", team_id,
+        changes={"quota": {"old": old_values, "new": new_serialized}})
 
     return quota
