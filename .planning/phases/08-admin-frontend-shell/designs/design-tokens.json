@@ -1,0 +1,180 @@
+{
+  "$schema": "design-tokens-v1",
+  "description": "Admin Console Shell — Design Tokens (extends Canvas V4/V5 base tokens)",
+  "source": "pencil-new.pen (Frame 09KFK — Admin Console V2 Neutral Gray)",
+  "compatibility": "Inherits all Canvas V4 tokens. Admin-specific additions below.",
+
+  "themes": {
+    "dark": {
+      "canvas": {
+        "background": "#131313"
+      },
+      "surface": {
+        "primary": "#2A2A2A",
+        "secondary": "#353534",
+        "elevated": "#201F1F",
+        "overlay": "#1C1B1BDD",
+        "popup": "#1C1B1B",
+        "sidebar": "#131313",
+        "topbar": "#1C1B1BDD",
+        "card": "#2A2A2A"
+      },
+      "text": {
+        "primary": "#E5E2E1",
+        "secondary": "#BBC9CF",
+        "muted": "#859399",
+        "placeholder": "#85939930",
+        "disabled": "#85939960"
+      },
+      "border": {
+        "default": "#3c494e20",
+        "subtle": "#3c494e15",
+        "faint": "#3c494e12",
+        "focused": "#E5E2E130",
+        "divider": "#3c494e40",
+        "sidebarRight": "#3c494e20",
+        "topbarBottom": "#3c494e20"
+      },
+      "interactive": {
+        "buttonPrimary": "#E5E2E1",
+        "buttonPrimaryText": "#131313",
+        "buttonSecondary": "#2A2A2A",
+        "buttonSecondaryText": "#BBC9CF",
+        "buttonSecondaryBorder": "#3c494e30",
+        "activeHighlight": "#E5E2E115",
+        "hoverHighlight": "#E5E2E110"
+      },
+      "shadow": {
+        "sm": { "blur": 10, "color": "#00000040", "offsetY": 2 },
+        "md": { "blur": 20, "color": "#00000040", "offsetY": 4 },
+        "lg": { "blur": 30, "color": "#00000050", "offsetY": 6 },
+        "xl": { "blur": 60, "color": "#00000060", "offsetY": 12 }
+      }
+    },
+
+    "light": {
+      "canvas": {
+        "background": "#F5F5F5"
+      },
+      "surface": {
+        "primary": "#FFFFFF",
+        "secondary": "#EBEBEB",
+        "elevated": "#FFFFFF",
+        "overlay": "#FFFFFFEE",
+        "popup": "#FFFFFF",
+        "sidebar": "#F5F5F5",
+        "topbar": "#FFFFFFEE",
+        "card": "#FFFFFF"
+      },
+      "text": {
+        "primary": "#1A1A1A",
+        "secondary": "#4A5A62",
+        "muted": "#7A8A92",
+        "placeholder": "#9AA5AD40",
+        "disabled": "#9AA5AD80"
+      },
+      "border": {
+        "default": "#D0D0D040",
+        "subtle": "#D0D0D030",
+        "faint": "#D0D0D020",
+        "focused": "#1A1A1A15",
+        "divider": "#D0D0D060",
+        "sidebarRight": "#D0D0D040",
+        "topbarBottom": "#D0D0D040"
+      },
+      "interactive": {
+        "buttonPrimary": "#1A1A1A",
+        "buttonPrimaryText": "#FFFFFF",
+        "buttonSecondary": "#F0F0F0",
+        "buttonSecondaryText": "#4A5A62",
+        "buttonSecondaryBorder": "#D0D0D040",
+        "activeHighlight": "#1A1A1A08",
+        "hoverHighlight": "#1A1A1A05"
+      },
+      "shadow": {
+        "sm": { "blur": 8, "color": "#00000010", "offsetY": 1 },
+        "md": { "blur": 12, "color": "#00000010", "offsetY": 2 },
+        "lg": { "blur": 16, "color": "#00000012", "offsetY": 3 },
+        "xl": { "blur": 30, "color": "#00000015", "offsetY": 6 }
+      }
+    }
+  },
+
+  "typography": {
+    "fontFamily": {
+      "display": "Space Grotesk",
+      "body": "Manrope",
+      "mono": "Space Grotesk"
+    },
+    "scale": {
+      "pageTitle": { "size": 28, "weight": "700", "font": "Space Grotesk", "letterSpacing": -0.5 },
+      "pageSubtitle": { "size": 13, "weight": "normal", "font": "Manrope" },
+      "sidebarTitle": { "size": 13, "weight": "700", "font": "Space Grotesk" },
+      "sidebarSubtitle": { "size": 9, "weight": "normal", "font": "Space Grotesk", "letterSpacing": 1 },
+      "navItem": { "size": 12, "weight": "normal", "font": "Manrope" },
+      "navItemActive": { "size": 12, "weight": "600", "font": "Manrope" },
+      "topbarTitle": { "size": 14, "weight": "700", "font": "Space Grotesk" },
+      "topbarLink": { "size": 12, "weight": "normal", "font": "Manrope" },
+      "topbarEmail": { "size": 11, "weight": "normal", "font": "Manrope" },
+      "cardLabel": { "size": 11, "weight": "normal", "font": "Space Grotesk", "letterSpacing": 1 },
+      "cardValue": { "size": 36, "weight": "300", "font": "Space Grotesk" },
+      "cardValuePlaceholder": { "size": 36, "weight": "300", "font": "Space Grotesk", "color": "#E5E2E150" },
+      "badgeText": { "size": 9, "weight": "normal", "font": "Space Grotesk" },
+      "cardDescription": { "size": 10, "weight": "normal", "font": "Manrope" },
+      "buttonPrimary": { "size": 12, "weight": "600", "font": "Manrope" },
+      "buttonSecondary": { "size": 12, "weight": "500", "font": "Manrope" },
+      "footerLabel": { "size": 10, "weight": "normal", "font": "Space Grotesk", "letterSpacing": 1 },
+      "footerDescription": { "size": 12, "weight": "normal", "font": "Manrope" }
+    }
+  },
+
+  "spacing": {
+    "sidebarWidth": 240,
+    "topbarHeight": 56,
+    "sidebarPadding": [24, 16],
+    "topbarPadding": [0, 32],
+    "mainContentPadding": 40,
+    "cardPadding": [20, 24],
+    "gap": {
+      "navItems": 2,
+      "kpiCards": 16,
+      "kpiRows": 16,
+      "sections": 40,
+      "headerToCards": 40,
+      "footerTop": 32
+    }
+  },
+
+  "radii": {
+    "card": 12,
+    "button": 8,
+    "navItem": 8,
+    "badge": 6,
+    "footerBadge": 9999,
+    "avatar": 9999
+  },
+
+  "iconography": {
+    "library": "lucide",
+    "sidebarIcons": {
+      "admin": "shield",
+      "dashboard": "layout-dashboard",
+      "users": "users",
+      "teams": "group",
+      "quotas": "gauge",
+      "pricing": "credit-card",
+      "providers": "settings",
+      "monitoring": "activity"
+    },
+    "topbarIcons": {
+      "back": "arrow-left",
+      "notifications": "bell"
+    },
+    "cardIcons": {
+      "totalUsers": "user",
+      "activeTeams": "users",
+      "tasks": "circle-check",
+      "totalCost": "wallet"
+    }
+  }
+}
