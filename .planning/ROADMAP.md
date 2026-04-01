@@ -5,7 +5,7 @@
 - [x] **Phase 07: Admin API Foundation** — Admin user endpoints, audit log model, log scope lifts, dashboard stats, team overview API (completed 2026-04-01)
 - [x] **Phase 08: Admin Frontend Shell** — AdminGuard, admin layout/sidebar, new deps, adminApi/quotaApi client, Toaster setup (completed 2026-04-01)
 - [x] **Phase 09: User & Team Management UI** — TanStack Table user directory, status/admin toggles, team overview table, confirmation modals (completed 2026-04-01)
-- [ ] **Phase 10: Quota & Pricing & Provider Management UI** — Quota editor, pricing CRUD table, system AI Provider management
+- [x] **Phase 10: Quota & Pricing & Provider Management UI** — Quota editor, pricing CRUD table, system AI Provider management (completed 2026-04-01)
 - [ ] **Phase 11: Monitoring Dashboard & Polish** — Admin dashboard KPIs, global task/AI/skill logs, billing reuse, empty/error states, design consistency
 
 ### Phase 07: Admin API Foundation
@@ -76,13 +76,13 @@ Plans:
 **Depends on**: Phase 08
 **UI hint**: yes
 **Requirements:** [REQ-21, REQ-22, REQ-23]
-**Plans:** 2/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 10-01-PLAN.md — [W1] Backend gaps (key_hint + null-safe fallback, key list non-sensitive response) + billingApi extension + TabBar + ProgressBar
-- [ ] 10-02-PLAN.md — [W2] Quota Management page (dual tabs, search, expandable row editing, ProgressBar, mutation race guards)
+- [x] 10-02-PLAN.md — [W2] Quota Management page (dual tabs, search, expandable row editing, ProgressBar, mutation race guards)
 - [x] 10-03-PLAN.md — [W2] Pricing Management page (TanStack Table, create/edit modal, status toggle, string price precision, field cleanup)
-- [ ] 10-04-PLAN.md — [W2] Provider Management page (card list, key security hygiene, mutation guards, dependency warning)
+- [x] 10-04-PLAN.md — [W2] Provider Management page (card list, key security hygiene, mutation guards, dependency warning)
 
 **Success Criteria**:
 1. Quota management page: user/team picker with search; displays current quota vs usage; inline edit form to set limits via existing PUT endpoints; toast on success.
