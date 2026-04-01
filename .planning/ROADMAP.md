@@ -13,15 +13,22 @@
 **Depends on**: Phase 06
 **UI hint**: no
 **Requirements:** [REQ-13, REQ-14, REQ-15, REQ-16]
+**Plans:** 4 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — [W1] AdminAuditLog model + record_admin_audit service + schemas + unit tests
+- [ ] 07-02-PLAN.md — [W2] Admin user management endpoints (list/status/admin toggles) + nullslast sort + tests
+- [ ] 07-03-PLAN.md — [W3] Admin observability: /logs/* scope lifts (all 6 endpoints) + paginated /admin/teams + /admin/dashboard + tests
+- [ ] 07-04-PLAN.md — [W2] Audit wiring: record_admin_audit into quota/billing/AI-provider admin endpoints + tests
 
 **Success Criteria**:
 1. `GET /admin/users` returns paginated user list with search/filter/sort; response excludes `password_hash` and `refresh_token`.
 2. `PATCH /admin/users/{id}/status` toggles user status (active/banned) and invalidates refresh token on ban.
 3. `PATCH /admin/users/{id}/admin` toggles `is_admin` with last-admin and self-demotion safeguards.
-4. `AdminAuditLog` model exists; all admin mutations emit audit events.
-5. `/logs/skills`, `/logs/ai-calls`, `/logs/ai-calls/stats`, `/logs/trace/{trace_id}` support admin cross-user queries.
-6. `GET /admin/teams` returns all teams with aggregate member counts.
-7. `GET /admin/dashboard` returns aggregate KPIs (user count, team count, task stats, cost).
+4. `AdminAuditLog` model exists; all admin mutations emit audit events (user, quota, billing pricing, AI provider system-scope).
+5. `/logs/skills`, `/logs/ai-calls`, `/logs/ai-calls/stats`, `/logs/tasks`, `/logs/tasks/counts`, `/logs/trace/{trace_id}` support admin cross-user queries including team_id filter.
+6. `GET /admin/teams` returns paginated teams with aggregate member counts.
+7. `GET /admin/dashboard` returns aggregate KPIs (user count, team count, task stats, cost, system-scope provider status) with 24h/7d/30d windows.
 8. All `/admin/*` endpoints return 403 for non-admin tokens (automated test).
 
 ### Phase 08: Admin Frontend Shell
