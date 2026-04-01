@@ -31,10 +31,11 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ v2.0 Phase 4 media/slash skills + quota controls
 - ✓ v2.0 Phase 5 canvas/video experience + billing dashboard
 - ✓ v2.0 Phase 6 collaboration + OAuth + Obsidian Lens UI
+- ✓ v2.1 Phase 7 admin API foundation — audit model, user management, log scope lifts, dashboard
 
 ### Active
 
-- [ ] Admin Console — user/quota/pricing/provider/monitoring/team management
+- [ ] Admin Console Frontend — admin shell, user/team/quota/pricing/provider/monitoring UI (Phases 08–11)
 
 ### Out of Scope
 
@@ -50,7 +51,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - Auth: JWT HS256 + Google/GitHub OAuth, `User.is_admin` boolean for system admin.
 - Existing admin backend: `require_admin` guard, quota CRUD API, pricing CRUD API, system-level AI Provider config.
 - Missing admin frontend: no /admin route, no admin-specific pages, quota/pricing APIs not wired to UI.
-- Missing admin backend: user list/disable/enable API, full audit log queries (skills/AI calls still user-scoped).
+- Admin backend: complete — user management, audit trail, dashboard, log scope lifts, team overview API (Phase 07).
 
 ## Constraints
 
@@ -86,4 +87,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-31 — Milestone v2.1 Admin Console started*
+*Last updated: 2026-04-01 — Phase 07 Admin API Foundation complete*
