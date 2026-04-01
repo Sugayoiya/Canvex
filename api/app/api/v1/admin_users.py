@@ -80,3 +80,104 @@ async def list_users(
         limit=limit,
         offset=offset,
     )
+
+
+@router.patch("/users/{user_id}/status", response_model=AdminUserListItem)
+async def update_user_status(
+    user_id: str,
+    body: AdminUserStatusUpdate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    require_admin(user)
+
+    target = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
+    if target is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    old_status = target.status
+    target.status = body.status
+
+    if body.status == "banned":
+        target.refresh_token_hash = None
+        target.refresh_token_expires = None
+
+    await db.flush()
+
+    await record_admin_audit(
+        db,
+        admin_user_id=user.id,
+        action_type="user.status.update",
+        target_type="user",
+        target_id=user_id,
+        changes={"status": {"old": old_status, "new": body.status}},
+    )
+
+    return AdminUserListItem.model_validate(target)
+
+
+@router.patch("/users/{user_id}/admin", response_model=AdminUserListItem)
+async def update_user_admin(
+    user_id: str,
+    body: AdminUserRoleUpdate,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    require_admin(user)
+
+    target = (await db.execute(select(User).where(User.id == user_id))).scalar_one_or_none()
+    if target is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    old_is_admin = target.is_admin
+
+    if not body.is_admin:
+        if user_id == user.id:
+            await record_admin_audit(
+                db,
+                admin_user_id=user.id,
+                action_type="user.admin.update",
+                target_type="user",
+                target_id=user_id,
+                changes={"is_admin": {"old": old_is_admin, "new": body.is_admin}},
+                success=False,
+                error_message="self_demotion_blocked",
+            )
+            raise HTTPException(status_code=400, detail="Cannot demote yourself")
+
+        active_admin_count = (
+            await db.execute(
+                select(func.count(User.id)).where(
+                    User.is_admin == True,  # noqa: E712
+                    User.status == "active",
+                )
+            )
+        ).scalar() or 0
+
+        if active_admin_count <= 1 and target.is_admin:
+            await record_admin_audit(
+                db,
+                admin_user_id=user.id,
+                action_type="user.admin.update",
+                target_type="user",
+                target_id=user_id,
+                changes={"is_admin": {"old": old_is_admin, "new": body.is_admin}},
+                success=False,
+                error_message="last_admin_blocked",
+            )
+            raise HTTPException(status_code=400, detail="Cannot remove the last active admin")
+
+    target.is_admin = body.is_admin
+    await db.flush()
+
+    await record_admin_audit(
+        db,
+        admin_user_id=user.id,
+        action_type="user.admin.update",
+        target_type="user",
+        target_id=user_id,
+        changes={"is_admin": {"old": old_is_admin, "new": body.is_admin}},
+        success=True,
+    )
+
+    return AdminUserListItem.model_validate(target)
