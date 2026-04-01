@@ -1,5 +1,45 @@
 # Retrospective: Canvas Studio
 
+## Milestone: v2.0 — Skill + Celery Refactor
+
+**Shipped:** 2026-03-30
+**Phases:** 7 (incl. 3.1 inserted) | **Plans:** 39
+
+### What Was Built
+- SkillRegistry/Descriptor/Executor + Celery async backbone (13 business skills)
+- 4 material-type canvas nodes with focus-panel interaction and asset library
+- PydanticAI agent with SSE chat sidebar, pipeline orchestration, and context tools
+- Fail-closed quota enforcement (UserQuota/TeamQuota) with atomic locks
+- Recharts billing dashboard with KPI cards and UTC-normalized time-series
+- Multi-tenant collaboration: Team/Group RBAC, Google/GitHub OAuth
+- DB-backed ProviderManager with Fernet encryption and round-robin KeyRotator
+- Obsidian Lens design system across all pages
+
+### What Worked
+- **Skill abstraction**: Single SkillRegistry backbone for canvas nodes + agent tools eliminated duplication
+- **Wave-based plan parallelization**: Backend (W1) + frontend (W2-W3) kept dependencies clean
+- **Inserted Phase 03.1**: Catching 12 quality issues early prevented compounding bugs in later phases
+- **39-test acceptance gate (02-09)**: Verified all Phase 02 deliverables before advancing
+
+### What Was Inefficient
+- **Phase 01 had no formal plans**: Foundation was done ad-hoc, making it harder to trace
+- **v2.0 not formally archived**: No MILESTONES.md entry or archive created at completion time
+- **Audio node deferred**: Placeholder-only audio node created debt carried into all subsequent phases
+
+### Patterns Established
+- Category__skill double-underscore namespacing for collision-free tool names
+- 7-state node execution machine (idle/queued/running/completed/failed/timeout/blocked)
+- Fail-closed quota with idempotent usage tracking by skill_execution_id
+- Obsidian Lens --ob-* tokens + --cv4-* canvas-specific tokens coexistence
+- Partial degradation pattern: return valid items + warnings instead of full failure
+
+### Key Lessons
+- **Insert bugfix phases early**: Phase 03.1 prevented cascading quality issues
+- **Acceptance test gates work**: Phase 02-09's 39-test suite caught integration gaps
+- **Design system investment pays off**: Obsidian Lens tokens accelerated all frontend phases
+
+---
+
 ## Milestone: v2.1 — Admin Console
 
 **Shipped:** 2026-04-02

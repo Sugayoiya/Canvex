@@ -1,5 +1,22 @@
 # Milestones
 
+## v2.0 Skill + Celery Refactor (Shipped: 2026-03-30)
+
+**Phases completed:** 7 phases (incl. 3.1 inserted), 39 plans
+
+**Key accomplishments:**
+
+- SkillRegistry/Descriptor/Executor + Celery async backbone established
+- 13 business skills migrated (TEXT/EXTRACT/SCRIPT/STORYBOARD/VISUAL/VIDEO)
+- 4 material-type canvas nodes (text/image/video/audio) with focus-panel system
+- PydanticAI agent with SSE chat sidebar, pipeline orchestration, and context tools
+- Fail-closed quota enforcement with atomic locks (UserQuota/TeamQuota)
+- Recharts billing dashboard with KPI cards and UTC-normalized time-series
+- Multi-tenant collaboration: Team/Group RBAC, Google/GitHub OAuth, Obsidian Lens UI
+- DB-backed ProviderManager with Fernet-encrypted credentials and round-robin KeyRotator
+
+---
+
 ## v2.1 Admin Console (Shipped: 2026-04-01)
 
 **Phases completed:** 5 phases, 17 plans, 32 tasks
