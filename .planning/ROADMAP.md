@@ -36,10 +36,10 @@ Plans:
 **Depends on**: Phase 07
 **UI hint**: yes
 **Requirements:** [REQ-17, REQ-18]
-**Plans:** 2 plans
+**Plans:** 1/2 plans executed
 
 Plans:
-- [ ] 08-01-PLAN.md — [W1] Install deps (@tanstack/react-table + sonner) + add --cv4-btn-secondary-border token + fix Manrope 700 + adminApi/quotaApi namespaces in api.ts
+- [x] 08-01-PLAN.md — [W1] Install deps (@tanstack/react-table + sonner) + add --cv4-btn-secondary-border token + fix Manrope 700 + adminApi/quotaApi namespaces in api.ts
 - [ ] 08-02-PLAN.md — [W2] AdminShell/AdminSidebar/AdminTopbar components + admin layout + 7 placeholder pages + main sidebar Admin Console entry
 
 **Success Criteria**:
