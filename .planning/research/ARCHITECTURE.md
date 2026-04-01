@@ -1,356 +1,664 @@
-# Architecture Research
+# Architecture Patterns
 
-**Domain:** SaaS admin console for AI creative tool platform
-**Researched:** 2026-03-31
-**Confidence:** HIGH
+**Domain:** AI Agent System Upgrade for Short-Film Creation Workbench  
+**Researched:** 2026-04-02  
+**Confidence:** HIGH (based on direct codebase analysis + verified library APIs)
 
-## Standard Architecture
-
-### System Overview
+## Current Architecture Snapshot
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Browser                                                            │
+│  Frontend (Next.js 16 + React 19)                                   │
+│  ┌──────────┐ ┌──────────────┐ ┌─────────────┐                     │
+│  │ Chat UI  │ │ Canvas Flow  │ │ Skill Admin │                     │
+│  │ (SSE)    │ │ (React Flow) │ │ (TanStack)  │                     │
+│  └────┬─────┘ └──────┬───────┘ └──────┬──────┘                     │
+└───────┼──────────────┼────────────────┼─────────────────────────────┘
+        │              │                │
+────────┼──────────────┼────────────────┼──── HTTP / SSE ─────────────
+        │              │                │
+┌───────┼──────────────┼────────────────┼─────────────────────────────┐
+│  FastAPI Backend                                                     │
+│       │              │                │                              │
+│  ┌────▼────┐   ┌─────▼──────┐   ┌────▼──────┐                      │
+│  │ agent.py│   │ canvas.py  │   │ admin.py  │  ← API Layer         │
+│  │ (SSE)   │   │ (batch)    │   │ (CRUD)    │                      │
+│  └────┬────┘   └─────┬──────┘   └───────────┘                      │
+│       │              │                                              │
+│  ┌────▼──────────────┤                                              │
+│  │ AgentService      │  ← PydanticAI Agent + agent.iter()          │
+│  │ ┌──────────────┐  │                                              │
+│  │ │ SkillToolset │  │  ← AbstractToolset bridge                   │
+│  │ │ PipelineTools│  │  ← FunctionToolset (deterministic chain)    │
+│  │ │ ContextTools │  │  ← FunctionToolset (read-only queries)      │
+│  │ └──────┬───────┘  │                                              │
+│  └────────┼──────────┘                                              │
+│           │                                                         │
+│  ┌────────▼──────────┐                                              │
+│  │  SkillRegistry    │  ← Central invocation hub                   │
+│  │  (singleton)      │                                              │
+│  │  14 skills reg'd  │                                              │
+│  └──┬────────────┬───┘                                              │
+│     │sync        │async_celery                                      │
+│     ▼            ▼                                                  │
+│  handler()   Celery task                                            │
+│              run_skill_task                                          │
+│              └→ handler()                                           │
 │                                                                     │
-│  ┌──────────────────────┐     ┌──────────────────────────────────┐  │
-│  │ Regular App           │     │ Admin Console                    │  │
-│  │ /projects, /teams,    │     │ /admin/users, /admin/quotas,     │  │
-│  │ /billing, /tasks,     │     │ /admin/pricing, /admin/providers │  │
-│  │ /settings/ai, /canvas │     │ /admin/monitoring, /admin/teams  │  │
-│  │                       │     │                                  │  │
-│  │ AppShell (Sidebar +   │     │ AdminShell (AdminSidebar +       │  │
-│  │  Topbar)              │     │  Topbar — reused)                │  │
-│  │ AuthGuard             │     │ AuthGuard + AdminGuard           │  │
-│  └───────────┬───────────┘     └──────────────┬───────────────────┘  │
-│              │                                │                     │
-│              └──────────┬─────────────────────┘                     │
-│                         │ Axios (JWT auto-attach)                   │
-└─────────────────────────┼───────────────────────────────────────────┘
-                          │
-              ┌───────────▼───────────┐
-              │   FastAPI /api/v1/    │
-              │                       │
-              │  Existing routes:     │       New route:
-              │  /quota/* (admin)     │    ┌──────────────┐
-              │  /billing/* (mixed)   │    │ /admin/*     │
-              │  /logs/* (mixed)      │    │ user list    │
-              │  /ai-providers/*      │    │ user toggle  │
-              │  /teams/*             │    │ admin grant  │
-              │                       │    │ team overview│
-              │  Guard: require_admin │    │ audit log    │
-              │  Scope: is_admin →    │    │ dashboard KPI│
-              │    bypass user_id     │    └──────┬───────┘
-              └───────────┬───────────┘           │
-                          │                       │
-              ┌───────────▼───────────────────────▼──┐
-              │  SQLAlchemy async                     │
-              │  User (is_admin, status)              │
-              │  UserQuota / TeamQuota                │
-              │  ModelPricing                         │
-              │  AIProviderConfig / AIProviderKey      │
-              │  SkillExecutionLog / AICallLog         │
-              │  Team / TeamMember                    │
-              │  QuotaUsageLog (audit)                │
-              └──────────────────────────────────────┘
+│  AI Call Paths (3 SEPARATE STACKS):                                 │
+│  (A) PydanticAI: create_pydantic_model() → env key → Agent LLM     │
+│  (B) ProviderManager: get_provider_sync() → env key → LLM skills   │
+│  (C) Raw Provider: GeminiImageProvider/VideoProvider → env key      │
+│                                                                     │
+│  ProviderManager.get_provider() [async, DB chain] → DEAD CODE      │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Component Responsibilities
-
-| Component | Responsibility | Current State |
-|---|---|---|
-| `require_admin` (deps.py) | Backend gate — checks `User.is_admin` | ✅ Exists, used in quota/billing/provider routes |
-| `User.is_admin` | System admin boolean flag | ✅ Exists on model, exposed in JWT profile, in auth store |
-| `User.status` | Account lifecycle (active/banned) | ✅ Exists, enforced in `get_current_user` |
-| `AuthGuard` | Frontend route protection (redirect to /login) | ✅ Exists, wraps all routes via Providers |
-| `AdminGuard` | Frontend admin gate (redirect non-admins) | ❌ New — reads `user.is_admin` from auth store |
-| `AdminShell` | Admin-specific layout (sidebar + topbar) | ❌ New — parallel to AppShell |
-| `admin.py` router | Backend admin-only aggregate endpoints | ❌ New — user CRUD, team overview, dashboard KPIs |
-| `adminApi` | Frontend API client for admin endpoints | ❌ New — added to `lib/api.ts` |
-| Billing endpoints | Usage stats + timeseries | ✅ Already admin-aware (bypass user_id when is_admin) |
-| Logs endpoints | Tasks + AI calls + traces | ✅ Partially admin-aware (/tasks, /tasks/counts bypass user_id) |
-| Quota endpoints | User/team quota CRUD | ✅ Already admin-guarded |
-| Pricing endpoints | Model pricing CRUD | ✅ Already admin-guarded |
-| AI Provider endpoints | System/team/personal provider CRUD | ✅ Already ownership-scoped, system = admin |
-
-## Recommended Project Structure
-
-New files/folders within existing structure:
+## Recommended Architecture (v3.0 Target)
 
 ```
-web/src/
-├── app/
-│   └── admin/                          # NEW — admin route tree
-│       ├── layout.tsx                  # AdminShell + AdminGuard wrapper
-│       ├── page.tsx                    # Dashboard — KPIs, at-a-glance
-│       ├── users/
-│       │   └── page.tsx               # User management table
-│       ├── quotas/
-│       │   └── page.tsx               # Quota management (user + team)
-│       ├── pricing/
-│       │   └── page.tsx               # Model pricing CRUD
-│       ├── providers/
-│       │   └── page.tsx               # System-level AI provider management
-│       ├── monitoring/
-│       │   └── page.tsx               # Global task + AI call logs
-│       └── teams/
-│           └── page.tsx               # All-teams overview
-├── components/
-│   └── admin/                          # NEW — admin-specific components
-│       ├── admin-guard.tsx            # Redirect non-admins to /projects
-│       ├── admin-shell.tsx            # Layout: AdminSidebar + Topbar
-│       ├── admin-sidebar.tsx          # Admin navigation
-│       ├── admin-kpi-cards.tsx        # Dashboard KPI cards (4-6 metrics)
-│       ├── user-table.tsx             # Paginated user directory
-│       ├── user-status-toggle.tsx     # Enable/disable user action
-│       ├── admin-role-toggle.tsx      # Grant/revoke admin
-│       ├── quota-editor.tsx           # Inline quota edit form
-│       └── team-overview-table.tsx    # All-teams list with member counts
-└── lib/
-    └── api.ts                          # MODIFIED — add adminApi namespace
-
-api/app/
-├── api/v1/
-│   ├── admin.py                        # NEW — admin-only endpoints
-│   └── router.py                       # MODIFIED — register admin router
-├── models/
-│   └── admin_audit_log.py              # NEW (optional) — structured admin action log
-└── schemas/
-    └── admin.py                        # NEW — admin request/response schemas
+┌─────────────────────────────────────────────────────────────────────┐
+│  Frontend                                                           │
+│  ┌──────────┐ ┌──────────────┐ ┌─────────────┐                     │
+│  │ Chat UI  │ │ Canvas Flow  │ │ Admin Panel │                     │
+│  │ (SSE)    │ │ +Chat Panel  │ │ +Skill Mgmt │                     │
+│  └────┬─────┘ └──────┬───────┘ └──────┬──────┘                     │
+└───────┼──────────────┼────────────────┼─────────────────────────────┘
+        │              │                │
+────────┼──────────────┼────────────────┼──── HTTP / SSE ─────────────
+        │              │                │
+┌───────┼──────────────┼────────────────┼─────────────────────────────┐
+│  FastAPI Backend                                                     │
+│       │              │                │                              │
+│  ┌────▼────┐   ┌─────▼──────┐   ┌────▼──────┐                      │
+│  │ agent.py│   │ canvas.py  │   │ admin/    │  ← API Layer         │
+│  │ (SSE)   │   │ (+chat)    │   │ skills.py │                      │
+│  └────┬────┘   └─────┬──────┘   └───────────┘                      │
+│       │              │                                              │
+│  ┌────▼──────────────▼─────────────────────────────────────┐        │
+│  │  AgentService (ENHANCED)                                 │        │
+│  │  ┌─────────────┐ ┌──────────────┐ ┌────────────────┐   │        │
+│  │  │ QueryEngine │ │ ArtifactStore│ │ ToolInterceptor│   │        │
+│  │  │ (budget,    │ │ (session KV) │ │ (inject/persist│   │        │
+│  │  │  rounds,    │ │              │ │  artifacts)    │   │        │
+│  │  │  plan mode) │ │              │ │                │   │        │
+│  │  └──────┬──────┘ └──────┬───────┘ └───────┬────────┘   │        │
+│  │         │               │                 │             │        │
+│  │  ┌──────▼───────────────▼─────────────────▼──────────┐  │        │
+│  │  │ Toolsets                                           │  │        │
+│  │  │ ┌──────────────┐ ┌──────────────┐ ┌─────────────┐│  │        │
+│  │  │ │ SkillToolset │ │ PipelineTools│ │ ContextTools ││  │        │
+│  │  │ │ (enhanced)   │ │ (fixed)      │ │ (+write ops) ││  │        │
+│  │  │ ├──────────────┤ ├──────────────┤ ├─────────────┤│  │        │
+│  │  │ │SubAgentTool  │ │              │ │             ││  │        │
+│  │  │ └──────────────┘ └──────────────┘ └─────────────┘│  │        │
+│  │  └──────────────────────┬────────────────────────────┘  │        │
+│  └─────────────────────────┼───────────────────────────────┘        │
+│                            │                                        │
+│  ┌─────────────────────────▼────────────────────────────────┐       │
+│  │  UnifiedProviderResolver (NEW)                            │       │
+│  │  Replaces 3 call paths → single async DB credential chain │       │
+│  │  team → personal → system → env                           │       │
+│  │  Wraps: LLM / Image / Video provider instantiation        │       │
+│  └─────────────────────────┬─────────────────────────────────┘       │
+│                            │                                        │
+│  ┌─────────────────────────▼────────────────────────────────┐       │
+│  │  SkillRegistry (EXISTING, minor changes)                  │       │
+│  │  + SkillDescriptor enhancements (deps, mode, tier)        │       │
+│  │  14 existing + 30+ new business skills                    │       │
+│  └──┬────────────┬──────────────────────────────────────────┘       │
+│     │sync        │async_celery                                      │
+│     ▼            ▼                                                  │
+│  handler()   Celery run_skill_task                                  │
+└─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Architectural Patterns
+## Component Boundaries
 
-### 1. Dual Guard Pattern (Frontend)
+### Existing Components (MODIFY)
 
-```
-AuthGuard (exists)          AdminGuard (new)
-    │                           │
-    ▼                           ▼
-Check isAuthenticated       Check user.is_admin
-→ redirect to /login        → redirect to /projects (or 403 page)
-```
+| Component | File(s) | Current Role | v3.0 Changes |
+|-----------|---------|-------------|--------------|
+| **AgentService** | `agent/agent_service.py` | Agent factory + session CRUD | + QueryEngine integration, + ArtifactStore per-session, + model resolution via UnifiedProviderResolver |
+| **SkillDescriptor** | `skills/descriptor.py` | `@dataclass` with name/category/schema/mode | + `dependencies: list[str]`, + `mode: str` (generate/transform/query), + `tier: str` (foundation/business/workflow), + `cost_estimate` |
+| **SkillToolset** | `agent/skill_toolset.py` | AbstractToolset bridge to SkillRegistry | + ToolInterceptor hooks in `call_tool()`, + artifact injection pre-call, + artifact persistence post-call |
+| **SkillRegistry** | `skills/registry.py` | Central registry + invoke/poll | + dependency validation on register, + discover by tier/mode, + admin list/toggle API |
+| **SkillContext** | `skills/context.py` | Serializable identity bag | + `artifact_store_id: str`, + `parent_session_id: str` (for sub-agents) |
+| **ProviderManager** | `services/ai/provider_manager.py` | DB credential chain (async dead code) | Activate `get_provider()` async path, integrate Image/Video providers into registry |
+| **pipeline_tools.py** | `agent/pipeline_tools.py` | Deterministic 4-step chain | Fix `_chain_params` field mismatches, add Celery-aware async step execution, expand to 7-stage pipeline |
+| **context_tools.py** | `agent/context_tools.py` | 4 read-only query tools | + write tools (update_character, update_scene, save_script), + permission checking via SkillContext |
+| **agent.py** (API) | `api/v1/agent.py` | SSE chat endpoint | + QueryEngine wrapping `agent.iter()`, + SSE progress events for tool execution, + cost tracking in response |
+| **skill_task.py** | `tasks/skill_task.py` | Celery task wrapper | + pass UnifiedProviderResolver context, + structured cost reporting back to SkillExecutionLog |
 
-`admin/layout.tsx` nests both guards:
+### New Components (CREATE)
 
-```tsx
-// web/src/app/admin/layout.tsx
-export default function AdminLayout({ children }) {
-  return (
-    <AdminGuard>
-      <AdminShell>{children}</AdminShell>
-    </AdminGuard>
-  );
-}
-```
+| Component | Proposed Location | Purpose | Depends On |
+|-----------|------------------|---------|-----------|
+| **QueryEngine** | `agent/query_engine.py` | Token budget enforcement, round limits, diminishing-returns detection, plan-then-execute interaction mode | AgentService, PydanticAI `usage()` API |
+| **ArtifactStore** | `agent/artifact_store.py` | Session-scoped KV store for intermediate results (clips, screenplay, shot plans, generated images) | Redis (hot) + DB (cold), AgentSession FK |
+| **ToolInterceptor** | `agent/tool_interceptor.py` | Pre/post hooks on tool calls: inject artifacts into params, persist outputs as artifacts, log cost | ArtifactStore, SkillToolset.call_tool() |
+| **UnifiedProviderResolver** | `services/ai/unified_resolver.py` | Single entry point for all AI provider instantiation (LLM + Image + Video), replacing 3 call paths | ProviderManager (async path), GeminiImageProvider, GeminiVideoProvider |
+| **SubAgentTool** | `agent/sub_agent_tool.py` | PydanticAI FunctionToolset tool that spawns child Agent with scoped ArtifactStore and QueryEngine | AgentService, ArtifactStore, QueryEngine |
+| **Business Skills (30+)** | `skills/story/`, `skills/import_ops/`, `skills/asset_extract/`, `skills/screenplay/`, `skills/storyboard_pipeline/`, `skills/dialogue/`, `skills/video_gen/` | 7-stage creation pipeline as discrete skills | UnifiedProviderResolver, SkillDescriptor (enhanced) |
+| **WorkflowSkill** | `skills/workflow/` | Persistent workflow definitions (Markdown templates) that chain multiple skills with conditional branching | SkillRegistry, ArtifactStore |
+| **AgentMemory** | `agent/memory.py` | Cross-session agent memory (summarized context, user preferences, project learnings) | AgentSession, DB table `agent_memories` |
+| **Admin Skills API** | `api/v1/admin/skills.py` | CRUD for skill enable/disable, category browsing, execution stats | SkillRegistry, SkillExecutionLog |
 
-`AdminGuard` reads from the existing Zustand `useAuthStore` — no new store needed.
+## Detailed Component Designs
 
-### 2. Backend Admin Scope Pattern
+### 1. UnifiedProviderResolver — AI Call Convergence
 
-Existing routes already demonstrate two patterns for admin scope:
+**Problem:** Three disconnected call paths create credential duplication and prevent DB-level key management.
 
-**Pattern A — Explicit guard** (used in quota.py, billing.py pricing):
+| Path | Current Code | Key Source | Used By |
+|------|-------------|-----------|---------|
+| (A) PydanticAI | `create_pydantic_model()` in `agent_service.py` | `settings.OPENAI_API_KEY` etc. | Agent chat LLM |
+| (B) ProviderManager sync | `get_provider_sync()` in `provider_manager.py` | `settings.*_API_KEY` | Text skills (LLM) |
+| (C) Raw providers | Direct `GeminiImageProvider(api_key=...)` in skill handlers | `settings.GEMINI_API_KEY` | Image/video skills |
+
+**Solution:** `UnifiedProviderResolver` wraps `ProviderManager.get_provider()` (the async DB chain) and adds Image/Video provider instantiation.
+
 ```python
-@router.put("/user/{user_id}")
-async def set_user_quota(user_id: str, user=Depends(get_current_user), ...):
-    require_admin(user)  # 403 if not admin
-    ...
+class UnifiedProviderResolver:
+    """Single entry for all AI provider resolution — LLM, Image, Video."""
+
+    async def resolve_llm(
+        self, provider: str, model: str, *,
+        team_id: str | None, user_id: str | None, db: AsyncSession,
+    ) -> AIProviderBase:
+        """For text/LLM skills via ProviderManager async chain."""
+
+    async def resolve_pydantic_model(
+        self, provider: str, model: str, *,
+        team_id: str | None, user_id: str | None, db: AsyncSession,
+    ) -> pydantic_ai.models.Model:
+        """For PydanticAI Agent — creates OpenAIModel/GoogleModel with DB-resolved key."""
+
+    async def resolve_image(
+        self, provider: str, model: str, *,
+        team_id: str | None, user_id: str | None, db: AsyncSession,
+    ) -> GeminiImageProvider:
+        """For image generation skills."""
+
+    async def resolve_video(
+        self, provider: str, model: str, *,
+        team_id: str | None, user_id: str | None, db: AsyncSession,
+    ) -> GeminiVideoProvider:
+        """For video generation skills."""
 ```
 
-**Pattern B — Conditional scope lift** (used in billing.py timeseries, logs.py tasks):
+**Integration points:**
+- `agent_service.py`: Replace `create_pydantic_model()` with `resolver.resolve_pydantic_model()`
+- `skills/visual/generate_image.py`: Replace `settings.GEMINI_API_KEY` → `resolver.resolve_image()`
+- `skills/video/generate_video.py`: Replace `settings.GEMINI_API_KEY` → `resolver.resolve_video()`
+- All text skills using `get_provider_sync()` → `resolver.resolve_llm()`
+- `SkillContext`: Add `team_id` + `user_id` already present; resolver reads these
+
+**Celery complication:** Celery workers run in separate processes without access to the request's `AsyncSession`. The resolver must create its own session internally when `db=None`, matching the existing pattern in `ProviderManager._resolve_key()`.
+
+### 2. QueryEngine — Budget & Interaction Control
+
+**Purpose:** Wrap `agent.iter()` with guardrails: token budget, round limits, diminishing-returns detection, and "plan first, then execute" interaction mode.
+
 ```python
-if not getattr(user, "is_admin", False):
-    stmt = stmt.where(AICallLog.user_id == user.id)
-# admin sees all rows
+@dataclass
+class QueryEngineConfig:
+    max_tokens: int = 100_000          # total budget (input + output)
+    max_rounds: int = 15               # max LLM round-trips
+    diminishing_threshold: float = 0.3  # stop if output novelty < 30%
+    plan_mode: bool = False            # require plan approval before tool execution
+
+class QueryEngine:
+    """Wraps agent.iter() with budget enforcement and interaction modes."""
+
+    def __init__(self, agent: Agent, config: QueryEngineConfig, artifact_store: ArtifactStore):
+        self.agent = agent
+        self.config = config
+        self.artifact_store = artifact_store
+        self._round_count = 0
+        self._total_tokens = 0
+
+    async def run(self, prompt: str, deps: AgentDeps, ...) -> AsyncGenerator[SSEEvent]:
+        """Main entry — yields SSE events while enforcing budget."""
 ```
 
-For the new `/api/v1/admin/*` router, use **Pattern A exclusively** — every endpoint calls `require_admin`. No mixed-scope endpoints in the admin router.
+**Integration point:** `agent.py` chat endpoint replaces direct `agent.iter()` with `QueryEngine.run()`. The QueryEngine internally calls `agent.iter()` but intercepts each node to:
+1. Check token budget via `run.usage()` after each model request
+2. Increment round counter
+3. Detect diminishing returns (compare last output length/novelty)
+4. In plan mode: after first model response, yield a `sse_plan` event and pause until user confirms
 
-### 3. Component Reuse Strategy
+**PydanticAI compatibility:** QueryEngine does NOT subclass PydanticAI's Agent — it composes around `agent.iter()`. PydanticAI's `UsageLimits` can be passed to `agent.iter(usage_limits=...)` for hard limits; QueryEngine adds soft limits and interaction modes on top.
 
-| Existing Component | Reuse in Admin | Adaptation Needed |
-|---|---|---|
-| `KPICards` (billing) | Admin dashboard KPIs | Parameterize labels/icons; wrap with admin-global data |
-| `UsageChart` (billing) | Admin monitoring charts | Already admin-aware via backend scope lift |
-| `ProviderPieChart` (billing) | Admin provider stats | Already admin-aware |
-| `UsageTable` (billing) | Admin usage breakdown | Already admin-aware |
-| `TaskList` (tasks) | Admin task monitoring | Already accepts `isAdmin` prop |
-| `StatusBadge` (tasks) | Admin user status display | Reuse directly for status badges |
-| `Topbar` (layout) | Admin topbar | Reuse as-is; add admin indicator badge |
-| `BillingDashboard` | Admin billing view | Embed directly — already shows global data for admins |
-| `TaskMonitorPage` | Admin task monitoring | Embed directly — already shows global data for admins |
+### 3. ArtifactStore — Session State Management
 
-### 4. Sidebar Navigation Isolation
+**Purpose:** Session-scoped key-value store for intermediate creation artifacts (clip segments, screenplay text, shot plans, generated image URLs, video URLs).
 
-Regular sidebar (existing):
-```
-WORKSPACE
-├── Projects
-├── Team & Roles
-├── AI Console
-├── ─────────
-├── Tasks
-└── Billing
-```
+```python
+class ArtifactStore:
+    """Session-scoped artifact storage with Redis hot layer + DB cold persistence."""
 
-Admin sidebar (new):
-```
-ADMIN CONSOLE
-├── Dashboard        → /admin
-├── Users            → /admin/users
-├── Quotas           → /admin/quotas
-├── Pricing          → /admin/pricing
-├── Providers        → /admin/providers
-├── Monitoring       → /admin/monitoring
-├── Teams            → /admin/teams
-├── ─────────
-└── ← Back to App   → /projects
+    def __init__(self, session_id: str, redis: Redis | None = None):
+        self.session_id = session_id
+
+    async def put(self, key: str, value: Any, *, ttl: int = 3600) -> None:
+        """Store artifact. Redis for hot access, DB for persistence."""
+
+    async def get(self, key: str) -> Any | None:
+        """Retrieve artifact. Check Redis first, fall back to DB."""
+
+    async def list_keys(self, prefix: str = "") -> list[str]:
+        """List artifact keys with optional prefix filter."""
+
+    async def snapshot(self) -> dict[str, Any]:
+        """Return compact summary of all artifacts (for context injection)."""
 ```
 
-Regular sidebar gains a conditional admin link:
-```
-(if user.is_admin)
-├── Admin Console    → /admin
-```
+**Data model:** New `SessionArtifact` table:
 
-## Data Flow
-
-### Admin Request Flow
-
-```
-1. User navigates to /admin/users
-2. AdminGuard checks useAuthStore().user.is_admin
-   → false: redirect to /projects
-   → true: render AdminShell > page
-3. Page calls adminApi.listUsers({ search, status, page })
-4. Axios interceptor attaches JWT
-5. FastAPI /api/v1/admin/users:
-   a. get_current_user() — validates JWT, checks status != "banned"
-   b. require_admin(user) — checks is_admin, else 403
-   c. Query: SELECT users with pagination, no user_id filter
-6. Response → React Query cache → table render
+```python
+class SessionArtifact(Base):
+    __tablename__ = "session_artifacts"
+    id: str (PK)
+    session_id: str (FK → agent_sessions.id)
+    key: str            # e.g. "clips", "screenplay", "shot_plan.ep1"
+    value_json: Text    # JSON-serialized value
+    artifact_type: str  # "text" | "structured" | "media_ref"
+    created_at: datetime
+    updated_at: datetime
 ```
 
-### State Management Approach
+**Integration:** ArtifactStore instance is created per-session in `agent.py` chat endpoint and passed into QueryEngine. Skills access it via ToolInterceptor (automatic) or explicitly via SkillContext (manual).
 
-**No new Zustand store.** Rationale:
+### 4. ToolInterceptor — Automatic Artifact Injection/Persistence
 
-- Admin pages are read-heavy dashboards with server-authoritative data.
-- React Query handles caching, background refresh, and pagination state.
-- The only client state needed is UI-local (search filters, active tab, pagination offset) — `useState` is sufficient.
-- The existing `useAuthStore` already exposes `user.is_admin` for guard logic.
+**Purpose:** Pre/post hooks on every tool call to automatically:
+- **Pre-call:** Inject relevant artifacts into tool params (e.g., inject `clips` from ArtifactStore into `script.convert_screenplay` params)
+- **Post-call:** Persist tool output artifacts (e.g., save `screenplay` result into ArtifactStore)
+- **Always:** Log cost data from the tool execution
 
-Query key structure for admin:
-```typescript
-["admin", "users", { page, search, status }]
-["admin", "teams", { page }]
-["admin", "dashboard-kpis"]
-["admin", "audit-log", { page, action_type }]
+```python
+class ToolInterceptor:
+    """Wraps SkillToolset.call_tool() with artifact injection and persistence."""
+
+    def __init__(self, artifact_store: ArtifactStore, rules: list[InterceptRule]):
+        self.store = artifact_store
+        self.rules = rules
+
+    async def before_call(self, tool_name: str, args: dict) -> dict:
+        """Inject artifacts into args based on rules."""
+
+    async def after_call(self, tool_name: str, args: dict, result: SkillResult) -> SkillResult:
+        """Persist result artifacts based on rules."""
 ```
 
-## Integration Points
+**Integration:** Modify `SkillToolset.call_tool()` to call `interceptor.before_call()` and `interceptor.after_call()` around the existing invocation. Rules are declarative — each SkillDescriptor can declare its artifact dependencies and outputs via the enhanced descriptor fields.
 
-### Internal Boundaries
+### 5. SkillDescriptor Enhancement
 
-| Boundary | Integration Strategy |
-|---|---|
-| Admin routes ↔ Regular routes | Separate layouts, separate sidebars. Shared Topbar, shared auth store. No shared page state. |
-| Admin API ↔ Existing API | New `/admin/*` router for new endpoints. Existing admin-guarded endpoints (quota, billing, providers) called directly — no duplication. |
-| Admin components ↔ Existing components | Import and reuse billing/task components. Admin-specific components in `components/admin/`. |
-| Design system | Admin pages use same Obsidian Lens tokens (`--ob-*`), same fonts (Space Grotesk + Manrope), same glassmorphism card patterns. |
+**Current fields:** name, display_name, description, category, input_schema, output_schema, triggers, execution_mode, celery_queue, estimated_duration, requires_canvas, requires_project.
 
-### What's Reused vs New
+**New fields:**
 
-| Layer | Reused | New |
-|---|---|---|
-| **Backend models** | User, Team, TeamMember, UserQuota, TeamQuota, ModelPricing, AIProviderConfig, SkillExecutionLog, AICallLog, QuotaUsageLog | AdminAuditLog (optional — structured admin action events) |
-| **Backend routes** | `/quota/*`, `/billing/*`, `/logs/*`, `/ai-providers/*` | `/admin/users`, `/admin/teams`, `/admin/dashboard`, `/admin/audit-log` |
-| **Backend deps** | `get_current_user`, `require_admin`, `get_db` | None new |
-| **Frontend lib** | `api.ts` axios instance, JWT interceptors | `adminApi` namespace in same file |
-| **Frontend stores** | `auth-store.ts` (user.is_admin) | None new |
-| **Frontend components** | KPICards, UsageChart, ProviderPieChart, UsageTable, TaskList, StatusBadge, Topbar | AdminGuard, AdminShell, AdminSidebar, UserTable, QuotaEditor, TeamOverviewTable, AdminKPICards |
-| **Frontend pages** | None directly | 7 new pages under `/admin/*` |
+```python
+@dataclass
+class SkillDescriptor:
+    # ... existing fields ...
 
-### New Backend Endpoints Needed
+    # NEW: Dependency declarations (NodeMeta-style)
+    dependencies: list[str] = field(default_factory=list)
+    # e.g. ["script.split_clips"] — skills that must run before this one
 
-```
-GET    /api/v1/admin/users              — paginated user list (search, filter by status/admin)
-PATCH  /api/v1/admin/users/{id}/status  — enable/disable (set status active/banned)
-PATCH  /api/v1/admin/users/{id}/admin   — grant/revoke is_admin
-GET    /api/v1/admin/teams              — all teams with member counts
-GET    /api/v1/admin/dashboard          — aggregate KPIs (user count, team count, task stats, cost)
-GET    /api/v1/admin/audit-log          — admin action history (paginated)
-```
+    # NEW: Execution mode semantics
+    mode: str = "generate"
+    # "generate" — creates new content
+    # "transform" — modifies existing content
+    # "query" — reads without side effects
+    # "composite" — orchestrates multiple skills
 
-Existing endpoints used as-is by admin frontend:
-```
-GET    /api/v1/quota/user/{id}          — view user quota (already admin-guarded)
-PUT    /api/v1/quota/user/{id}          — set user quota (already admin-guarded)
-GET    /api/v1/quota/team/{id}          — view team quota (already admin-guarded)
-PUT    /api/v1/quota/team/{id}          — set team quota (already admin-guarded)
-POST   /api/v1/billing/pricing/         — create pricing (already admin-guarded)
-GET    /api/v1/billing/pricing/         — list pricing (any auth)
-PATCH  /api/v1/billing/pricing/{id}     — update pricing (already admin-guarded)
-DELETE /api/v1/billing/pricing/{id}     — deactivate pricing (already admin-guarded)
-GET    /api/v1/billing/usage-stats/     — usage stats (admin sees global)
-GET    /api/v1/billing/usage-timeseries/— timeseries (admin sees global)
-GET    /api/v1/ai-providers/?owner_type=system — system providers (admin-guarded)
-POST   /api/v1/ai-providers/            — create provider (admin when system)
-GET    /api/v1/logs/tasks               — task list (admin sees all)
-GET    /api/v1/logs/tasks/counts        — task counts (admin sees all)
+    # NEW: Three-tier classification
+    tier: str = "foundation"
+    # "foundation" — generic capabilities (text gen, image gen)
+    # "business" — domain-specific (script splitting, storyboard planning)
+    # "workflow" — multi-skill orchestration (episode pipeline)
+
+    # NEW: Artifact contract
+    artifact_inputs: list[str] = field(default_factory=list)
+    # Keys this skill reads from ArtifactStore, e.g. ["clips"]
+
+    artifact_outputs: list[str] = field(default_factory=list)
+    # Keys this skill writes to ArtifactStore, e.g. ["screenplay"]
+
+    # NEW: Cost estimation
+    cost_estimate: str = "low"
+    # "low" (<$0.01) | "medium" ($0.01-$0.10) | "high" (>$0.10)
+
+    # NEW: Admin toggleable
+    enabled: bool = True
 ```
 
-## Anti-Patterns
+**Backward compatible:** All new fields have defaults, existing 14 skills continue working without changes. New fields are additive.
 
-### 1. Don't Duplicate Admin Logic in Frontend
+### 6. SubAgentTool — Child Agent Spawning
 
-The frontend should never filter data client-side to enforce admin scope. If a React Query response contains user-scoped data, the *backend* is wrong — fix the query, don't add `if (isAdmin)` branches in JSX to hide rows.
+**Purpose:** Allow the main agent to spawn specialized child agents for complex subtasks (e.g., "create a full storyboard" spawns a storyboard specialist agent with focused tools and context).
 
-### 2. Don't Create a Separate Axios Instance for Admin
+```python
+async def spawn_sub_agent(
+    ctx: RunContext[AgentDeps],
+    task_description: str,
+    specialist_type: str,  # "storyboard" | "screenplay" | "visual"
+    context_keys: list[str] | None = None,
+) -> str:
+    """Spawn a child agent for a specialized subtask.
 
-The existing `api` axios instance already handles JWT, token refresh, and 401 redirects. Creating a second instance (`adminApi = axios.create(...)`) would duplicate interceptor logic. Instead, add an `adminApi` namespace object that uses the shared instance:
-
-```typescript
-export const adminApi = {
-  listUsers: (params) => api.get("/admin/users", { params }),
-  ...
-};
+    The child agent:
+    - Gets a focused system prompt for its specialty
+    - Has access to a scoped subset of tools (by category)
+    - Shares the parent's ArtifactStore (reads parent artifacts, writes its own)
+    - Has its own QueryEngine with a sub-budget
+    - Returns result as a string summary + artifacts in store
+    """
 ```
 
-### 3. Don't Put Admin State in Zustand
+**Architecture:** NOT using the third-party `subagents-pydantic-ai` library — too early/unstable (v0.2.0 as of March 2026). Instead, implement as a simple PydanticAI `FunctionToolset` tool that:
+1. Creates a new `Agent` via `AgentService` with filtered toolsets
+2. Runs it with a child `QueryEngine` (sub-budget from parent)
+3. Shares the parent's `ArtifactStore` (child writes go to `sub/{specialist_type}/` prefix)
+4. Returns the child's final output as the tool result
 
-Admin pages have no cross-page shared state that isn't already handled by React Query caching. Adding an admin Zustand store would create sync problems (stale cache vs store) and unnecessary complexity. Use React Query + `useState` for local UI state.
+**Integration:** Registered as a tool in a new `SubAgentToolset` (FunctionToolset), passed alongside SkillToolset/PipelineTools/ContextTools in `agent.iter()`.
 
-### 4. Don't Build a Generic "Admin Framework"
+### 7. Business Skill Expansion (7-Stage Pipeline)
 
-Avoid building configurable table/form generators, dynamic column renderers, or admin-specific component libraries. The admin console has ~7 pages with known schemas. Use direct, purpose-built components.
+The 7-stage creation pipeline maps to new skill packages:
 
-### 5. Don't Mix Admin and Regular Nav in One Sidebar
+| Stage | New Package | Skills | Tier |
+|-------|------------|--------|------|
+| 1. Story Workshop | `skills/story/` | `story.wash_text`, `story.split_segments`, `story.extract_climax`, `story.extract_themes` | business |
+| 2. Import Episodes | `skills/import_ops/` | `import.create_episode`, `import.bulk_create_clips`, `import.assign_segments` | business |
+| 3. Asset Extraction | `skills/asset_extract/` | `asset.extract_characters`, `asset.extract_scenes`, `asset.extract_props`, `asset.link_to_episode` | business |
+| 4. Story-to-Script | `skills/screenplay/` | `screenplay.convert`, `screenplay.format_screenplay`, `screenplay.validate` | business |
+| 5. Storyboard | `skills/storyboard_pipeline/` | `storyboard.plan_shots`, `storyboard.detail_shots`, `storyboard.generate_shot_images`, `storyboard.compose_board` | business |
+| 6. Dialogue/Narration | `skills/dialogue/` | `dialogue.extract_lines`, `dialogue.assign_voice`, `dialogue.generate_tts` | business |
+| 7. Video Generation | `skills/video_gen/` | `video.generate_clip`, `video.composite_episode`, `video.add_subtitles` | business |
 
-Admin navigation has different IA and different user intent. Hiding admin links behind a collapsible section in the regular sidebar creates confusion. Use a separate admin layout with its own sidebar. Connect the two with a clear "Back to App" / "Admin Console" link.
+Each skill follows the existing handler pattern: `async def handler(params: dict, ctx: SkillContext) -> SkillResult`. The key difference is they all use `UnifiedProviderResolver` instead of direct env key access.
 
-### 6. Don't Forget the "Last Admin" Safeguard
+### 8. Canvas-Chat Integration
 
-When revoking admin or disabling a user, the backend must check that at least one active admin remains. The existing team code does this for `team_admin` removal — apply the same pattern for `is_admin` revocation.
+**Current state:** Canvas (`BatchExecutionService`) and Chat (`agent.py` SSE) are separate systems with no cross-communication.
 
-### 7. Don't Lift Log Scope Without Pagination Safety
+**Target:** Canvas chat panel can drive canvas operations through the agent, and the agent can read/modify canvas state.
 
-Admin queries that remove `user_id` filters can return massive result sets. Every admin-scoped list endpoint must enforce `limit` (with a reasonable max, e.g., 100) and return `X-Total-Count` for pagination — same pattern already used in `/logs/tasks`.
+**Implementation:**
+1. Context tools already include `get_canvas_state` — extend with write tools:
+   - `update_canvas_node(node_id, data)` — update node result/status
+   - `add_canvas_node(type, position, data)` — create new node
+   - `trigger_canvas_batch(node_ids)` — kick off batch execution
+2. Agent session already has `canvas_id` — use it to scope canvas operations
+3. Frontend: Canvas chat panel sends messages to the same `/api/v1/agent/chat/{session_id}` endpoint where the session's `canvas_id` is set
+4. SSE events already support `tool_call` / `tool_result` — frontend can react to canvas-specific tool results to update the React Flow graph in real time
+
+## Data Flow Changes
+
+### Before (v2.x): Chat → Skill Flow
+
+```
+User message
+  → agent.py SSE endpoint
+    → AgentService.create_agent() [env key]
+      → PydanticAI agent.iter()
+        → SkillToolset.call_tool()
+          → SkillRegistry.invoke()
+            → sync: handler() [env key via get_provider_sync]
+            → async: Celery run_skill_task → handler() [env key]
+        → Return result to LLM
+      → Stream text to client via SSE
+```
+
+### After (v3.0): Chat → QueryEngine → Skill Flow
+
+```
+User message
+  → agent.py SSE endpoint
+    → ArtifactStore(session_id)
+    → UnifiedProviderResolver.resolve_pydantic_model() [DB key chain]
+    → QueryEngine(agent, config, artifact_store)
+      → QueryEngine.run()
+        → agent.iter() [with budget limits]
+          → ToolInterceptor.before_call() [inject artifacts]
+            → SkillToolset.call_tool()
+              → SkillRegistry.invoke()
+                → handler() uses UnifiedProviderResolver [DB key chain]
+          → ToolInterceptor.after_call() [persist artifacts]
+          → Budget check after each round
+        → Stream text + progress to client via SSE
+    → Cost tracking persisted
+```
+
+### Canvas-Chat Data Flow (NEW)
+
+```
+Canvas Chat message
+  → agent.py SSE endpoint (session has canvas_id)
+    → QueryEngine.run()
+      → Agent uses context tools to read canvas state
+      → Agent uses canvas write tools to modify nodes
+      → Agent uses skill tools to generate content
+      → Agent uses trigger_canvas_batch to execute nodes
+    → SSE events include canvas-specific tool results
+    → Frontend updates React Flow graph from SSE events
+```
+
+## Patterns to Follow
+
+### Pattern 1: Resolver-as-Service (for AI Call Convergence)
+
+**What:** All AI provider instantiation goes through a single async service that implements the credential chain.
+
+**When:** Any code needs an AI provider (LLM, Image, Video).
+
+**Why:** Eliminates credential duplication, enables per-team key isolation, creates single point for cost tracking.
+
+```python
+# In skill handler:
+async def handle_generate_image(params: dict, ctx: SkillContext) -> SkillResult:
+    resolver = get_unified_resolver()
+    provider = await resolver.resolve_image(
+        "gemini", model, team_id=ctx.team_id, user_id=ctx.user_id, db=None
+    )
+    result = await provider.generate_image(prompt)
+```
+
+### Pattern 2: Artifact Contract via Descriptor
+
+**What:** Each skill declares its artifact inputs/outputs in the SkillDescriptor, enabling automatic wiring by ToolInterceptor.
+
+**When:** Skills that participate in multi-step pipelines.
+
+```python
+descriptor = SkillDescriptor(
+    name="screenplay.convert",
+    artifact_inputs=["clips"],        # reads clips from ArtifactStore
+    artifact_outputs=["screenplay"],   # writes screenplay to ArtifactStore
+    dependencies=["script.split_clips"],
+    tier="business",
+    mode="transform",
+)
+```
+
+### Pattern 3: Compose Around agent.iter(), Don't Subclass
+
+**What:** QueryEngine and other orchestration logic wrap PydanticAI's `agent.iter()` without extending Agent class.
+
+**When:** Adding budget limits, artifact tracking, plan-mode interaction.
+
+**Why:** PydanticAI's internal API changes between versions; composition is resilient.
+
+```python
+class QueryEngine:
+    async def run(self, prompt, deps, toolsets, history):
+        async with self.agent.iter(
+            user_prompt=prompt, deps=deps,
+            toolsets=toolsets, message_history=history,
+            usage_limits=UsageLimits(total_tokens=self.config.max_tokens),
+        ) as run:
+            async for node in run:
+                self._round_count += 1
+                if self._round_count > self.config.max_rounds:
+                    yield sse_budget_exceeded(...)
+                    break
+                # ... process node ...
+```
+
+### Pattern 4: Celery Context Propagation
+
+**What:** Pass UnifiedProviderResolver context (team_id, user_id) through SkillContext serialization so Celery workers can resolve credentials.
+
+**When:** Any async_celery skill needs AI provider access.
+
+```python
+# SkillContext already has team_id + user_id
+# In Celery worker, UnifiedProviderResolver creates its own AsyncSession
+resolver = get_unified_resolver()
+provider = await resolver.resolve_llm(
+    "gemini", "gemini-2.5-flash",
+    team_id=ctx.team_id, user_id=ctx.user_id, db=None  # creates own session
+)
+```
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Direct settings.* Key Access in Skills
+
+**What:** Skills reading `settings.GEMINI_API_KEY` directly to instantiate providers.
+
+**Why bad:** Bypasses DB credential chain, breaks team-level key isolation, makes cost tracking impossible to centralize.
+
+**Instead:** Always go through `UnifiedProviderResolver`. Even for the "simple case" of a single env key, the resolver handles it via the env fallback.
+
+### Anti-Pattern 2: Extending PydanticAI Agent Class
+
+**What:** Subclassing `pydantic_ai.Agent` to add budget/artifact tracking.
+
+**Why bad:** PydanticAI's Agent internal API is evolving rapidly (toolset lifecycle hooks added March 2026). Subclassing creates tight coupling to internals.
+
+**Instead:** Compose around `agent.iter()` — the iteration protocol is stable.
+
+### Anti-Pattern 3: Storing Full Artifacts in LLM Context
+
+**What:** Putting entire screenplay text, all shot details, or image URLs directly in conversation history.
+
+**Why bad:** Context window explosion. A single episode's screenplay can be 10K+ tokens.
+
+**Instead:** Store in ArtifactStore, inject summaries/references into context. Tools access full artifacts via ArtifactStore.get().
+
+### Anti-Pattern 4: Mixing Sync and Async Provider Paths
+
+**What:** Some code uses `get_provider_sync()`, other code uses `get_provider()` async.
+
+**Why bad:** Sync path bypasses DB credential chain entirely. Creates two behavioral modes.
+
+**Instead:** Deprecate `get_provider_sync()`. All paths go through async `UnifiedProviderResolver`. For Celery workers (sync context), use `loop.run_until_complete(resolver.resolve_*())` — matching the existing pattern in `skill_task.py`.
+
+## Integration Points Summary
+
+| # | Integration Point | What Changes | Touches |
+|---|-------------------|-------------|---------|
+| 1 | **agent_service.py** → UnifiedProviderResolver | `create_pydantic_model()` uses DB key chain | agent_service.py, unified_resolver.py |
+| 2 | **agent.py** SSE endpoint → QueryEngine | Wrap `agent.iter()` with budget/round control | agent.py, query_engine.py |
+| 3 | **agent.py** → ArtifactStore | Create per-session store, pass to QueryEngine | agent.py, artifact_store.py |
+| 4 | **SkillToolset.call_tool()** → ToolInterceptor | Pre/post hooks for artifact injection/persistence | skill_toolset.py, tool_interceptor.py |
+| 5 | **Skill handlers** → UnifiedProviderResolver | Replace `settings.*_API_KEY` with resolver calls | All skill handler files (14 existing + new) |
+| 6 | **SkillDescriptor** → Enhanced fields | Add deps, mode, tier, artifact contract | descriptor.py, all skill registrations |
+| 7 | **SkillContext** → Extended fields | Add artifact_store_id, parent_session_id | context.py, skill_task.py |
+| 8 | **context_tools.py** → Write operations | Add update/create tools with permission checks | context_tools.py |
+| 9 | **pipeline_tools.py** → Fix + Expand | Fix field mismatches, add 7-stage support | pipeline_tools.py |
+| 10 | **agent.py** → SubAgentTool toolset | Add SubAgentToolset to toolsets list | agent.py, sub_agent_tool.py |
+| 11 | **Canvas chat** → Agent session with canvas_id | Frontend sends to same chat endpoint | canvas.py (frontend), agent.py |
+| 12 | **Admin skills API** → SkillRegistry | New CRUD endpoints for skill management | admin/skills.py, registry.py |
+| 13 | **DB models** → SessionArtifact + AgentMemory | New tables for artifacts and memory | models/session_artifact.py, models/agent_memory.py |
+
+## Suggested Build Order
+
+The build order is driven by dependency analysis — each phase's outputs are inputs to the next.
+
+```
+Phase 1: AI Call Convergence (Foundation — unblocks everything)
+├── UnifiedProviderResolver
+├── Activate ProviderManager.get_provider() async path
+├── Integrate Image/Video providers into resolver
+└── Migrate agent_service.py to use resolver
+
+Phase 2: SkillDescriptor Enhancement + Pipeline Fix
+├── Add new SkillDescriptor fields (backward compatible)
+├── Fix pipeline_tools.py field mismatches
+├── Update existing 14 skill registrations with new metadata
+└── Dependency validation in SkillRegistry.register()
+
+Phase 3: ArtifactStore + ToolInterceptor
+├── SessionArtifact DB model
+├── ArtifactStore implementation (Redis hot + DB cold)
+├── ToolInterceptor with declarative rules
+└── Wire into SkillToolset.call_tool()
+
+Phase 4: QueryEngine
+├── QueryEngine implementation (budget, rounds, diminishing returns)
+├── Plan-mode interaction
+├── Wire into agent.py replacing direct agent.iter()
+└── SSE budget/progress events
+
+Phase 5: Business Skill Expansion (7-stage pipeline)
+├── Skills for stages 1-3 (Story Workshop → Import → Asset Extract)
+├── Skills for stages 4-5 (Screenplay → Storyboard)
+├── Skills for stages 6-7 (Dialogue → Video Gen)
+└── Updated pipeline_tools.py for full 7-stage chain
+
+Phase 6: Context Tools + Canvas-Chat Integration
+├── Write operations in context_tools.py
+├── Canvas write tools (update_node, add_node, trigger_batch)
+├── Permission checking
+└── Frontend canvas chat panel integration
+
+Phase 7: SubAgentTool + Workflow Skills
+├── SubAgentTool implementation
+├── WorkflowSkill (Markdown template-based pipelines)
+├── Cross-session agent memory
+└── Admin skill management page
+
+Phase 8: Polish + Cost Tracking
+├── Unified retry strategy
+├── Context compression
+├── Cost tracking aggregation + display
+└── SSE tool progress events
+```
+
+**Phase ordering rationale:**
+- **Phase 1 first** because every subsequent phase (skills, agent, sub-agents) needs the unified credential path
+- **Phase 2 before 3** because ToolInterceptor rules depend on enhanced SkillDescriptor metadata
+- **Phase 3 before 4** because QueryEngine uses ArtifactStore for state management
+- **Phase 4 before 5** because new business skills need the QueryEngine's budget controls when invoked via agent
+- **Phase 5 before 6** because canvas-chat needs business skills to drive creation workflows
+- **Phase 6 before 7** because SubAgentTool needs write-capable context tools
+- **Phase 8 last** because it's polish on top of working features
+
+## Scalability Considerations
+
+| Concern | At 10 users | At 1K users | At 10K users |
+|---------|------------|-------------|--------------|
+| ArtifactStore | SQLite + in-process dict | Redis + PostgreSQL | Redis cluster + PostgreSQL with partition |
+| Celery queue depth | Single worker | 4 workers, 3 queues | Auto-scaling workers, priority queues |
+| Agent sessions | In-memory history | DB-backed with 20-msg window | DB + Redis cache, aggressive summarization |
+| Provider keys | 1 system key per provider | Team-level keys, rotation | Key pools with rate-limit tracking |
+| Cost tracking | Log-level only | Per-session aggregation | Real-time budget enforcement + alerts |
 
 ## Sources
 
-- `api/app/core/deps.py` — `require_admin`, `get_current_user`, role priority maps
-- `api/app/models/user.py` — `User.is_admin`, `User.status`
-- `api/app/api/v1/quota.py` — admin-guarded quota CRUD with audit logging pattern
-- `api/app/api/v1/billing.py` — admin scope lift pattern (bypass user_id filter)
-- `api/app/api/v1/logs.py` — mixed admin/user scope, pagination with X-Total-Count
-- `api/app/api/v1/ai_providers.py` — ownership-scoped provider management (system/team/personal)
-- `api/app/api/v1/router.py` — route registration pattern
-- `web/src/components/auth/auth-guard.tsx` — route protection pattern
-- `web/src/components/layout/app-shell.tsx` — layout composition (Sidebar + Topbar)
-- `web/src/components/layout/sidebar.tsx` — nav structure, Obsidian Lens tokens
-- `web/src/components/billing/billing-dashboard.tsx` — KPI + chart + table composition
-- `web/src/components/tasks/task-monitor-page.tsx` — paginated list with admin awareness
-- `web/src/stores/auth-store.ts` — `user.is_admin` already in client state
-- `web/src/lib/api.ts` — API client pattern, namespace exports
-- `web/src/components/providers.tsx` — QueryClient + AuthGuard wrapper
+- Direct codebase analysis of Canvex repository (2026-04-02)
+- [PydanticAI Toolsets documentation](https://ai.pydantic.dev/toolsets/) — AbstractToolset, for_run/for_run_step lifecycle hooks (HIGH confidence)
+- [PydanticAI Usage API](https://ai.pydantic.dev/api/usage) — UsageBase, token tracking (HIGH confidence)
+- [pydantic-ai-tool-budget package](https://pypi.org/project/pydantic-ai-tool-budget/) — third-party tool budget tracking (MEDIUM confidence)
+- [Artifact Pattern for AI Agents](https://www.yess.ai/post/context-is-not-a-storage-unit) — artifact store pattern rationale (HIGH confidence)
+- [subagents-pydantic-ai v0.2.0](https://github.com/vstorm-co/pydantic-ai-subagents) — evaluated but not recommended (too early, v0.2.0) (MEDIUM confidence)
+- [Redis for Distributed Agent State](https://zylos.ai/research/2026-03-04-redis-session-stores-distributed-ai-agents) — Redis session store patterns (MEDIUM confidence)
