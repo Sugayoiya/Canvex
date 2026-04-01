@@ -99,6 +99,9 @@ async def init_db():
     from app.services.ai.provider_manager import seed_providers_from_env
     await seed_providers_from_env()
 
+    if settings.SEED_TEST_DATA:
+        await _seed_test_data()
+
 
 async def _seed_demo_project():
     """Create a demo project + canvas if none exist, so the chat UI is testable immediately."""
@@ -163,6 +166,17 @@ async def _seed_default_admin():
             session.add(admin)
             await session.commit()
             logger.info("Default admin created: %s", settings.DEFAULT_ADMIN_EMAIL)
+
+
+async def _seed_test_data():
+    """Seed fake users/teams for admin UI testing. Gated by SEED_TEST_DATA=true."""
+    import sys, os
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+    try:
+        from scripts.seed_test_data import seed
+        await seed()
+    except Exception as e:
+        logger.warning("Test data seeding failed (non-fatal): %s", e)
 
 
 async def get_db():

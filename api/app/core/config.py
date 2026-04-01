@@ -57,6 +57,9 @@ class Settings(BaseSettings):
     DEFAULT_ADMIN_EMAIL: str = "admin@canvex.studio"
     DEFAULT_ADMIN_PASSWORD: str = "Admin123!"
 
+    # Seed test data on startup (dev only)
+    SEED_TEST_DATA: bool = False
+
     class Config:
         env_file = ".env"
         case_sensitive = True
