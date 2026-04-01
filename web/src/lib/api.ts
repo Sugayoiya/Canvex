@@ -308,4 +308,36 @@ export const aiProvidersApi = {
     api.get("/ai-models/", { params }),
 };
 
+export const adminApi = {
+  listUsers: (params?: {
+    q?: string;
+    status?: string;
+    is_admin?: boolean;
+    sort_by?: string;
+    sort_order?: string;
+    limit?: number;
+    offset?: number;
+  }) => api.get("/admin/users", { params }),
+  toggleUserStatus: (userId: string, data: { status: "active" | "banned" }) =>
+    api.patch(`/admin/users/${userId}/status`, data),
+  toggleUserAdmin: (userId: string, data: { is_admin: boolean }) =>
+    api.patch(`/admin/users/${userId}/admin`, data),
+  listTeams: (params?: { q?: string; limit?: number; offset?: number }) =>
+    api.get("/admin/teams", { params }),
+  getDashboard: () => api.get("/admin/dashboard"),
+};
+
+export const quotaApi = {
+  getUserQuota: (userId: string) => api.get(`/quota/user/${userId}`),
+  updateUserQuota: (
+    userId: string,
+    data: { monthly_credit_limit?: number; daily_call_limit?: number },
+  ) => api.put(`/quota/user/${userId}`, data),
+  getTeamQuota: (teamId: string) => api.get(`/quota/team/${teamId}`),
+  updateTeamQuota: (
+    teamId: string,
+    data: { monthly_credit_limit?: number; daily_call_limit?: number },
+  ) => api.put(`/quota/team/${teamId}`, data),
+};
+
 export default api;
