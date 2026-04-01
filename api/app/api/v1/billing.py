@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, String, cast
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import settings
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.model_pricing import ModelPricing
+from app.services.admin_audit import record_admin_audit
 from app.models.ai_call_log import AICallLog
 from app.schemas.billing import (
     PricingCreate,
@@ -31,6 +33,16 @@ async def create_pricing(
     db.add(pricing)
     await db.flush()
     await db.refresh(pricing)
+
+    await record_admin_audit(
+        db,
+        admin_user_id=user.id,
+        action_type="pricing.create",
+        target_type="model_pricing",
+        target_id=pricing.id,
+        changes={"pricing": {"old": None, "new": {"provider": pricing.provider, "model": pricing.model, "pricing_model": pricing.pricing_model}}},
+    )
+
     return pricing
 
 
@@ -63,11 +75,25 @@ async def update_pricing(
     if not pricing:
         raise HTTPException(status_code=404, detail="Pricing not found")
 
-    for field, value in body.model_dump(exclude_unset=True).items():
+    update_fields = body.model_dump(exclude_unset=True)
+    old_values = {k: str(v) if isinstance(v, Decimal) else v for k, v in ((k, getattr(pricing, k)) for k in update_fields)}
+
+    for field, value in update_fields.items():
         setattr(pricing, field, value)
     pricing.updated_at = datetime.now(timezone.utc)
     await db.flush()
     await db.refresh(pricing)
+
+    new_values = {k: str(v) if isinstance(v, Decimal) else v for k, v in update_fields.items()}
+    await record_admin_audit(
+        db,
+        admin_user_id=user.id,
+        action_type="pricing.update",
+        target_type="model_pricing",
+        target_id=pricing_id,
+        changes={"pricing": {"old": old_values, "new": new_values}},
+    )
+
     return pricing
 
 
@@ -88,6 +114,16 @@ async def delete_pricing(
     pricing.is_active = False
     pricing.updated_at = datetime.now(timezone.utc)
     await db.flush()
+
+    await record_admin_audit(
+        db,
+        admin_user_id=user.id,
+        action_type="pricing.deactivate",
+        target_type="model_pricing",
+        target_id=pricing_id,
+        changes={"is_active": {"old": True, "new": False}},
+    )
+
     return {"detail": "Pricing deactivated"}
 
 

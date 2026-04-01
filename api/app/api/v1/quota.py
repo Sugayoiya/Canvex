@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.quota import UserQuota, TeamQuota, QuotaUsageLog
 from app.schemas.quota import QuotaResponse, QuotaUpdate
+from app.services.admin_audit import record_admin_audit
 
 router = APIRouter(prefix="/quota", tags=["quota"])
 
@@ -79,6 +80,16 @@ async def set_user_quota(
     ))
 
     await db.flush()
+
+    await record_admin_audit(
+        db,
+        admin_user_id=user.id,
+        action_type="quota.user.set",
+        target_type="user_quota",
+        target_id=user_id,
+        changes={"quota": {"old": old_values, "new": {k: str(v) if isinstance(v, Decimal) else v for k, v in new_values.items()}}},
+    )
+
     return quota
 
 
@@ -135,4 +146,14 @@ async def set_team_quota(
     ))
 
     await db.flush()
+
+    await record_admin_audit(
+        db,
+        admin_user_id=user.id,
+        action_type="quota.team.set",
+        target_type="team_quota",
+        target_id=team_id,
+        changes={"quota": {"old": old_values, "new": {k: str(v) if isinstance(v, Decimal) else v for k, v in new_values.items()}}},
+    )
+
     return quota
