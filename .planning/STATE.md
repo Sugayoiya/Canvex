@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Admin Console
 status: executing
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-04-01T15:26:22.689Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-04-01T15:27:02.386Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 11 (monitoring-dashboard-polish) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-01
 
@@ -156,6 +156,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 11]: Composite index on SkillExecutionLog(status, queued_at) for alerts+filter count query performance
 - [Phase 11]: AdminErrorBoundary uses setState remount strategy with post-reset onReset callback for query invalidation
 - [Phase 11]: Silent fail for alerts query — badges omitted on API error, no user-visible error shown
+- [Phase 11]: Shared useAdminLogTable hook eliminates table logic duplication across 3 log tabs
+- [Phase 11]: Lazy mount via && conditional rendering for tab content — only active tab fetches data
 
 ### Pending Todos
 
@@ -174,6 +176,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-01T15:26:22.687Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-04-01T15:27:02.383Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None
