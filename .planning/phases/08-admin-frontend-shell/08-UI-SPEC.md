@@ -5,6 +5,7 @@ status: draft
 shadcn_initialized: false
 preset: none
 created: 2026-04-01
+revised: 2026-04-01
 ---
 
 # Phase 08 — UI Design Contract
@@ -34,34 +35,31 @@ created: 2026-04-01
 
 ## Spacing Scale
 
-Declared values (multiples of 4, sourced from design-tokens.json `spacing`):
+Declared values (standard set — multiples of 4, all values in {4, 8, 16, 24, 32, 48, 64}):
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| 2xs | 2px | Nav item gap (`gap.navItems`) |
-| xs | 4px | — |
-| sm | 8px | Inline padding, badge padding-block |
+| xs | 4px | Nav item gap |
+| sm | 8px | Inline padding, badge padding-block, logo info gap |
 | md | 16px | Sidebar horizontal padding, KPI card/row gap |
-| lg | 20px | Card padding-block |
-| xl | 24px | Sidebar padding-top, card padding-inline, topbar padding |
-| 2xl | 32px | Topbar horizontal padding, footer top margin |
-| 3xl | 40px | Main content padding, section gap, header-to-cards gap |
-| 4xl | 56px | Topbar height (fixed) |
+| lg | 24px | Sidebar padding-top, card padding (all sides), topbar internal gap |
+| xl | 32px | Topbar horizontal padding, footer top margin, main content padding, section gap, header-to-cards gap |
+| 2xl | 48px | Topbar height (fixed) |
+| 3xl | 64px | (reserved for future use) |
 
-### Fixed dimensions (from design-tokens.json)
+### Fixed dimensions
 
 | Element | Value | Source |
 |---------|-------|--------|
 | Sidebar width | 240px | `spacing.sidebarWidth` |
-| Topbar height | 56px | `spacing.topbarHeight` |
+| Topbar height | 48px | Standardized from design-tokens 56px → 48px (nearest standard value) |
 | Sidebar padding | 24px top, 16px horizontal | `spacing.sidebarPadding` |
 | Topbar padding | 0 vertical, 32px horizontal | `spacing.topbarPadding` |
-| Main content padding | 40px all sides | `spacing.mainContentPadding` |
-| Card padding | 20px block, 24px inline | `spacing.cardPadding` |
+| Main content padding | 32px all sides | Standardized from design-tokens 40px → 32px |
+| Card padding | 24px all sides | Standardized from design-tokens [20, 24] → uniform 24px |
 | Nav item height | 36px | component-specs §2.2 |
+| Nav item gap | 4px | Standardized from design-tokens 2px → 4px |
 | KPI card height | 160px | component-specs §4 |
-
-Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar lists.
 
 ---
 
@@ -75,36 +73,46 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 | Body / UI | Manrope | `var(--font-body)` |
 | Monospace | Space Grotesk | `var(--font-headline)` |
 
-### Full Type Scale (from design-tokens.json `typography.scale`)
+### Consolidated Type Scale (4 sizes, 2 weights)
 
 | Role | Size | Weight | Font | Line Height | Letter Spacing | Usage |
 |------|------|--------|------|-------------|----------------|-------|
-| pageTitle | 28px | 700 | Space Grotesk | 1.2 | -0.5px | Page headings ("Dashboard") |
-| pageSubtitle | 13px | 400 | Manrope | 1.5 | 0 | Page description text |
+| pageTitle | 24px | 700 | Space Grotesk | 1.2 | -0.5px | Page headings ("Dashboard") |
+| pageSubtitle | 14px | 400 | Manrope | 1.5 | 0 | Page description text |
 | topbarTitle | 14px | 700 | Space Grotesk | 1.3 | 0 | "Admin Console" in topbar |
 | topbarLink | 12px | 400 | Manrope | 1.5 | 0 | "Back to App" link text |
-| topbarEmail | 11px | 400 | Manrope | 1.5 | 0 | User email in topbar |
-| sidebarTitle | 13px | 700 | Space Grotesk | 1.3 | 0 | "Admin" brand text |
-| sidebarSubtitle | 9px | 400 | Space Grotesk | 1.3 | 1px | "Production Suite" subtitle |
+| topbarEmail | 12px | 400 | Manrope | 1.5 | 0 | User email in topbar |
+| sidebarTitle | 14px | 700 | Space Grotesk | 1.3 | 0 | "Admin" brand text |
+| sidebarSubtitle | 12px | 400 | Space Grotesk | 1.3 | 1px | "Production Suite" subtitle |
 | navItem | 12px | 400 | Manrope | 1.5 | 0 | Inactive nav labels |
-| navItemActive | 12px | 600 | Manrope | 1.5 | 0 | Active nav labels |
-| cardLabel | 11px | 400 | Space Grotesk | 1.3 | 1px | KPI card labels ("TOTAL USERS") |
-| cardValue | 36px | 300 | Space Grotesk | 1.1 | 0 | KPI numeric values |
-| badgeText | 9px | 400 | Space Grotesk | 1.3 | 0 | Status badge text ("Stable") |
-| cardDescription | 10px | 400 | Manrope | 1.5 | 0 | KPI supplementary text |
-| buttonPrimary | 12px | 600 | Manrope | 1.5 | 0 | Primary button labels |
-| buttonSecondary | 12px | 500 | Manrope | 1.5 | 0 | Secondary button labels |
-| footerLabel | 10px | 400 | Space Grotesk | 1.3 | 1px | Footer badge text |
+| navItemActive | 12px | 700 | Manrope | 1.5 | 0 | Active nav labels |
+| cardLabel | 12px | 400 | Space Grotesk | 1.3 | 1px | KPI card labels ("TOTAL USERS") |
+| cardValue | 36px | 400 | Space Grotesk | 1.1 | 0 | KPI numeric values |
+| badgeText | 12px | 400 | Space Grotesk | 1.3 | 0 | Status badge text ("Stable") |
+| cardDescription | 12px | 400 | Manrope | 1.5 | 0 | KPI supplementary text |
+| buttonPrimary | 12px | 700 | Manrope | 1.5 | 0 | Primary button labels |
+| buttonSecondary | 12px | 400 | Manrope | 1.5 | 0 | Secondary button labels |
+| footerLabel | 12px | 400 | Space Grotesk | 1.3 | 1px | Footer badge text |
 | footerDescription | 12px | 400 | Manrope | 1.5 | 0 | Footer description text |
 
-### Simplified 4-tier summary
+### Size/Weight Summary
 
-| Tier | Sizes Used | Weights Used |
-|------|-----------|-------------|
-| Display | 36px, 28px | 300 (light), 700 (bold) |
-| Heading | 14px, 13px | 600 (semibold), 700 (bold) |
-| Body | 12px, 11px, 10px | 400 (regular), 500 (medium), 600 (semibold) |
-| Micro | 9px | 400 (regular) |
+| Tier | Size | Weights | Roles |
+|------|------|---------|-------|
+| Display | 36px | 400 | KPI card values |
+| Page | 24px | 700 | Page title |
+| Subheading | 14px | 400, 700 | Page subtitle (400), topbar title (700), sidebar title (700) |
+| Body | 12px | 400, 700 | Nav, buttons, badges, descriptions, labels, email, links |
+
+**Consolidation mapping from design-tokens.json originals:**
+- 9px → 12px (sidebarSubtitle, badgeText)
+- 10px → 12px (cardDescription, footerLabel)
+- 11px → 12px (topbarEmail, cardLabel)
+- 13px → 14px (pageSubtitle, sidebarTitle)
+- 28px → 24px (pageTitle)
+- weight 300 → 400 (cardValue)
+- weight 500 → 400 (buttonSecondary)
+- weight 600 → 700 (navItemActive, buttonPrimary)
 
 ---
 
@@ -167,10 +175,10 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 ┌─────────────────────────────────────────────────┐
 │ AdminSidebar │ AdminTopbar (sticky, blur)        │
 │ (fixed 240px)│─────────────────────────────────  │
-│              │ MainContent (padding: 40px)        │
+│              │ MainContent (padding: 32px)        │
 │              │                                    │
 │              │   PageHeader                       │
-│              │   KPI Grid (2×2)                   │
+│              │   KPI Grid (2×2)  ← FOCAL POINT   │
 │              │   Footer                           │
 │              │                                    │
 └─────────────────────────────────────────────────┘
@@ -182,6 +190,8 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 - Right area: `flex: 1`, vertical stack (Topbar + MainContent)
 - **Independent from AppShell** — no shared layout components (CONTEXT D-01)
 
+**Focal point:** The 2×2 KPI card grid is the primary visual anchor on the Dashboard screen. The 36px card values (largest type on the page) draw the eye immediately after entering, reinforced by the high-contrast `--cv4-text-primary` color against `--cv4-surface-primary` card backgrounds.
+
 ### AdminSidebar
 
 - **Source:** component-specs §2, CONTEXT D-02
@@ -189,8 +199,8 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 - Background: `--cv4-canvas-bg` (#131313)
 - Border right: `--cv4-border-default` (1px)
 - Padding: 24px top, 16px horizontal
-- Logo: Shield icon (20px) + "Admin" (sidebarTitle) + "Production Suite" (sidebarSubtitle)
-- 7 nav items with 2px gap:
+- Logo: Shield icon (20px) + "Admin" (sidebarTitle 14px/700) + "Production Suite" (sidebarSubtitle 12px/400)
+- 7 nav items with 4px gap:
 
 | # | Icon | Label | Route |
 |---|------|-------|-------|
@@ -202,18 +212,18 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 | 6 | `settings` | Providers | `/admin/providers` |
 | 7 | `activity` | Monitoring | `/admin/monitoring` |
 
-- Nav item states: default (transparent bg, muted text) → hover (`--cv4-hover-highlight`, secondary text) → active (`--cv4-active-highlight`, primary text + weight 600)
+- Nav item states: default (transparent bg, muted text) → hover (`--cv4-hover-highlight`, secondary text) → active (`--cv4-active-highlight`, primary text + weight 700)
 - Nav item: height 36px, padding 0 12px, border-radius 8px
 
 ### AdminTopbar
 
 - **Source:** component-specs §3, CONTEXT D-03
-- Sticky top, 56px height, backdrop-blur 20px
+- Sticky top, 48px height, backdrop-blur 20px
 - Background: `--cv4-surface-overlay` (#1C1B1BDD)
 - Border bottom: `--cv4-border-default`
 - Padding: 0 32px
-- **Left:** Back button (arrow-left 14px + "Back to App" topbarLink) + "Admin Console" (topbarTitle) — CONTEXT D-03
-- **Right:** Bell icon (16px, muted) + vertical divider (1×20px) + email (topbarEmail) + avatar circle (28×28)
+- **Left:** Back button (arrow-left 14px + "Back to App" topbarLink 12px/400) + "Admin Console" (topbarTitle 14px/700) — CONTEXT D-03
+- **Right:** Bell icon (16px, muted, `aria-label="Notifications"`) + vertical divider (1×20px) + email (topbarEmail 12px/400) + avatar circle (28×28)
 - "Back to App" navigates to `/projects` via `router.push`
 
 ### KPI Card (Dashboard placeholder)
@@ -224,14 +234,14 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 - Background: `--cv4-surface-primary` (#2A2A2A)
 - Border: `--cv4-border-subtle` (1px)
 - Border-radius: 12px
-- Padding: 20px 24px
-- Top row: label (cardLabel) + icon (16px, muted)
-- Bottom: value (cardValue, "—" placeholder at 50% opacity) + badge + description
+- Padding: 24px all sides
+- Top row: label (cardLabel 12px/400) + icon (16px, muted)
+- Bottom: value (cardValue 36px/400, "—" placeholder at 50% opacity) + badge + description
 
 ### PageHeader
 
 - **Source:** component-specs §5
-- Left: title (pageTitle) + subtitle (pageSubtitle)
+- Left: title (pageTitle 24px/700) + subtitle (pageSubtitle 14px/400)
 - Right: secondary button ("Export Data") + primary button ("Generate Report")
 - Button height: 36px, padding: 0 16px, border-radius: 8px
 
@@ -240,8 +250,8 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 - **Source:** component-specs §6
 - Border-top: `--cv4-border-subtle`
 - Pill badge: full-radius, surface-primary bg, subtle border
-- Content: dot (5×5, muted) + "Phase 11: Production Integration" (footerLabel)
-- Description: "Detailed analytics and real-time node monitoring coming in Phase 11"
+- Content: dot (5×5, muted) + "Phase 11: Production Integration" (footerLabel 12px/400)
+- Description: "Detailed analytics and real-time node monitoring coming in Phase 11" (footerDescription 12px/400)
 
 ### Main Sidebar Admin Entry (modification to existing Sidebar)
 
@@ -263,7 +273,7 @@ Exceptions: `2px` nav item gap is intentional micro-spacing for tight sidebar li
 |-------|-----------|------------|-------------|------------|
 | Default | transparent | `--cv4-text-muted` | 400 | `--cv4-text-muted` |
 | Hover | `--cv4-hover-highlight` | `--cv4-text-secondary` | 400 | `--cv4-text-secondary` |
-| Active | `--cv4-active-highlight` | `--cv4-text-primary` | 600 | `--cv4-text-primary` |
+| Active | `--cv4-active-highlight` | `--cv4-text-primary` | 700 | `--cv4-text-primary` |
 
 Transition: `background 100ms, color 100ms` (matching existing Sidebar pattern).
 
@@ -281,6 +291,17 @@ Transition: `background 100ms, color 100ms` (matching existing Sidebar pattern).
 |-------|------|------|
 | Default | `--cv4-text-muted` | `--cv4-text-muted` |
 | Hover | `--cv4-text-secondary` | `--cv4-text-secondary` |
+
+---
+
+## Accessibility
+
+| Element | Requirement |
+|---------|-------------|
+| Bell icon button (topbar) | `aria-label="Notifications"` — icon-only button requires accessible label |
+| Nav items | Use `<nav>` landmark with `aria-label="Admin navigation"` |
+| Active nav item | `aria-current="page"` on active route link |
+| Back to App link | Visible text sufficient — no extra aria needed |
 
 ---
 
@@ -348,23 +369,23 @@ No visible error UI in AdminGuard — all failures redirect silently (existing p
 
 All icons from `lucide-react` (already installed). Standard size: 16px for UI, 14px for secondary.
 
-| Context | Icon | Size | Color |
-|---------|------|------|-------|
-| Sidebar logo | `shield` | 20px | `--cv4-text-primary` |
-| Dashboard nav | `layout-dashboard` | 16px | state-dependent |
-| Users nav | `users` | 16px | state-dependent |
-| Teams nav | `group` | 16px | state-dependent |
-| Quotas nav | `gauge` | 16px | state-dependent |
-| Pricing nav | `credit-card` | 16px | state-dependent |
-| Providers nav | `settings` | 16px | state-dependent |
-| Monitoring nav | `activity` | 16px | state-dependent |
-| Back arrow (topbar) | `arrow-left` | 14px | `--cv4-text-muted` |
-| Notifications (topbar) | `bell` | 16px | `--cv4-text-muted` |
-| KPI: Total Users | `user` | 16px | `--cv4-text-muted` |
-| KPI: Active Teams | `users` | 16px | `--cv4-text-muted` |
-| KPI: Tasks | `circle-check` | 16px | `--cv4-text-muted` |
-| KPI: Total Cost | `wallet` | 16px | `--cv4-text-muted` |
-| Main sidebar admin entry | `shield` | 16px | state-dependent |
+| Context | Icon | Size | Color | Notes |
+|---------|------|------|-------|-------|
+| Sidebar logo | `shield` | 20px | `--cv4-text-primary` | |
+| Dashboard nav | `layout-dashboard` | 16px | state-dependent | |
+| Users nav | `users` | 16px | state-dependent | |
+| Teams nav | `group` | 16px | state-dependent | |
+| Quotas nav | `gauge` | 16px | state-dependent | |
+| Pricing nav | `credit-card` | 16px | state-dependent | |
+| Providers nav | `settings` | 16px | state-dependent | |
+| Monitoring nav | `activity` | 16px | state-dependent | |
+| Back arrow (topbar) | `arrow-left` | 14px | `--cv4-text-muted` | |
+| Notifications (topbar) | `bell` | 16px | `--cv4-text-muted` | `aria-label="Notifications"` required |
+| KPI: Total Users | `user` | 16px | `--cv4-text-muted` | |
+| KPI: Active Teams | `users` | 16px | `--cv4-text-muted` | |
+| KPI: Tasks | `circle-check` | 16px | `--cv4-text-muted` | |
+| KPI: Total Cost | `wallet` | 16px | `--cv4-text-muted` | |
+| Main sidebar admin entry | `shield` | 16px | state-dependent | |
 
 ---
 
@@ -460,6 +481,23 @@ app/admin/
 
 ---
 
+## Revision Log
+
+### R1 (2026-04-01) — Checker-driven fixes
+
+| # | Dimension | Issue | Fix Applied |
+|---|-----------|-------|-------------|
+| 1 | Typography (sizes) | 8 unique sizes (9,10,11,12,13,14,28,36) — max 4 | Consolidated to 4: 12px, 14px, 24px, 36px. Mapped 9→12, 10→12, 11→12, 13→14, 28→24. |
+| 2 | Typography (weights) | 5 unique weights (300,400,500,600,700) — max 2 | Consolidated to 2: 400, 700. Mapped 300→400, 500→400, 600→700. |
+| 3 | Spacing (2px) | Nav item gap 2px not multiple of 4 | Changed to 4px. |
+| 4 | Spacing (20px) | Card padding-block 20px not in standard set | Changed to uniform 24px card padding (all sides). |
+| 5 | Spacing (40px) | Main content padding 40px not in standard set | Changed to 32px. Section/header gaps also 40→32px. |
+| 6 | Spacing (56px) | Topbar height 56px not in standard set | Changed to 48px. |
+| 7 | Visuals (focal point) | No focal point declared for Dashboard | Added: KPI card grid is primary visual anchor. |
+| 8 | Visuals (bell icon) | Missing aria-label on icon-only button | Added `aria-label="Notifications"` requirement. Added Accessibility section. |
+
+---
+
 ## Appendix: Token Mapping Reference
 
 Admin design-tokens.json maps 1:1 to existing `--cv4-*` CSS custom properties. No new namespace needed.
@@ -487,5 +525,5 @@ Admin design-tokens.json maps 1:1 to existing `--cv4-*` CSS custom properties. N
 ---
 
 *Phase: 08-admin-frontend-shell*
-*UI-SPEC created: 2026-04-01*
+*UI-SPEC created: 2026-04-01 · Revised: 2026-04-01 (R1 — checker fixes)*
 *Design assets: admin-console-v2-neutral-gray.png, component-specs.md, design-tokens.json*
