@@ -20,6 +20,8 @@ async def list_skill_logs(
     skill_name: str | None = None,
     status: str | None = None,
     user_id: str | None = Query(None),
+    team_id: str | None = Query(None),
+    project_id: str | None = Query(None),
 ):
     """Query Skill execution logs. Admins can see all users' logs."""
     stmt = select(SkillExecutionLog).order_by(desc(SkillExecutionLog.queued_at))
@@ -28,6 +30,11 @@ async def list_skill_logs(
         stmt = stmt.where(SkillExecutionLog.user_id == user.id)
     elif user_id:
         stmt = stmt.where(SkillExecutionLog.user_id == user_id)
+
+    if user.is_admin and team_id:
+        stmt = stmt.where(SkillExecutionLog.team_id == team_id)
+    if user.is_admin and project_id:
+        stmt = stmt.where(SkillExecutionLog.project_id == project_id)
 
     if skill_name:
         stmt = stmt.where(SkillExecutionLog.skill_name == skill_name)
@@ -66,6 +73,8 @@ async def list_ai_call_logs(
     provider: str | None = None,
     model: str | None = None,
     user_id: str | None = Query(None),
+    team_id: str | None = Query(None),
+    project_id: str | None = Query(None),
 ):
     """Query AI call logs. Admins can see all users' logs."""
     stmt = select(AICallLog).order_by(desc(AICallLog.created_at))
@@ -74,6 +83,11 @@ async def list_ai_call_logs(
         stmt = stmt.where(AICallLog.user_id == user.id)
     elif user_id:
         stmt = stmt.where(AICallLog.user_id == user_id)
+
+    if user.is_admin and team_id:
+        stmt = stmt.where(AICallLog.team_id == team_id)
+    if user.is_admin and project_id:
+        stmt = stmt.where(AICallLog.project_id == project_id)
 
     if provider:
         stmt = stmt.where(AICallLog.provider == provider)
@@ -107,6 +121,8 @@ async def ai_call_stats(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     user_id: str | None = Query(None),
+    team_id: str | None = Query(None),
+    project_id: str | None = Query(None),
 ):
     """Aggregate statistics for AI calls. Admins see global stats."""
     stmt = select(
@@ -120,6 +136,11 @@ async def ai_call_stats(
         stmt = stmt.where(AICallLog.user_id == user.id)
     elif user_id:
         stmt = stmt.where(AICallLog.user_id == user_id)
+
+    if user.is_admin and team_id:
+        stmt = stmt.where(AICallLog.team_id == team_id)
+    if user.is_admin and project_id:
+        stmt = stmt.where(AICallLog.project_id == project_id)
 
     result = await db.execute(stmt)
     row = result.one()
@@ -141,6 +162,7 @@ async def list_tasks(
     status: str | None = Query(None),
     project_id: str | None = Query(None),
     user_id: str | None = Query(None),
+    team_id: str | None = Query(None),
 ):
     is_admin = user.is_admin
 
@@ -153,6 +175,10 @@ async def list_tasks(
     elif user_id:
         stmt = stmt.where(SkillExecutionLog.user_id == user_id)
         count_stmt = count_stmt.where(SkillExecutionLog.user_id == user_id)
+
+    if is_admin and team_id:
+        stmt = stmt.where(SkillExecutionLog.team_id == team_id)
+        count_stmt = count_stmt.where(SkillExecutionLog.team_id == team_id)
 
     if status:
         stmt = stmt.where(SkillExecutionLog.status == status)
@@ -196,6 +222,8 @@ async def task_status_counts(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
     project_id: str | None = Query(None),
+    user_id: str | None = Query(None),
+    team_id: str | None = Query(None),
 ):
     is_admin = user.is_admin
 
@@ -206,6 +234,11 @@ async def task_status_counts(
 
     if not is_admin:
         stmt = stmt.where(SkillExecutionLog.user_id == user.id)
+    elif user_id:
+        stmt = stmt.where(SkillExecutionLog.user_id == user_id)
+
+    if is_admin and team_id:
+        stmt = stmt.where(SkillExecutionLog.team_id == team_id)
     if project_id:
         stmt = stmt.where(SkillExecutionLog.project_id == project_id)
 
