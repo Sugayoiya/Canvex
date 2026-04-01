@@ -4,7 +4,7 @@
 
 - [x] **Phase 07: Admin API Foundation** — Admin user endpoints, audit log model, log scope lifts, dashboard stats, team overview API (completed 2026-04-01)
 - [x] **Phase 08: Admin Frontend Shell** — AdminGuard, admin layout/sidebar, new deps, adminApi/quotaApi client, Toaster setup (completed 2026-04-01)
-- [ ] **Phase 09: User & Team Management UI** — TanStack Table user directory, status/admin toggles, team overview table, confirmation modals
+- [x] **Phase 09: User & Team Management UI** — TanStack Table user directory, status/admin toggles, team overview table, confirmation modals (completed 2026-04-01)
 - [ ] **Phase 10: Quota & Pricing & Provider Management UI** — Quota editor, pricing CRUD table, system AI Provider management
 - [ ] **Phase 11: Monitoring Dashboard & Polish** — Admin dashboard KPIs, global task/AI/skill logs, billing reuse, empty/error states, design consistency
 
@@ -56,11 +56,11 @@ Plans:
 **Depends on**: Phase 08
 **UI hint**: yes
 **Requirements:** [REQ-19, REQ-20]
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [x] 09-01-PLAN.md — [W1] Backend extensions (teams field, admin_count, owner_name) + AdminDataTable/AdminPagination/FilterToolbar reusable components
-- [ ] 09-02-PLAN.md — [W2] StatusBadge/AdminBadge/RowDropdownMenu/ConfirmationModal + Users page full implementation
+- [x] 09-02-PLAN.md — [W2] StatusBadge/AdminBadge/RowDropdownMenu/ConfirmationModal + Users page full implementation
 - [x] 09-03-PLAN.md — [W2] Teams overview page (read-only table with search + pagination)
 
 **Success Criteria**:
