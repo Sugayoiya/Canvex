@@ -1,0 +1,205 @@
+{
+  "$schema": "design-tokens-v1",
+  "description": "Quota & Pricing & Provider Management UI — Design Tokens (extends Phase 08/09 Admin Console tokens)",
+  "source": "pencil-new.pen (Frame zXqUs — Quota Management, Frame ASIoH — Pricing Management, Frame E1Z09 — System Providers)",
+  "compatibility": "Inherits all Phase 08 Admin Console tokens and Phase 09 semantic tokens. Phase 10-specific additions below.",
+
+  "themes": {
+    "dark": {
+      "semantic": {
+        "badge": {
+          "active": { "bg": "#4CAF5020", "text": "#4ADE80" },
+          "inactive": { "bg": "#FFB4AB20", "text": "#FFB4AB" },
+          "revoked": { "bg": "#FFB4AB20", "text": "#FFB4AB" }
+        },
+        "progressBar": {
+          "trackBg": "#3c494e40",
+          "fillNormal": "#00D1FF",
+          "fillWarning": "#FEB127",
+          "fillCritical": "#FFB4AB"
+        },
+        "quota": {
+          "warningBg": "#FEB12710",
+          "warningBorder": "#FEB12720",
+          "warningText": "#FEB127"
+        },
+        "provider": {
+          "iconBg": "#131313",
+          "iconColor": "#00D1FF",
+          "statusDotActive": "#4ADE80",
+          "statusDotRevoked": "#859399"
+        }
+      },
+      "interactive": {
+        "tabActive": { "borderBottom": "#E5E2E1", "text": "#E5E2E1" },
+        "tabInactive": { "borderBottom": "transparent", "text": "#859399" },
+        "expandableRowHover": "#E5E2E108",
+        "providerCardHover": "#E5E2E108"
+      }
+    },
+
+    "light": {
+      "semantic": {
+        "badge": {
+          "active": { "bg": "#4CAF5015", "text": "#2E7D32" },
+          "inactive": { "bg": "#D32F2F15", "text": "#D32F2F" },
+          "revoked": { "bg": "#D32F2F15", "text": "#D32F2F" }
+        },
+        "progressBar": {
+          "trackBg": "#1A1A1A10",
+          "fillNormal": "#0087A3",
+          "fillWarning": "#E09800",
+          "fillCritical": "#D32F2F"
+        },
+        "quota": {
+          "warningBg": "#E0980010",
+          "warningBorder": "#E0980020",
+          "warningText": "#E09800"
+        },
+        "provider": {
+          "iconBg": "#F5F5F5",
+          "iconColor": "#0087A3",
+          "statusDotActive": "#2E7D32",
+          "statusDotRevoked": "#7A8A92"
+        }
+      },
+      "interactive": {
+        "tabActive": { "borderBottom": "#1A1A1A", "text": "#1A1A1A" },
+        "tabInactive": { "borderBottom": "transparent", "text": "#7A8A92" },
+        "expandableRowHover": "#1A1A1A05",
+        "providerCardHover": "#1A1A1A05"
+      }
+    }
+  },
+
+  "typography": {
+    "scale": {
+      "pageTitle": { "size": 24, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.2 },
+      "pageSubtitle": { "size": 13, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "tabLabel": { "size": 12, "weight": "700", "font": "Manrope", "lineHeight": 1.5 },
+      "tabLabelInactive": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "expandableRowName": { "size": 16, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3 },
+      "expandableRowMeta": { "size": 11, "weight": "normal", "font": "Space Grotesk", "lineHeight": 1.5, "letterSpacing": 0.3 },
+      "usageSummaryLabel": { "size": 11, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "usageSummaryNumber": { "size": 20, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.2 },
+      "usageSummaryUnit": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "usageCollapsedNumber": { "size": 18, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.2 },
+      "limitSectionHeader": { "size": 11, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3, "letterSpacing": 0.5, "textTransform": "uppercase" },
+      "limitPercentage": { "size": 11, "weight": "600", "font": "Manrope", "lineHeight": 1.5 },
+      "limitInputText": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "resetButton": { "size": 11, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3, "letterSpacing": 0.5, "textTransform": "uppercase" },
+      "warningText": { "size": 11, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3, "letterSpacing": 0.5, "textTransform": "uppercase" },
+      "summaryCardTitle": { "size": 14, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3 },
+      "summaryCardPrice": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "tableHeader": { "size": 12, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3, "letterSpacing": 1, "textTransform": "uppercase" },
+      "tableCell": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "tableCellBold": { "size": 12, "weight": "700", "font": "Manrope", "lineHeight": 1.5 },
+      "badgeLabel": { "size": 11, "weight": "700", "font": "Manrope", "lineHeight": 1.5 },
+      "providerCardName": { "size": 14, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3 },
+      "providerCardStatus": { "size": 11, "weight": "600", "font": "Manrope", "lineHeight": 1.5 },
+      "keyTableHeader": { "size": 10, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3, "letterSpacing": 0.8, "textTransform": "uppercase" },
+      "keyName": { "size": 12, "weight": "600", "font": "Manrope", "lineHeight": 1.5 },
+      "keyMasked": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "keyAction": { "size": 11, "weight": "600", "font": "Manrope", "lineHeight": 1.5 },
+      "statsLabel": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 },
+      "statsValue": { "size": 14, "weight": "700", "font": "Space Grotesk", "lineHeight": 1.3 },
+      "searchPlaceholder": { "size": 12, "weight": "normal", "font": "Manrope", "lineHeight": 1.5 }
+    }
+  },
+
+  "spacing": {
+    "mainContentPadding": [32, 40],
+    "mainContentGap": 24,
+    "tabBarSearchGap": 16,
+    "limitColumnsGap": 24,
+    "limitColumnInternalGap": 10,
+    "summaryCardsGap": 16,
+    "providerListGap": 16,
+    "keysListGap": 8,
+    "dimensions": {
+      "tabHeight": 40,
+      "expandableRowCollapsed": 72,
+      "expandableRowPaddingH": 20,
+      "searchInputHeight": 36,
+      "limitInputHeight": 32,
+      "summaryCardHeight": 80,
+      "pricingTableRowHeight": 48,
+      "pricingTableHeaderHeight": 40,
+      "providerCardCollapsed": 64,
+      "providerCardHeaderHeight": 64,
+      "providerIconSize": 36,
+      "keyRowHeight": 44,
+      "keyTableHeaderHeight": 32,
+      "statusDotSize": 8,
+      "progressBarHeight": 6,
+      "actionIconButtonSize": 32
+    }
+  },
+
+  "radii": {
+    "quotaList": 12,
+    "pricingTable": 12,
+    "providerCard": 12,
+    "providerIcon": 8,
+    "badge": 6,
+    "searchInput": 8,
+    "limitInput": 6,
+    "resetButton": 6,
+    "summaryCard": 12,
+    "keyRow": 8,
+    "progressBar": 3,
+    "statusDot": 4,
+    "actionButton": 8
+  },
+
+  "iconography": {
+    "library": "lucide",
+    "navigation": {
+      "quotas": "gauge",
+      "pricing": "credit-card",
+      "providers": "settings"
+    },
+    "toolbar": {
+      "search": "search",
+      "filterChevron": "chevron-down",
+      "add": "plus"
+    },
+    "expandable": {
+      "expanded": "chevron-up",
+      "collapsed": "chevron-down"
+    },
+    "quota": {
+      "warning": "triangle-alert"
+    },
+    "pricing": {
+      "rowActions": "ellipsis"
+    },
+    "provider": {
+      "openai": "bot",
+      "gemini": "sparkles",
+      "deepseek": "brain",
+      "edit": "pencil",
+      "delete": "trash-2",
+      "addKey": "plus"
+    }
+  },
+
+  "columns": {
+    "pricing": [
+      { "key": "provider", "header": "PROVIDER", "width": 140, "sortable": false },
+      { "key": "model", "header": "MODEL", "width": 180, "sortable": false },
+      { "key": "type", "header": "TYPE", "width": 80, "sortable": false },
+      { "key": "price", "header": "PRICE (PER 1K)", "width": 180, "sortable": false },
+      { "key": "status", "header": "STATUS", "width": 100, "sortable": false },
+      { "key": "actions", "header": "", "width": 48, "sortable": false }
+    ],
+    "providerKeys": [
+      { "key": "name", "header": "NAME", "width": 140, "sortable": false },
+      { "key": "key", "header": "KEY", "width": 140, "sortable": false },
+      { "key": "created", "header": "CREATED", "width": 100, "sortable": false },
+      { "key": "lastUsed", "header": "LAST USED", "width": 100, "sortable": false },
+      { "key": "status", "header": "STATUS", "width": 80, "sortable": false },
+      { "key": "actions", "header": "", "width": 60, "sortable": false }
+    ]
+  }
+}
