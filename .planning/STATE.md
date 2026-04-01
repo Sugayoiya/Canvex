@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Admin Console
 status: executing
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-04-01T15:21:48.613Z"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-04-01T15:26:22.689Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 5
   completed_phases: 4
   total_plans: 17
-  completed_plans: 14
+  completed_plans: 15
   percent: 0
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 11 (monitoring-dashboard-polish) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-04-01
 
@@ -155,6 +155,7 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 10]: quotaApi types accept null for unlimited; saveMutation.isPending gates all UI interactions; lazy quota fetch on row expand
 - [Phase 11]: Composite index on SkillExecutionLog(status, queued_at) for alerts+filter count query performance
 - [Phase 11]: AdminErrorBoundary uses setState remount strategy with post-reset onReset callback for query invalidation
+- [Phase 11]: Silent fail for alerts query — badges omitted on API error, no user-visible error shown
 
 ### Pending Todos
 
@@ -173,6 +174,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-01T15:21:48.611Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-04-01T15:26:22.687Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None
