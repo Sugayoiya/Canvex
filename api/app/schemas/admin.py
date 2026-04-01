@@ -64,3 +64,40 @@ class AdminUserStatusUpdate(BaseModel):
 
 class AdminUserRoleUpdate(BaseModel):
     is_admin: bool
+
+
+class AdminTeamListItem(BaseModel):
+    id: str
+    name: str
+    description: str | None = None
+    created_at: datetime
+    member_count: int
+
+    model_config = {"from_attributes": True}
+
+
+class AdminTeamListResponse(BaseModel):
+    items: list[AdminTeamListItem]
+    total: int
+    limit: int
+    offset: int
+
+
+class AdminDashboardWindowStats(BaseModel):
+    tasks_total: int
+    tasks_failed: int
+    cost_total: float
+
+
+class AdminProviderStatus(BaseModel):
+    enabled_count: int
+    disabled_count: int
+
+
+class AdminDashboardResponse(BaseModel):
+    total_users: int
+    total_teams: int
+    active_tasks: int
+    total_cost: float
+    provider_status: AdminProviderStatus
+    windows: dict[str, AdminDashboardWindowStats]
