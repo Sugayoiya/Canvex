@@ -74,6 +74,23 @@ def _migrate_refresh_token_column(connection):
         logger.info("Added users.refresh_token_hash column")
 
 
+def _auto_migrate_columns(connection):
+    """Add missing columns to existing tables (dev-mode schema drift fix)."""
+    insp = inspect(connection)
+    table_names = insp.get_table_names()
+
+    migrations = [
+        ("ai_provider_keys", "key_hint", "VARCHAR(8)"),
+    ]
+    for table, column, col_type in migrations:
+        if table not in table_names:
+            continue
+        existing = {col["name"] for col in insp.get_columns(table)}
+        if column not in existing:
+            connection.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+            logger.info("Auto-migrated: added %s.%s (%s)", table, column, col_type)
+
+
 async def init_db():
     """Create all tables and seed defaults."""
     from app.models.user import User  # noqa
@@ -92,6 +109,7 @@ async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(_migrate_refresh_token_column)
+        await conn.run_sync(_auto_migrate_columns)
 
     await _seed_default_admin()
     await _seed_demo_project()

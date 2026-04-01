@@ -20,6 +20,10 @@ interface AdminUser {
   teams: string[];
   last_login_at: string | null;
   created_at: string;
+  monthly_credit_limit: number | null;
+  current_month_usage: number;
+  daily_call_limit: number | null;
+  current_day_calls: number;
 }
 
 interface AdminUserListResponse {
@@ -37,6 +41,10 @@ interface AdminTeam {
   created_at: string;
   member_count: number;
   owner_name: string | null;
+  monthly_credit_limit: number | null;
+  current_month_usage: number;
+  daily_call_limit: number | null;
+  current_day_calls: number;
 }
 
 interface AdminTeamListResponse {
@@ -580,7 +588,7 @@ export default function AdminQuotasPage() {
                         : `${team?.member_count ?? 0} members`}
                     </span>
 
-                    {/* Quota summary placeholder */}
+                    {/* Quota summary */}
                     <span
                       style={{
                         flex: 1,
@@ -590,8 +598,43 @@ export default function AdminQuotasPage() {
                         color: "var(--cv4-text-muted)",
                       }}
                     >
-                      —
+                      {item.monthly_credit_limit !== null
+                        ? `Monthly: ${Math.round(item.current_month_usage)}/${Math.round(item.monthly_credit_limit)} credits`
+                        : (
+                          <span style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            height: 24,
+                            padding: "4px 8px",
+                            borderRadius: 6,
+                            background: "var(--cv4-hover-highlight)",
+                            color: "var(--cv4-text-secondary)",
+                            fontSize: 12,
+                            fontWeight: 400,
+                          }}>
+                            Unlimited
+                          </span>
+                        )}
                     </span>
+
+                    {/* Status dot */}
+                    {item.monthly_credit_limit !== null && (() => {
+                      const pct = item.monthly_credit_limit > 0
+                        ? (item.current_month_usage / item.monthly_credit_limit) * 100
+                        : 0;
+                      const dotColor = pct >= 85 ? "var(--ob-error)"
+                        : pct >= 60 ? "var(--ob-tertiary)"
+                        : "var(--ob-success)";
+                      return (
+                        <span style={{
+                          width: 8,
+                          height: 8,
+                          borderRadius: "50%",
+                          background: dotColor,
+                          flexShrink: 0,
+                        }} />
+                      );
+                    })()}
                   </div>
 
                   {/* QuotaDetailArea */}
@@ -798,6 +841,115 @@ export default function AdminQuotasPage() {
             }
             entityName={activeTab}
           />
+
+          {/* OrgTotalBar — Teams tab */}
+          {activeTab === "teams" && items.length > 0 && (() => {
+            const allTeams = items as AdminTeam[];
+            const totalUsage = allTeams.reduce((s, t) => s + (t.current_month_usage ?? 0), 0);
+            const totalLimit = allTeams.reduce((s, t) => s + (t.monthly_credit_limit ?? 0), 0);
+            const hasAnyLimit = allTeams.some(t => t.monthly_credit_limit !== null);
+            const pct = hasAnyLimit && totalLimit > 0 ? (totalUsage / totalLimit) * 100 : 0;
+            const barColor = pct >= 85 ? "var(--ob-error)" : pct >= 60 ? "var(--ob-tertiary)" : "var(--ob-success)";
+            return (
+              <div style={{
+                height: 48,
+                background: "var(--cv4-surface-primary)",
+                border: "1px solid var(--cv4-border-subtle)",
+                borderRadius: 12,
+                padding: "0 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+                marginTop: 16,
+              }}>
+                <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--cv4-text-primary)" }}>
+                  Org Total Usage
+                </span>
+                {hasAnyLimit && (
+                  <div style={{ width: 200, height: 8, borderRadius: 4, background: "var(--cv4-border-default)", overflow: "hidden" }}>
+                    <div style={{ height: 8, borderRadius: 4, width: `${Math.min(100, pct)}%`, background: barColor, transition: "width 300ms ease" }} />
+                  </div>
+                )}
+                <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 700, color: "var(--cv4-text-primary)" }}>
+                  {hasAnyLimit
+                    ? `${Math.round(totalUsage).toLocaleString()} / ${Math.round(totalLimit).toLocaleString()}`
+                    : "No limits set"}
+                </span>
+                {hasAnyLimit && (
+                  <span style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    height: 24,
+                    padding: "4px 8px",
+                    borderRadius: 6,
+                    background: "var(--cv4-hover-highlight)",
+                    fontFamily: "Manrope, sans-serif",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    color: barColor,
+                  }}>
+                    {Math.round(pct)}%
+                  </span>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* BottomStats — Users tab */}
+          {activeTab === "users" && items.length > 0 && (() => {
+            const allUsers = items as AdminUser[];
+            const activeCount = allUsers.filter(u => u.status === "active").length;
+            const usersWithLimit = allUsers.filter(u => u.monthly_credit_limit !== null && u.monthly_credit_limit > 0);
+            const avgUsage = usersWithLimit.length > 0
+              ? usersWithLimit.reduce((s, u) => s + ((u.current_month_usage / u.monthly_credit_limit!) * 100), 0) / usersWithLimit.length
+              : 0;
+            const totalOverhead = allUsers.reduce((s, u) => s + (u.current_month_usage ?? 0), 0);
+            return (
+              <div style={{
+                display: "flex",
+                gap: 24,
+                alignItems: "center",
+                justifyContent: "space-between",
+                marginTop: 16,
+                padding: 16,
+                background: "var(--cv4-surface-primary)",
+                border: "1px solid var(--cv4-border-subtle)",
+                borderRadius: 12,
+              }}>
+                <div style={{ display: "flex", gap: 24 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 400, color: "var(--cv4-text-muted)" }}>Active Users</span>
+                    <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--cv4-text-primary)" }}>{activeCount}</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 400, color: "var(--cv4-text-muted)" }}>Avg Monthly Usage</span>
+                    <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--cv4-text-primary)" }}>{avgUsage.toFixed(1)}%</span>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 400, color: "var(--cv4-text-muted)" }}>Total Overhead</span>
+                    <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, fontWeight: 700, color: "var(--cv4-text-primary)" }}>{Math.round(totalOverhead).toLocaleString()}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  style={{
+                    height: 36,
+                    padding: "0 16px",
+                    borderRadius: 8,
+                    border: "1px solid var(--cv4-border-default)",
+                    background: "transparent",
+                    color: "var(--cv4-text-secondary)",
+                    fontFamily: "Manrope, sans-serif",
+                    fontSize: 12,
+                    fontWeight: 400,
+                    cursor: "pointer",
+                  }}
+                >
+                  Export System Report
+                </button>
+              </div>
+            );
+          })()}
         </>
       )}
     </div>

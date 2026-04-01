@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import nullslast
 
 from app.core.deps import get_current_user, get_db, require_admin
+from app.models.quota import UserQuota
 from app.models.team import Team, TeamMember
 from app.models.user import User
 from app.schemas.admin import (
@@ -91,10 +92,22 @@ async def list_users(
         select(func.count(User.id)).where(User.is_admin == True, User.status == "active")  # noqa: E712
     )).scalar() or 0
 
+    quota_map: dict[str, UserQuota] = {}
+    if user_ids:
+        q_stmt = select(UserQuota).where(UserQuota.user_id.in_(user_ids))
+        q_rows = (await db.execute(q_stmt)).scalars().all()
+        quota_map = {q.user_id: q for q in q_rows}
+
     items = []
     for u in rows:
         item = AdminUserListItem.model_validate(u)
         item.teams = team_map.get(u.id, [])
+        uq = quota_map.get(u.id)
+        if uq:
+            item.monthly_credit_limit = float(uq.monthly_credit_limit) if uq.monthly_credit_limit is not None else None
+            item.current_month_usage = float(uq.current_month_usage) if uq.current_month_usage else 0
+            item.daily_call_limit = uq.daily_call_limit
+            item.current_day_calls = uq.current_day_calls or 0
         items.append(item)
 
     return AdminUserListResponse(

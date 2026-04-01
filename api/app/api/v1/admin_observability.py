@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.ai_call_log import AICallLog
 from app.models.ai_provider_config import AIProviderConfig
+from app.models.quota import TeamQuota
 from app.models.skill_execution_log import SkillExecutionLog
 from app.models.team import Team, TeamMember
 from app.models.user import User
@@ -73,17 +74,28 @@ async def list_teams(
     )
     rows = (await db.execute(stmt)).all()
 
-    items = [
-        AdminTeamListItem(
+    team_ids = [r.id for r in rows]
+    tq_map: dict[str, TeamQuota] = {}
+    if team_ids:
+        tq_stmt = select(TeamQuota).where(TeamQuota.team_id.in_(team_ids))
+        tq_rows = (await db.execute(tq_stmt)).scalars().all()
+        tq_map = {tq.team_id: tq for tq in tq_rows}
+
+    items = []
+    for r in rows:
+        tq = tq_map.get(r.id)
+        items.append(AdminTeamListItem(
             id=r.id,
             name=r.name,
             description=r.description,
             created_at=r.created_at,
             member_count=r.member_count or 0,
             owner_name=r.owner_name,
-        )
-        for r in rows
-    ]
+            monthly_credit_limit=float(tq.monthly_credit_limit) if tq and tq.monthly_credit_limit is not None else None,
+            current_month_usage=float(tq.current_month_usage) if tq and tq.current_month_usage else 0,
+            daily_call_limit=tq.daily_call_limit if tq else None,
+            current_day_calls=tq.current_day_calls if tq else 0,
+        ))
     return AdminTeamListResponse(items=items, total=total, limit=limit, offset=offset)
 
 

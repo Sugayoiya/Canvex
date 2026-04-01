@@ -48,6 +48,10 @@ class AdminUserListItem(BaseModel):
     teams: list[str] = []
     last_login_at: datetime | None = None
     created_at: datetime
+    monthly_credit_limit: float | None = None
+    current_month_usage: float = 0
+    daily_call_limit: int | None = None
+    current_day_calls: int = 0
 
     model_config = {"from_attributes": True}
 
@@ -75,6 +79,10 @@ class AdminTeamListItem(BaseModel):
     created_at: datetime
     member_count: int
     owner_name: str | None = None
+    monthly_credit_limit: float | None = None
+    current_month_usage: float = 0
+    daily_call_limit: int | None = None
+    current_day_calls: int = 0
 
     model_config = {"from_attributes": True}
 
