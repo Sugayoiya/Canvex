@@ -19,6 +19,22 @@ class ProviderConfigUpdate(BaseModel):
     priority: int | None = None
 
 
+class ProviderKeyCreate(BaseModel):
+    api_key: str
+    label: str | None = None
+
+
+class ProviderKeyResponse(BaseModel):
+    id: str
+    label: str | None = None
+    key_hint: str | None = None
+    is_active: bool
+    last_used_at: datetime | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
 class ProviderConfigResponse(BaseModel):
     id: str
     provider_name: str
@@ -29,22 +45,7 @@ class ProviderConfigResponse(BaseModel):
     owner_id: str | None = None
     key_count: int = 0
     active_key_count: int = 0
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
-
-
-class ProviderKeyCreate(BaseModel):
-    api_key: str
-    label: str | None = None
-
-
-class ProviderKeyResponse(BaseModel):
-    id: str
-    label: str | None = None
-    is_active: bool
-    error_count: int
-    last_used_at: datetime | None = None
+    keys: list[ProviderKeyResponse] = []
     created_at: datetime
 
     model_config = {"from_attributes": True}

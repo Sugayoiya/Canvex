@@ -36,6 +36,7 @@ class AIProviderKey(Base, TimestampMixin):
     )
     api_key_encrypted: Mapped[str] = mapped_column(Text, nullable=False)
     label: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    key_hint: Mapped[str | None] = mapped_column(String(8), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     rate_limit_rpm: Mapped[int | None] = mapped_column(Integer, nullable=True)
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)

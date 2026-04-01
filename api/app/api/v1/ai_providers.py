@@ -65,6 +65,11 @@ def _config_to_response(config: AIProviderConfig) -> ProviderConfigResponse:
         owner_id=config.owner_id,
         key_count=len(keys),
         active_key_count=sum(1 for k in keys if k.is_active),
+        keys=[ProviderKeyResponse(
+            id=k.id, label=k.label, key_hint=getattr(k, "key_hint", None),
+            is_active=k.is_active,
+            last_used_at=k.last_used_at, created_at=k.created_at,
+        ) for k in keys],
         created_at=config.created_at,
     )
 
@@ -198,6 +203,7 @@ async def add_provider_key(
         provider_config_id=provider_id,
         api_key_encrypted=encrypt_api_key(data.api_key),
         label=data.label,
+        key_hint=data.api_key[-4:] if len(data.api_key) >= 4 else data.api_key,
     )
     db.add(key)
     await db.flush()
@@ -211,8 +217,8 @@ async def add_provider_key(
     return ProviderKeyResponse(
         id=key.id,
         label=key.label,
+        key_hint=key.key_hint,
         is_active=key.is_active,
-        error_count=key.error_count,
         last_used_at=key.last_used_at,
         created_at=key.created_at,
     )
