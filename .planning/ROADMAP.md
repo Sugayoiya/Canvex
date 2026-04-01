@@ -3,7 +3,7 @@
 ## Canvex Roadmap v2.1: Admin Console
 
 - [x] **Phase 07: Admin API Foundation** — Admin user endpoints, audit log model, log scope lifts, dashboard stats, team overview API (completed 2026-04-01)
-- [ ] **Phase 08: Admin Frontend Shell** — AdminGuard, admin layout/sidebar, new deps, adminApi/quotaApi client, Toaster setup
+- [x] **Phase 08: Admin Frontend Shell** — AdminGuard, admin layout/sidebar, new deps, adminApi/quotaApi client, Toaster setup (completed 2026-04-01)
 - [ ] **Phase 09: User & Team Management UI** — TanStack Table user directory, status/admin toggles, team overview table, confirmation modals
 - [ ] **Phase 10: Quota & Pricing & Provider Management UI** — Quota editor, pricing CRUD table, system AI Provider management
 - [ ] **Phase 11: Monitoring Dashboard & Polish** — Admin dashboard KPIs, global task/AI/skill logs, billing reuse, empty/error states, design consistency
@@ -36,11 +36,11 @@ Plans:
 **Depends on**: Phase 07
 **UI hint**: yes
 **Requirements:** [REQ-17, REQ-18]
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [x] 08-01-PLAN.md — [W1] Install deps (@tanstack/react-table + sonner) + add --cv4-btn-secondary-border token + fix Manrope 700 + adminApi/quotaApi namespaces in api.ts
-- [ ] 08-02-PLAN.md — [W2] AdminShell/AdminSidebar/AdminTopbar components + admin layout + 7 placeholder pages + main sidebar Admin Console entry
+- [x] 08-02-PLAN.md — [W2] AdminShell/AdminSidebar/AdminTopbar components + admin layout + 7 placeholder pages + main sidebar Admin Console entry
 
 **Success Criteria**:
 1. `AdminGuard` blocks non-admin users from `/admin/*` routes; redirects to `/projects`.
