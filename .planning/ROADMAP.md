@@ -2,7 +2,7 @@
 
 ## Canvex Roadmap v2.1: Admin Console
 
-- [ ] **Phase 07: Admin API Foundation** — Admin user endpoints, audit log model, log scope lifts, dashboard stats, team overview API
+- [x] **Phase 07: Admin API Foundation** — Admin user endpoints, audit log model, log scope lifts, dashboard stats, team overview API (completed 2026-04-01)
 - [ ] **Phase 08: Admin Frontend Shell** — AdminGuard, admin layout/sidebar, new deps, adminApi/quotaApi client, Toaster setup
 - [ ] **Phase 09: User & Team Management UI** — TanStack Table user directory, status/admin toggles, team overview table, confirmation modals
 - [ ] **Phase 10: Quota & Pricing & Provider Management UI** — Quota editor, pricing CRUD table, system AI Provider management
@@ -13,12 +13,12 @@
 **Depends on**: Phase 06
 **UI hint**: no
 **Requirements:** [REQ-13, REQ-14, REQ-15, REQ-16]
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 07-01-PLAN.md — [W1] AdminAuditLog model + record_admin_audit service + schemas + unit tests
 - [x] 07-02-PLAN.md — [W2] Admin user management endpoints (list/status/admin toggles) + nullslast sort + tests
-- [ ] 07-03-PLAN.md — [W3] Admin observability: /logs/* scope lifts (all 6 endpoints) + paginated /admin/teams + /admin/dashboard + tests
+- [x] 07-03-PLAN.md — [W3] Admin observability: /logs/* scope lifts (all 6 endpoints) + paginated /admin/teams + /admin/dashboard + tests
 - [x] 07-04-PLAN.md — [W2] Audit wiring: record_admin_audit into quota/billing/AI-provider admin endpoints + tests
 
 **Success Criteria**:
