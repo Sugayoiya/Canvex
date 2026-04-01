@@ -6,7 +6,7 @@
 - [x] **Phase 08: Admin Frontend Shell** — AdminGuard, admin layout/sidebar, new deps, adminApi/quotaApi client, Toaster setup (completed 2026-04-01)
 - [x] **Phase 09: User & Team Management UI** — TanStack Table user directory, status/admin toggles, team overview table, confirmation modals (completed 2026-04-01)
 - [x] **Phase 10: Quota & Pricing & Provider Management UI** — Quota editor, pricing CRUD table, system AI Provider management (completed 2026-04-01)
-- [ ] **Phase 11: Monitoring Dashboard & Polish** — Admin dashboard KPIs, global task/AI/skill logs, billing reuse, empty/error states, design consistency
+- [x] **Phase 11: Monitoring Dashboard & Polish** — Admin dashboard KPIs, global task/AI/skill logs, billing reuse, empty/error states, design consistency (completed 2026-04-01)
 
 ### Phase 07: Admin API Foundation
 **Goal**: Build all backend admin endpoints and data models needed by the admin console — user management, audit trail, log scope lifts, team overview, and dashboard aggregation.
@@ -96,13 +96,13 @@ Plans:
 **Depends on**: Phase 09, Phase 10
 **UI hint**: yes
 **Requirements:** [REQ-24, REQ-25]
-**Plans:** 3/4 plans executed
+**Plans:** 4/4 plans complete
 
 Plans:
 - [x] 11-01-PLAN.md — [W1] Backend GET /admin/alerts + X-Total-Count on log endpoints + adminApi extensions + StatusBadge + AdminErrorBoundary
 - [x] 11-02-PLAN.md — [W2] Dashboard KPI card enhancement (click-to-navigate + alert badges + hover effects)
 - [x] 11-03-PLAN.md — [W2] Monitoring page 4-tab build (3 log tables + Usage & Cost chart wrapper)
-- [ ] 11-04-PLAN.md — [W3] Polish audit: AdminErrorBoundary wrapping + loading/error/empty consistency across all 7 admin pages
+- [x] 11-04-PLAN.md — [W3] Polish audit: AdminErrorBoundary wrapping + loading/error/empty consistency across all 7 admin pages
 
 **Success Criteria**:
 1. Admin dashboard: 4-6 KPI cards (total users, total teams, active tasks, failed tasks last 24h, total cost, providers with errors); actionable items above fold; links to sub-pages.
