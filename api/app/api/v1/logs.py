@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy import select, func, desc
@@ -22,10 +24,15 @@ async def list_skill_logs(
     user_id: str | None = Query(None),
     team_id: str | None = Query(None),
     project_id: str | None = Query(None),
+    since: datetime | None = Query(None, description="ISO datetime lower bound for queued_at"),
 ):
     """Query Skill execution logs. Admins can see all users' logs."""
     stmt = select(SkillExecutionLog).order_by(desc(SkillExecutionLog.queued_at))
     count_stmt = select(func.count(SkillExecutionLog.id))
+
+    if since:
+        stmt = stmt.where(SkillExecutionLog.queued_at >= since)
+        count_stmt = count_stmt.where(SkillExecutionLog.queued_at >= since)
 
     if not user.is_admin:
         stmt = stmt.where(SkillExecutionLog.user_id == user.id)
@@ -87,10 +94,15 @@ async def list_ai_call_logs(
     user_id: str | None = Query(None),
     team_id: str | None = Query(None),
     project_id: str | None = Query(None),
+    since: datetime | None = Query(None, description="ISO datetime lower bound for created_at"),
 ):
     """Query AI call logs. Admins can see all users' logs."""
     stmt = select(AICallLog).order_by(desc(AICallLog.created_at))
     count_stmt = select(func.count(AICallLog.id))
+
+    if since:
+        stmt = stmt.where(AICallLog.created_at >= since)
+        count_stmt = count_stmt.where(AICallLog.created_at >= since)
 
     if not user.is_admin:
         stmt = stmt.where(AICallLog.user_id == user.id)
@@ -184,14 +196,23 @@ async def list_tasks(
     limit: int = Query(20, le=100, ge=1),
     offset: int = Query(0, ge=0),
     status: str | None = Query(None),
+    skill_name: str | None = Query(None),
     project_id: str | None = Query(None),
     user_id: str | None = Query(None),
     team_id: str | None = Query(None),
+    since: datetime | None = Query(None, description="ISO datetime lower bound for queued_at"),
 ):
     is_admin = user.is_admin
 
     stmt = select(SkillExecutionLog)
     count_stmt = select(func.count(SkillExecutionLog.id))
+
+    if since:
+        stmt = stmt.where(SkillExecutionLog.queued_at >= since)
+        count_stmt = count_stmt.where(SkillExecutionLog.queued_at >= since)
+    if skill_name:
+        stmt = stmt.where(SkillExecutionLog.skill_name == skill_name)
+        count_stmt = count_stmt.where(SkillExecutionLog.skill_name == skill_name)
 
     if not is_admin:
         stmt = stmt.where(SkillExecutionLog.user_id == user.id)

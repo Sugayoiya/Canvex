@@ -10,9 +10,11 @@ import { Plus, Copy, Check, Search } from "lucide-react";
 interface TeamMember {
   id: string;
   user_id: string;
-  email: string;
-  nickname: string;
+  user_email: string | null;
+  user_nickname: string | null;
+  user_avatar: string | null;
   role: string;
+  joined_at: string;
   status?: string;
   group_name?: string;
 }
@@ -252,7 +254,7 @@ export default function TeamDetailPage() {
                     flexShrink: 0,
                   }}
                 >
-                  {(member.nickname || member.email)?.charAt(0)?.toUpperCase() ||
+                  {(member.user_nickname || member.user_email)?.charAt(0)?.toUpperCase() ||
                     "U"}
                 </div>
                 <div>
@@ -263,7 +265,7 @@ export default function TeamDetailPage() {
                       color: "var(--ob-text-primary)",
                     }}
                   >
-                    {member.nickname || "—"}
+                    {member.user_nickname || "—"}
                   </div>
                   <div
                     style={{
@@ -271,7 +273,7 @@ export default function TeamDetailPage() {
                       color: "var(--ob-text-muted)",
                     }}
                   >
-                    {member.email}
+                    {member.user_email || "—"}
                   </div>
                 </div>
               </div>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { AxiosResponse } from "axios";
+import { timeRangeToSince } from "./use-admin-filter-options";
 
 const PAGE_SIZE = 20;
 
@@ -46,21 +47,31 @@ export function useAdminLogTable<T>({
     setPage(0);
   }, [debouncedSearch, filterValues]);
 
+  const resolvedFilters = useMemo(() => {
+    const clean: Record<string, string> = {};
+    for (const [k, v] of Object.entries(filters)) {
+      if (!v) continue;
+      if (k === "time_range") {
+        const since = timeRangeToSince(v);
+        if (since) clean.since = since;
+      } else {
+        clean[k] = v;
+      }
+    }
+    return clean;
+  }, [filters]);
+
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["admin", queryKeyPrefix, page, debouncedSearch, filters],
-    queryFn: () => {
-      const cleanFilters = Object.fromEntries(
-        Object.entries(filters).filter(([, v]) => v !== "")
-      );
-      return fetchFn({
+    queryKey: ["admin", queryKeyPrefix, page, debouncedSearch, resolvedFilters],
+    queryFn: () =>
+      fetchFn({
         limit: PAGE_SIZE,
         offset: page * PAGE_SIZE,
-        ...cleanFilters,
+        ...resolvedFilters,
       }).then((r) => ({
         items: r.data as T[],
         total: parseInt(r.headers["x-total-count"] || "0"),
-      }));
-    },
+      })),
     enabled,
     staleTime: 30_000,
   });

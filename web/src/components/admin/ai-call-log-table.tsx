@@ -12,6 +12,12 @@ import { AdminDataTable } from "@/components/admin/admin-data-table";
 import { AdminPagination } from "@/components/admin/admin-pagination";
 import { FilterToolbar } from "@/components/admin/filter-toolbar";
 import { useAdminLogTable } from "@/components/admin/use-admin-log-table";
+import {
+  TIME_RANGE_OPTIONS,
+  MODEL_OPTIONS,
+  useUserOptions,
+  useTeamOptions,
+} from "@/components/admin/use-admin-filter-options";
 
 interface AiCallLogItem {
   id: string;
@@ -31,6 +37,13 @@ const columnHelper = createColumnHelper<AiCallLogItem>();
 
 export function AiCallLogTable() {
   const [providerFilter, setProviderFilter] = useState("");
+  const [timeRange, setTimeRange] = useState("");
+  const [userFilter, setUserFilter] = useState("");
+  const [teamFilter, setTeamFilter] = useState("");
+  const [modelFilter, setModelFilter] = useState("");
+
+  const userOptions = useUserOptions();
+  const teamOptions = useTeamOptions();
 
   const {
     items,
@@ -46,7 +59,13 @@ export function AiCallLogTable() {
   } = useAdminLogTable<AiCallLogItem>({
     queryKeyPrefix: "ai-calls",
     fetchFn: (params) => adminApi.listAiCallLogs(params),
-    filters: { provider: providerFilter },
+    filters: {
+      provider: providerFilter,
+      model: modelFilter,
+      time_range: timeRange,
+      user_id: userFilter,
+      team_id: teamFilter,
+    },
   });
 
   const columns = useMemo(
@@ -195,6 +214,11 @@ export function AiCallLogTable() {
         searchPlaceholder="Search by model or provider..."
         filters={[
           {
+            value: timeRange,
+            onChange: setTimeRange,
+            options: TIME_RANGE_OPTIONS,
+          },
+          {
             value: providerFilter,
             onChange: setProviderFilter,
             options: [
@@ -203,6 +227,21 @@ export function AiCallLogTable() {
               { value: "openai", label: "OpenAI" },
               { value: "deepseek", label: "DeepSeek" },
             ],
+          },
+          {
+            value: modelFilter,
+            onChange: setModelFilter,
+            options: MODEL_OPTIONS,
+          },
+          {
+            value: userFilter,
+            onChange: setUserFilter,
+            options: userOptions,
+          },
+          {
+            value: teamFilter,
+            onChange: setTeamFilter,
+            options: teamOptions,
           },
         ]}
       />

@@ -13,6 +13,12 @@ import { AdminPagination } from "@/components/admin/admin-pagination";
 import { FilterToolbar } from "@/components/admin/filter-toolbar";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { useAdminLogTable } from "@/components/admin/use-admin-log-table";
+import {
+  TIME_RANGE_OPTIONS,
+  SKILL_NAME_OPTIONS,
+  useUserOptions,
+  useTeamOptions,
+} from "@/components/admin/use-admin-filter-options";
 
 interface SkillLogItem {
   id: string;
@@ -33,6 +39,13 @@ const columnHelper = createColumnHelper<SkillLogItem>();
 
 export function SkillLogTable() {
   const [statusFilter, setStatusFilter] = useState("");
+  const [timeRange, setTimeRange] = useState("");
+  const [userFilter, setUserFilter] = useState("");
+  const [teamFilter, setTeamFilter] = useState("");
+  const [skillFilter, setSkillFilter] = useState("");
+
+  const userOptions = useUserOptions();
+  const teamOptions = useTeamOptions();
 
   const {
     items,
@@ -48,7 +61,13 @@ export function SkillLogTable() {
   } = useAdminLogTable<SkillLogItem>({
     queryKeyPrefix: "skills",
     fetchFn: (params) => adminApi.listSkillLogs(params),
-    filters: { status: statusFilter },
+    filters: {
+      status: statusFilter,
+      time_range: timeRange,
+      user_id: userFilter,
+      team_id: teamFilter,
+      skill_name: skillFilter,
+    },
   });
 
   const columns = useMemo(
@@ -193,6 +212,11 @@ export function SkillLogTable() {
         searchPlaceholder="Search by skill name or user..."
         filters={[
           {
+            value: timeRange,
+            onChange: setTimeRange,
+            options: TIME_RANGE_OPTIONS,
+          },
+          {
             value: statusFilter,
             onChange: setStatusFilter,
             options: [
@@ -201,6 +225,21 @@ export function SkillLogTable() {
               { value: "failed", label: "Failed" },
               { value: "timeout", label: "Timeout" },
             ],
+          },
+          {
+            value: skillFilter,
+            onChange: setSkillFilter,
+            options: SKILL_NAME_OPTIONS,
+          },
+          {
+            value: userFilter,
+            onChange: setUserFilter,
+            options: userOptions,
+          },
+          {
+            value: teamFilter,
+            onChange: setTeamFilter,
+            options: teamOptions,
           },
         ]}
       />

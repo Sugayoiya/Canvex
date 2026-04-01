@@ -336,8 +336,10 @@ export const adminApi = {
     limit?: number;
     offset?: number;
     status?: string;
+    skill_name?: string;
     user_id?: string;
     team_id?: string;
+    since?: string;
   }) => api.get("/logs/tasks", { params }),
   listSkillLogs: (params?: {
     limit?: number;
@@ -346,6 +348,7 @@ export const adminApi = {
     status?: string;
     user_id?: string;
     team_id?: string;
+    since?: string;
   }) => api.get("/logs/skills", { params }),
   listAiCallLogs: (params?: {
     limit?: number;
@@ -354,6 +357,7 @@ export const adminApi = {
     model?: string;
     user_id?: string;
     team_id?: string;
+    since?: string;
   }) => api.get("/logs/ai-calls", { params }),
   getAiCallStats: (params?: { user_id?: string; team_id?: string }) =>
     api.get("/logs/ai-calls/stats", { params }),
