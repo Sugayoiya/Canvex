@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { User, Users, CircleCheck, Wallet, Activity, AlertTriangle, RefreshCw } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { adminApi } from "@/lib/api";
@@ -28,6 +29,12 @@ interface DashboardData {
 
 type WindowKey = "h24" | "d7" | "d30";
 
+interface AlertsData {
+  quota_warning_users: number;
+  failed_tasks_24h: number;
+  error_providers: number;
+}
+
 const WINDOW_LABELS: Record<WindowKey, string> = {
   h24: "24h",
   d7: "7d",
@@ -49,6 +56,8 @@ function KpiCard({
   description,
   badgeVariant = "default",
   isLoading,
+  onClick,
+  alertBadge,
 }: {
   label: string;
   icon: LucideIcon;
@@ -57,7 +66,11 @@ function KpiCard({
   description: string;
   badgeVariant?: "default" | "primary" | "success" | "warning";
   isLoading?: boolean;
+  onClick?: () => void;
+  alertBadge?: string | null;
 }) {
+  const [hovered, setHovered] = useState(false);
+
   const badgeColors: Record<string, { bg: string; text: string; border: string }> = {
     default: { bg: "var(--cv4-surface-primary)", text: "var(--cv4-text-muted)", border: "var(--cv4-border-subtle)" },
     primary: { bg: "var(--cv4-surface-primary)", text: "var(--cv4-text-primary)", border: "var(--cv4-border-subtle)" },
@@ -68,15 +81,25 @@ function KpiCard({
 
   return (
     <div
+      onClick={onClick}
+      onKeyDown={(e) => { if (onClick && e.key === "Enter") onClick(); }}
+      role={onClick ? "link" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onMouseEnter={() => onClick && setHovered(true)}
+      onMouseLeave={() => onClick && setHovered(false)}
       style={{
         height: 160,
         padding: 24,
         borderRadius: 12,
         background: "var(--cv4-surface-primary)",
-        border: "1px solid var(--cv4-border-subtle)",
+        border: `1px solid ${hovered ? "rgba(0,209,255,0.3)" : "var(--cv4-border-subtle)"}`,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
+        cursor: onClick ? "pointer" : "default",
+        transition: "all 150ms ease",
+        transform: hovered ? "translateY(-1px)" : "none",
+        outline: "none",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -137,6 +160,23 @@ function KpiCard({
               {badge}
             </span>
           )}
+          {alertBadge && (
+            <span
+              style={{
+                fontFamily: "var(--font-headline)",
+                fontSize: 12,
+                fontWeight: 400,
+                lineHeight: 1.3,
+                padding: "2px 8px",
+                borderRadius: 6,
+                background: "#FFB4AB15",
+                border: "1px solid #FFB4AB30",
+                color: "#FFB4AB",
+              }}
+            >
+              {alertBadge}
+            </span>
+          )}
           <span
             style={{
               fontFamily: "var(--font-body)",
@@ -191,12 +231,20 @@ function WindowToggle({
 
 export default function AdminDashboardPage() {
   const [activeWindow, setActiveWindow] = useState<WindowKey>("h24");
+  const router = useRouter();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["admin", "dashboard"],
     queryFn: () => adminApi.getDashboard().then((r) => r.data as DashboardData),
     refetchInterval: 60_000,
   });
+
+  const alertsQuery = useQuery({
+    queryKey: ["admin", "alerts"],
+    queryFn: () => adminApi.getAlerts().then((r) => r.data as AlertsData),
+    refetchInterval: 60_000,
+  });
+  const alerts = alertsQuery.data;
 
   const win = data?.windows?.[activeWindow];
   const providers = data?.provider_status;
@@ -304,6 +352,9 @@ export default function AdminDashboardPage() {
           description={data ? `${data.total_users} registered accounts` : "Loading..."}
           badgeVariant="success"
           isLoading={isLoading}
+          onClick={() => router.push("/admin/users")}
+          alertBadge={alerts && alerts.quota_warning_users > 0
+            ? `${alerts.quota_warning_users} at quota limit` : null}
         />
         <KpiCard
           label="ACTIVE TEAMS"
@@ -312,6 +363,7 @@ export default function AdminDashboardPage() {
           badge={data ? `${data.total_teams} teams` : null}
           description={data ? `Team collaboration spaces` : "Loading..."}
           isLoading={isLoading}
+          onClick={() => router.push("/admin/teams")}
         />
         <KpiCard
           label="ACTIVE TASKS"
@@ -321,6 +373,9 @@ export default function AdminDashboardPage() {
           description={data ? "Queued or running tasks" : "Loading..."}
           badgeVariant={data && data.active_tasks > 0 ? "warning" : "default"}
           isLoading={isLoading}
+          onClick={() => router.push("/admin/monitoring")}
+          alertBadge={alerts && alerts.failed_tasks_24h > 0
+            ? `${alerts.failed_tasks_24h} failed in 24h` : null}
         />
         <KpiCard
           label="TOTAL COST"
@@ -330,6 +385,7 @@ export default function AdminDashboardPage() {
           description={data ? "All-time AI usage cost" : "Loading..."}
           badgeVariant="primary"
           isLoading={isLoading}
+          onClick={() => router.push("/admin/monitoring")}
         />
       </div>
 
