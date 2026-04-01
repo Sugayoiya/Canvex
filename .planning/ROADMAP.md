@@ -76,10 +76,10 @@ Plans:
 **Depends on**: Phase 08
 **UI hint**: yes
 **Requirements:** [REQ-21, REQ-22, REQ-23]
-**Plans:** 4 plans
+**Plans:** 1/4 plans executed
 
 Plans:
-- [ ] 10-01-PLAN.md — [W1] Backend gaps (key_hint + null-safe fallback, key list non-sensitive response) + billingApi extension + TabBar + ProgressBar
+- [x] 10-01-PLAN.md — [W1] Backend gaps (key_hint + null-safe fallback, key list non-sensitive response) + billingApi extension + TabBar + ProgressBar
 - [ ] 10-02-PLAN.md — [W2] Quota Management page (dual tabs, search, expandable row editing, ProgressBar, mutation race guards)
 - [ ] 10-03-PLAN.md — [W2] Pricing Management page (TanStack Table, create/edit modal, status toggle, string price precision, field cleanup)
 - [ ] 10-04-PLAN.md — [W2] Provider Management page (card list, key security hygiene, mutation guards, dependency warning)
