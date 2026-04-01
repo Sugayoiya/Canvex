@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.expression import nullslast
 
 from app.core.deps import get_current_user, get_db, require_admin
+from app.models.team import Team, TeamMember
 from app.models.user import User
 from app.schemas.admin import (
     AdminUserListItem,
@@ -74,11 +75,34 @@ async def list_users(
     total = (await db.execute(count_base)).scalar() or 0
     rows = (await db.execute(base.order_by(order_expr).offset(offset).limit(limit))).scalars().all()
 
+    user_ids = [u.id for u in rows]
+    team_map: dict[str, list[str]] = {}
+    if user_ids:
+        tm_stmt = (
+            select(TeamMember.user_id, Team.name)
+            .join(Team, TeamMember.team_id == Team.id)
+            .where(TeamMember.user_id.in_(user_ids), Team.is_deleted == False)  # noqa: E712
+        )
+        tm_rows = (await db.execute(tm_stmt)).all()
+        for uid, tname in tm_rows:
+            team_map.setdefault(uid, []).append(tname)
+
+    admin_count_val = (await db.execute(
+        select(func.count(User.id)).where(User.is_admin == True, User.status == "active")  # noqa: E712
+    )).scalar() or 0
+
+    items = []
+    for u in rows:
+        item = AdminUserListItem.model_validate(u)
+        item.teams = team_map.get(u.id, [])
+        items.append(item)
+
     return AdminUserListResponse(
-        items=[AdminUserListItem.model_validate(u) for u in rows],
+        items=items,
         total=total,
         limit=limit,
         offset=offset,
+        admin_count=admin_count_val,
     )
 
 

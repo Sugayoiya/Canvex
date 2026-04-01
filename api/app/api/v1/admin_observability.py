@@ -38,6 +38,18 @@ async def list_teams(
         .scalar_subquery()
     )
 
+    owner_sub = (
+        select(User.nickname)
+        .join(TeamMember, TeamMember.user_id == User.id)
+        .where(
+            TeamMember.team_id == Team.id,
+            TeamMember.role.in_(["team_admin", "owner"]),
+        )
+        .correlate(Team)
+        .limit(1)
+        .scalar_subquery()
+    )
+
     base_filter = Team.is_deleted == False  # noqa: E712
     if q:
         base_filter = base_filter & Team.name.ilike(f"%{q}%")
@@ -52,6 +64,7 @@ async def list_teams(
             Team.description,
             Team.created_at,
             member_count_sub.label("member_count"),
+            owner_sub.label("owner_name"),
         )
         .where(base_filter)
         .order_by(Team.created_at.desc())
@@ -67,6 +80,7 @@ async def list_teams(
             description=r.description,
             created_at=r.created_at,
             member_count=r.member_count or 0,
+            owner_name=r.owner_name,
         )
         for r in rows
     ]

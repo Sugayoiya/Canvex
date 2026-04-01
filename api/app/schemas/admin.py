@@ -45,6 +45,7 @@ class AdminUserListItem(BaseModel):
     avatar: str | None = None
     status: str
     is_admin: bool
+    teams: list[str] = []
     last_login_at: datetime | None = None
     created_at: datetime
 
@@ -56,6 +57,7 @@ class AdminUserListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+    admin_count: int
 
 
 class AdminUserStatusUpdate(BaseModel):
@@ -72,6 +74,7 @@ class AdminTeamListItem(BaseModel):
     description: str | None = None
     created_at: datetime
     member_count: int
+    owner_name: str | None = None
 
     model_config = {"from_attributes": True}
 

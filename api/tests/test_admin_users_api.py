@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_db, get_current_user
 from app.main import app
 from app.models.admin_audit_log import AdminAuditLog
+from app.models.team import Team, TeamMember
 from app.models.user import User
 
 
@@ -241,3 +242,36 @@ async def test_admin_users_sort_last_login_null_handling(admin_client):
     if null_positions and non_null:
         assert all(pos >= len(non_null) for pos in null_positions), \
             "NULL last_login_at values should appear at end with nullslast"
+
+
+# ── Test 7: teams field and admin_count in list response ─────────────
+
+@pytest.mark.asyncio
+async def test_admin_users_list_includes_teams_and_admin_count(admin_client):
+    client, admin, db = admin_client
+
+    user = await _seed_user(db, email="team-member@test.com", nickname="TeamUser")
+    team = Team(id=str(uuid.uuid4()), name="TestTeam-Alpha")
+    db.add(team)
+    await db.flush()
+
+    member = TeamMember(
+        id=str(uuid.uuid4()),
+        team_id=team.id,
+        user_id=user.id,
+        role="member",
+    )
+    db.add(member)
+    await db.flush()
+
+    resp = await client.get("/api/v1/admin/users")
+    assert resp.status_code == 200
+    data = resp.json()
+
+    assert "admin_count" in data
+    assert data["admin_count"] >= 1
+
+    matched = [item for item in data["items"] if item["id"] == user.id]
+    assert len(matched) == 1
+    assert "teams" in matched[0]
+    assert "TestTeam-Alpha" in matched[0]["teams"]

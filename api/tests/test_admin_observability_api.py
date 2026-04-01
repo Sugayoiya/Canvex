@@ -336,3 +336,23 @@ async def test_admin_dashboard_provider_status_system_only(admin_client):
     ps = resp.json()["provider_status"]
     assert ps["enabled_count"] >= 2
     assert ps["disabled_count"] >= 1
+
+
+# ── 11. /admin/teams includes owner_name ─────────────────────────────
+
+@pytest.mark.asyncio
+async def test_admin_teams_list_includes_owner_name(admin_client):
+    client, db = admin_client
+
+    owner = await _seed_user(db, email="team-owner@test.com")
+    team = await _seed_team(db, name="OwnerTestTeam")
+    await _seed_team_member(db, team_id=team.id, user_id=owner.id, role="team_admin")
+
+    resp = await client.get("/api/v1/admin/teams", params={"q": "OwnerTestTeam"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] >= 1
+
+    matched = [item for item in data["items"] if item["name"] == "OwnerTestTeam"]
+    assert len(matched) == 1
+    assert matched[0]["owner_name"] == owner.nickname
