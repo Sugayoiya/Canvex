@@ -232,7 +232,13 @@ export const billingApi = {
     granularity?: string;
     project_id?: string;
   }) => api.get("/billing/usage-timeseries/", { params }),
-  pricing: () => api.get("/billing/pricing/"),
+  pricing: (params?: { active_only?: boolean }) =>
+    api.get("/billing/pricing/", { params }),
+  createPricing: (data: Record<string, unknown>) =>
+    api.post("/billing/pricing/", data),
+  updatePricing: (id: string, data: Record<string, unknown>) =>
+    api.patch(`/billing/pricing/${id}`, data),
+  deletePricing: (id: string) => api.delete(`/billing/pricing/${id}`),
 };
 
 export const teamsApi = {
