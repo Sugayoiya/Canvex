@@ -2,182 +2,50 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: Admin Console
-status: verifying
-stopped_at: Completed 11-04-PLAN.md Task 1; Task 2 checkpoint awaiting human-verify
-last_updated: "2026-04-01T15:33:44.168Z"
-last_activity: 2026-04-01
+status: completed
+stopped_at: null
+last_updated: "2026-04-02"
+last_activity: 2026-04-02
 progress:
   total_phases: 5
   completed_phases: 5
   total_plans: 17
   completed_plans: 17
-  percent: 0
+  percent: 100
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-31)
+See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 11 — monitoring-dashboard-polish
+**Current focus:** Milestone v2.1 complete — planning next milestone
 
 ## Current Position
 
-Phase: 11 (monitoring-dashboard-polish) — EXECUTING
-Plan: 4 of 4
-Status: Phase complete — ready for verification
-Last activity: 2026-04-01
+Milestone v2.1 Admin Console — COMPLETED 2026-04-02
+All 5 phases, 17 plans shipped.
 
-Progress: [░░░░░░░░░░] 0%
-
-## Performance Metrics
-
-**Velocity:**
-
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: —
+Progress: [████████████████████] 100%
 
 ## Accumulated Context
 
 ### Decisions
 
-- [Phase 1]: architecture foundation accepted as complete baseline.
-- [Audit Init]: use GSD artifacts to enable cross-phase standardized audits.
-- [Phase 02-02]: Dropped CanvasTemplate/CanvasVersion — deferred to later phases
-- [Phase 02]: Env-only credential lookup for Phase 02 providers (no DB, no throttling)
-- [Phase 02]: Trimmed model whitelists to essential models per provider (3/3/2)
-- [Phase 02]: VISUAL skills use sync mode for prompt gen, async_celery for image gen
-- [Phase 02]: Hardcoded prompts in skills (no PromptTemplateService) — keeps skills self-contained
-- [Phase 02]: Shared json_parser utility for robust LLM JSON parsing across all extract skills
-- [Phase 02]: Partial degradation pattern: return valid items + warnings instead of full failure
-- [Phase 02-06]: Price snapshot captured at write time for cost audit trail
-- [Phase 02-06]: Pricing lookup failure is fail-open — AICallLog write always succeeds
-- [Phase 02-06]: Usage stats scoped: admin sees all, non-admin sees own calls only
-- [Phase 02-05]: useParams hook for client-side canvas param extraction in Next.js 16
-- [Phase 02-05]: Placeholder node components — real skill-connected nodes deferred to 02-08
-- [Phase 02]: Hardcoded prompts in SCRIPT/STORYBOARD skills (no PromptTemplateService) — keeps skills self-contained
-- [Phase 02]: Pydantic strict validators for all structured LLM outputs with partial degradation
-- [Phase 02]: Added lucide-react for node icons — no prior icon library in Canvex
-- [Phase 02]: 7-state node execution machine: idle/queued/running/completed/failed/timeout/blocked
-- [Phase 02]: Idempotency key pattern: nodeId_timestamp for duplicate execution prevention
-- [Phase 02]: Register skills in conftest module-level for test-time availability
-- [Phase 02]: 39-test acceptance gate validates all Phase 02 deliverables end-to-end
-- [Phase 03]: pydantic-ai-slim with openai+google+xai extras for multi-provider agent
-- [Phase 03]: Two-level session scope: project_id (always) + canvas_id (optional) for project vs canvas agent context
-- [Phase 03]: SSE event envelope with optional request_id for frontend reconnect dedup
-- [Phase 03]: No persist on chat store — session-scoped, not localStorage
-- [Phase 03]: SSE hook uses fetchEventSource with throw-on-error (no auto-retry) + openWhenHidden
-- [Phase 03]: Adapted to actual PydanticAI AbstractToolset API (get_tools/call_tool with RunContext+ToolsetTool)
-- [Phase 03]: Category__skill double-underscore namespacing for collision-free tool names in SkillToolset
-- [Phase 03]: Explicit API key resolution from settings — never PydanticAI auto-env (openai/gemini/deepseek)
-- [Phase 03]: PydanticAI agent.iter() graph API for SSE chat — per-node visibility into tool calls
-- [Phase 03]: Pipeline tool returns structured JSON (completed/partial/cancelled) for resilient step chaining
-- [Phase 03]: Responsive sidebar via window resize listener + JS-controlled canvas margin (not CSS media queries)
-- [Phase 03]: Chat UI: 6 custom TailwindCSS components (no shadcn) with full accessibility and reduced-motion support
-- [Phase 03.1-03]: Module-level _loadRequestId counter for stale-response guard (not in store interface)
-- [Phase 03.1-03]: sendMessage closure with [] deps confirmed correct — getState() pattern
-- [Phase 03.1]: Lazy model imports with try/except for models not yet in Canvex (Character/Scene/Episode/Script)
-- [Phase 03.1]: Context tools return JSON error strings instead of raising exceptions for agent-friendly error surfacing
-- [Phase 03.1]: Stable edge ordering via localeCompare on source node ID for deterministic upstream aggregation
-- [Phase 03.1]: fetch with keepalive+PATCH+auth instead of sendBeacon for beforeunload flush (sendBeacon incompatible with PATCH)
-- [Phase 03.1]: isSavingRef/needsSaveRef write serialization — at most one PATCH in-flight per node
-- [Phase 03.1]: Hook order: useReactFlow → useUpstreamData → useNodePersistence → handleExecutionComplete → useNodeExecution (TDZ safety)
-- [Phase 03.1]: Execution writeback via canvasApi with .catch graceful degradation — local-first state, best-effort backend sync
-- [Phase 04]: Provider auto-select iterates [gemini, openai, deepseek] priority order
-- [Phase 04]: Video skill uses media_processing Celery queue (not ai_generation)
-- [Phase 04]: Fail-closed quota enforcement: check_quota returns allowed=False on any exception including DB errors
-- [Phase 04]: Idempotent usage tracking by unique QuotaUsageLog.skill_execution_id — Celery retries safe
-- [Phase 04]: Lazy month/day counter reset on access — no cron dependency for quota resets
-- [Phase 04]: 4 material types only (text/image/video/audio) — no legacy type backward compat in connection rules
-- [Phase 04]: CSS custom properties under --cv4-* namespace for canvas theming
-- [Phase 04]: toFlowNode extracts config.text/config.prompt into data top-level for direct access
-- [Phase 04]: nodeTypes has exactly 4 keys — no legacy type backward compat (per user decision)
-- [Phase 04]: Audio node is placeholder-only with hasContent=false; real audio deferred
-- [Phase 04]: Focus state in Zustand store; panel type/direction derived in useNodeFocus hook
-- [Phase 04]: CSS transitions over CSS keyframes for panel enter/exit — React state-driven animation control
-- [Phase 04]: Template chip click visual-only for MVP — actual template application deferred to Plan 07
-- [Phase 04]: canvas_assets router registered before canvas router for correct prefix matching
-- [Phase 04]: AssetPanel uses open/onClose props (store-based projectId) — adapted integration to match actual component API
-- [Phase 04]: Incremental 8-edit workspace integration preserved original InnerWorkspace structure
-- [Phase 05]: V5 external node label at top:-24 with pointer-events-none and overflow:visible
-- [Phase 05]: Type-specific panel routing: image-toolbar/video-toolbar/audio-toolbar replace template-menu
-- [Phase 05]: MediaToolbarPlaceholder shared for all 3 media types until Plan 03
-- [Phase 05]: DB-backed BatchExecution model replaces in-memory store for restart survivability
-- [Phase 05]: Dual SQLite/PG date grouping pattern for time-series billing
-- [Phase 05]: Shallow-equality ref guard for useOnSelectionChange — avoids infinite re-render loops
-- [Phase 05]: Exponential backoff (3s-30s cap) on batch poll errors — prevents server hammering
-- [Phase 05]: All ImageToolbar template skills disabled with opacity 0.4 + 即将上线 tooltip until skill registry wired
-- [Phase 05]: WaveSurfer loaded via next/dynamic with ssr:false — prevents hydration mismatch from AudioContext/Canvas
-- [Phase 05]: AudioNode memo() wrapper matching other node component patterns for re-render optimization
-- [Phase 05]: UTC date normalization via toUTCDateString() for all billing API params — prevents timezone boundary aggregation bugs
-- [Phase 05]: Deterministic index-based fallback color palette for unknown providers — no code changes needed when new providers added
-- [Phase 05]: ProjectUsageView as separate component with independent queries — cleaner separation of global vs project billing views
-- [Phase 06]: Obsidian Lens --ob-* tokens coexist with --cv4-* Phase 04 tokens; Space Grotesk+Manrope replace Geist
-- [Phase 06]: AuthGuard inside QueryClientProvider; SpaceContext discriminated union for personal/team switching
-- [Phase 06]: TeamMember default role migrated from editor to member with legacy backward compat
-- [Phase 06]: resolve_project_access: team_admin bypasses group check, members need group editor+ for writes
-- [Phase 06]: Suspense boundary wrapping LoginContent for useSearchParams SSR safety in Next.js 16
-- [Phase 06]: Inline styles with CSS custom properties (--ob-*) matching Obsidian Lens spec for design fidelity
-- [Phase 06]: OAuth callback via URL params with history.replaceState cleanup
-- [Phase 06]: OAuth state uses JWT-signed nonce with 10min expiry for CSRF protection
-- [Phase 06]: GitHub email fallback to /user/emails API for null primary emails
-- [Phase 06]: Group member add validates team membership first; last team_admin guard prevents removing sole admin
-- [Phase 06]: Fernet key derived from SHA-256 of SECRET_KEY; sync get_provider_sync preserved for backward compat; env fallback in credential chain
-- [Phase 06]: ProjectClone copies canvases+nodes+edges with UUID remapping; AI Provider ownership verified via _verify_config_ownership; TeamMemberQuota shares _lazy_reset pattern
-- [Phase 06]: Inline styles with --ob-* tokens for management pages; invite page standalone without AppShell
-- [Phase 07]: Append-only AdminAuditLog model: no update/delete, write-only via service
-- [Phase 07]: JSON string storage for audit changes with Pydantic field_validator deserialize on read
-- [Phase 07]: nullslast() for cross-DB NULL sort consistency on last_login_at
-- [Phase 07]: Audit log emitted before HTTPException on rejection paths for reliable audit trail
-- [Phase 07]: AI provider audit scoped to system-type only (team/personal not admin operations)
-- [Phase 07]: set_committed_value for async-safe relationship init in create_provider
-- [Phase 07]: CASE WHEN conditional aggregation for 24h/7d/30d dashboard windows (SQLite+PG portable)
-- [Phase 07]: Dashboard provider_status counts system-scope AIProviderConfig only
-- [Phase 08]: Independent AdminShell (not extending AppShell) for complete admin visual isolation per D-01
-- [Phase 08]: Dashboard exact-match route to avoid always-active nav highlight per Pitfall 4
-- [Phase 08]: Sonner Toaster with --cv4-* themed styles mounted at admin layout level
-- [Phase 09]: Python-side dict.setdefault team aggregation for SQLite/PG portability
-- [Phase 09]: Correlated subquery for owner_name — acceptable at admin-scale team counts
-- [Phase 09]: No debounce in FilterToolbar — consuming page handles debounce
-- [Phase 09]: No row actions or drill-down links on teams table per D-04 — deferred to REQ-F03
-- [Phase 09]: MODAL_COPY const object map for 4 action types — avoids switch sprawl in modal rendering
-- [Phase 10]: Removed error_count from ProviderKeyResponse — minimize exposed key metadata per security review
-- [Phase 10]: Null-safe getattr for key_hint on legacy keys — avoids migration backfill
-- [Phase 10]: Pricing DELETE kept as soft-deactivate per cross-AI review auditability concern
-- [Phase 10]: Price values sent as strings to preserve backend Decimal precision
-- [Phase 10]: No delete action in pricing row dropdown — DELETE is soft-deactivate per review [HIGH]
-- [Phase 10]: Dynamic PRICING_FIELDS mapping with useEffect cleanup on pricing_model switch
-- [Phase 10]: Toggle group pattern for Enabled/Disabled using role=radiogroup for accessibility
-- [Phase 10]: anyPending boolean gates all interactive elements during provider mutations
-- [Phase 10]: quotaApi types accept null for unlimited; saveMutation.isPending gates all UI interactions; lazy quota fetch on row expand
-- [Phase 11]: Composite index on SkillExecutionLog(status, queued_at) for alerts+filter count query performance
-- [Phase 11]: AdminErrorBoundary uses setState remount strategy with post-reset onReset callback for query invalidation
-- [Phase 11]: Silent fail for alerts query — badges omitted on API error, no user-visible error shown
-- [Phase 11]: Shared useAdminLogTable hook eliminates table logic duplication across 3 log tabs
-- [Phase 11]: Lazy mount via && conditional rendering for tab content — only active tab fetches data
-- [Phase 11]: Providers page early returns consolidated to single return for AdminErrorBoundary wrapper
-- [Phase 11]: Admin page header always outside AdminErrorBoundary for visibility during errors
+(Cleared at milestone boundary — see .planning/milestones/v2.1-ROADMAP.md for full history)
 
 ### Pending Todos
 
-- [x] /gsd-plan-phase 03 — 5 plans created, checker verified
-- [ ] /gsd-execute-phase 03 — execute all 5 plans in 4 waves
-
-### Roadmap Evolution
-
-- Phase 03.1 inserted after Phase 03: Agent Chat + Canvas Quality Fix (URGENT)
+(None)
 
 ### Blockers/Concerns
 
-- D8 前置任务：Phase 03 执行前需先迁移原项目 prompt_seeds（97 prompt + 31 schema）到 SKILL.md 格式
-- Phase 2+ verification and UAT artifacts are not yet executed.
-- Phase 03 功能质量不达标：Agent Chat 缺 pipeline 工具/上下文注入/历史加载；Canvas 缺链式输入/持久化/执行编排
+(None — milestone complete)
 
 ## Session Continuity
 
-Last session: 2026-04-01T15:33:44.166Z
-Stopped at: Completed 11-04-PLAN.md Task 1; Task 2 checkpoint awaiting human-verify
+Last session: 2026-04-02
+Stopped at: Milestone v2.1 archived
 Resume file: None

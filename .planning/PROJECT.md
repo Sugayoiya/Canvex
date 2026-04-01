@@ -2,23 +2,17 @@
 
 ## What This Is
 
-Canvas Studio is an AI-assisted short-film creation workbench with Skill-based execution, Celery async orchestration, agent-driven canvas workflows, multi-tenant collaboration, and Obsidian Lens UI. The platform supports teams, groups, AI provider management, billing, and quota controls.
+Canvas Studio is an AI-assisted short-film creation workbench with Skill-based execution, Celery async orchestration, agent-driven canvas workflows, multi-tenant collaboration, admin console, and Obsidian Lens UI. The platform supports teams, groups, AI provider management, billing, quota controls, and full admin monitoring/management capabilities.
 
 ## Core Value
 
 A single, reliable Skill execution backbone that both canvas nodes and AI agents can use consistently.
 
-## Current Milestone: v2.1 Admin Console
+## Current State
 
-**Goal:** 为系统管理员提供统一的管理控制台，覆盖用户、配额、定价、Provider、监控和团队的全面管理能力。
+Shipped v2.1 Admin Console (2026-04-02). The platform now has a production-grade admin console covering user management, quota/pricing/provider configuration, and cross-user monitoring with actionable dashboards.
 
-**Target features:**
-- 用户管理 — 用户列表/搜索、禁用/启用、管理员提权/撤权
-- 配额管理 — 查看/设置用户和团队配额上限（对接已有后端 API）
-- 定价管理 — 模型定价 CRUD（对接已有后端 API）
-- 系统级 AI Provider 管理 — 与普通用户 AI Console 权限隔离
-- 全站监控 — 任务日志、AI 调用日志、计费统计的管理员全局视图
-- 团队概览 — 全站团队列表与成员情况一览
+**Next focus:** Agent system upgrade — QueryEngine, ArtifactStore, SkillDescriptor enhancements.
 
 ## Requirements
 
@@ -31,45 +25,55 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ v2.0 Phase 4 media/slash skills + quota controls
 - ✓ v2.0 Phase 5 canvas/video experience + billing dashboard
 - ✓ v2.0 Phase 6 collaboration + OAuth + Obsidian Lens UI
-- ✓ v2.1 Phase 7 admin API foundation — audit model, user management, log scope lifts, dashboard
-- ✓ v2.1 Phase 8 admin frontend shell — layout, sidebar, routing, dashboard page
-- ✓ v2.1 Phase 9 user & team management UI — Users table (ban/enable, admin grant/revoke, search/filter/sort) + Teams read-only directory
+- ✓ v2.1 Phase 7 admin API foundation — audit model, user management, log scope lifts, dashboard stats
+- ✓ v2.1 Phase 8 admin frontend shell — AdminGuard, layout, sidebar, routing, Sonner toast
+- ✓ v2.1 Phase 9 user & team management UI — TanStack Table user directory + Teams overview
+- ✓ v2.1 Phase 10 quota/pricing/provider management — dual-tab quota editor, pricing CRUD, provider key management
+- ✓ v2.1 Phase 11 monitoring dashboard & polish — KPI cards, 4-tab logs, AdminErrorBoundary on all pages
 
 ### Active
 
-- [ ] Admin Console Frontend — quota/pricing/provider/monitoring UI (Phases 10–11)
+(To be defined in next milestone)
 
 ### Out of Scope
 
 - Legacy monolith service extension — replaced by skillized architecture.
 - Full production SLA hardening — deferred beyond admin console.
-- Mobile app — web-first admin experience.
+- Mobile app — web-first experience.
+- Fine-grained admin RBAC (super-admin/billing-admin) — `is_admin` boolean sufficient at current scale.
+- Login-as-user impersonation — high security/audit risk without enterprise-grade isolation.
+- SCIM/LDAP provisioning — no enterprise customer demand yet.
 
 ## Context
 
-- Backend: FastAPI + SQLAlchemy async + Celery + Redis + PostgreSQL/SQLite.
-- Frontend: Next.js 16 App Router + React 19 + Zustand + Axios.
+- Backend: FastAPI + SQLAlchemy async + Celery + Redis + PostgreSQL/SQLite. ~11.5K LOC Python.
+- Frontend: Next.js 16 App Router + React 19 + Zustand + Axios + TanStack Table + Sonner. ~92K LOC TypeScript.
 - UI: Obsidian Lens design system (--ob-* tokens, Space Grotesk + Manrope).
 - Auth: JWT HS256 + Google/GitHub OAuth, `User.is_admin` boolean for system admin.
-- Existing admin backend: `require_admin` guard, quota CRUD API, pricing CRUD API, system-level AI Provider config.
-- Admin frontend: shell + dashboard (Phase 08), user management + team overview (Phase 09) complete. Quota/pricing/provider/monitoring UI pending (Phases 10–11).
-- Admin backend: complete — user management, audit trail, dashboard, log scope lifts, team overview API (Phase 07).
+- Admin console: 7 pages (Dashboard, Users, Teams, Quotas, Pricing, Providers, Monitoring) with AdminErrorBoundary, loading skeletons, empty states.
+- Admin backend: user management, audit trail (append-only AdminAuditLog), dashboard KPIs, log scope lifts, team overview.
+- Agent system: PydanticAI + SkillToolset + context_tools + pipeline_tools + SSE chat sidebar.
 
 ## Constraints
 
 - **Architecture**: SkillRegistry + Celery remains the core invocation path.
-- **UI consistency**: Admin pages must use Obsidian Lens design system (--ob-* tokens).
-- **Permission isolation**: Admin routes must be `require_admin`-guarded; frontend must hide/block admin UI for non-admins.
-- **Backward compatibility**: Existing team/personal AI Console must continue working independently.
+- **UI consistency**: All pages must use Obsidian Lens design system (--ob-* tokens).
+- **Permission isolation**: Admin routes `require_admin`-guarded; frontend hides admin UI for non-admins.
+- **Backward compatibility**: Existing team/personal AI Console continues working independently.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Use GSD planning artifacts for audit baseline | Enables standardized cross-phase auditing and verification | ✓ Good |
-| Treat current status as Phase 1 complete, Phase 2+ pending | Matches repository state and stated progress | ✓ Good |
 | Obsidian Lens as unified design system | Consistent visual identity across all pages | ✓ Good |
 | User.is_admin boolean for system admin | Simple, sufficient for current scale | ✓ Good |
+| Append-only AdminAuditLog model | Immutable audit trail, no update/delete | ✓ Good |
+| Independent AdminShell (not extending AppShell) | Complete admin visual isolation | ✓ Good |
+| TanStack Table for admin data tables | Server-side sort/filter/pagination with rich interactions | ✓ Good |
+| Pricing DELETE as soft-deactivate | Preserves audit trail and historical data | ✓ Good |
+| Fail-silent alerts query on dashboard | Badges omitted on API error, no user-visible error | ✓ Good |
+| AdminErrorBoundary with setState remount | Clean error recovery with query invalidation | ✓ Good |
+| Shared useAdminLogTable hook | Eliminates duplication across 3 log tab components | ✓ Good |
 
 ## Evolution
 
@@ -89,4 +93,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-01 — Phase 10 Quota & Pricing & Provider Management UI complete*
+*Last updated: 2026-04-02 after v2.1 milestone*
