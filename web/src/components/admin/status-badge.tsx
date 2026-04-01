@@ -1,19 +1,36 @@
 "use client";
 
 interface StatusBadgeProps {
-  status: "active" | "banned";
+  status:
+    | "active"
+    | "banned"
+    | "running"
+    | "completed"
+    | "failed"
+    | "timeout"
+    | "queued"
+    | "success";
 }
 
-const VARIANTS = {
-  active: { bg: "#4CAF5020", color: "var(--ob-success)" },
-  banned: { bg: "#FFB4AB20", color: "var(--ob-error)" },
-} as const;
+const VARIANTS: Record<
+  StatusBadgeProps["status"],
+  { bg: string; color: string; label: string }
+> = {
+  active: { bg: "#4CAF5020", color: "var(--ob-success)", label: "Active" },
+  banned: { bg: "#FFB4AB20", color: "var(--ob-error)", label: "Banned" },
+  running: { bg: "#007AFF20", color: "#007AFF", label: "Running" },
+  completed: { bg: "#4CAF5020", color: "var(--ob-success)", label: "Completed" },
+  failed: { bg: "#FFB4AB20", color: "var(--ob-error)", label: "Failed" },
+  timeout: { bg: "#FF950020", color: "#FF9500", label: "Timeout" },
+  queued: { bg: "#8E8E9320", color: "#8E8E93", label: "Queued" },
+  success: { bg: "#4CAF5020", color: "var(--ob-success)", label: "Success" },
+};
 
 export function StatusBadge({ status }: StatusBadgeProps) {
   const v = VARIANTS[status];
   return (
     <span
-      aria-label={`Status: ${status === "active" ? "Active" : "Banned"}`}
+      aria-label={`Status: ${v.label}`}
       style={{
         display: "inline-flex",
         alignItems: "center",
@@ -29,7 +46,7 @@ export function StatusBadge({ status }: StatusBadgeProps) {
         whiteSpace: "nowrap",
       }}
     >
-      {status === "active" ? "Active" : "Banned"}
+      {v.label}
     </span>
   );
 }

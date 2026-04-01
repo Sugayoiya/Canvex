@@ -331,6 +331,33 @@ export const adminApi = {
   listTeams: (params?: { q?: string; limit?: number; offset?: number }) =>
     api.get("/admin/teams", { params }),
   getDashboard: () => api.get("/admin/dashboard"),
+  getAlerts: () => api.get("/admin/alerts"),
+  listTasks: (params?: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    user_id?: string;
+    team_id?: string;
+  }) => api.get("/logs/tasks", { params }),
+  listSkillLogs: (params?: {
+    limit?: number;
+    offset?: number;
+    skill_name?: string;
+    status?: string;
+    user_id?: string;
+    team_id?: string;
+  }) => api.get("/logs/skills", { params }),
+  listAiCallLogs: (params?: {
+    limit?: number;
+    offset?: number;
+    provider?: string;
+    model?: string;
+    user_id?: string;
+    team_id?: string;
+  }) => api.get("/logs/ai-calls", { params }),
+  getAiCallStats: (params?: { user_id?: string; team_id?: string }) =>
+    api.get("/logs/ai-calls/stats", { params }),
+  getTrace: (traceId: string) => api.get(`/logs/trace/${traceId}`),
 };
 
 export const quotaApi = {
