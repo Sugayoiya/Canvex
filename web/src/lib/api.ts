@@ -337,12 +337,12 @@ export const quotaApi = {
   getUserQuota: (userId: string) => api.get(`/quota/user/${userId}`),
   updateUserQuota: (
     userId: string,
-    data: { monthly_credit_limit?: number; daily_call_limit?: number },
+    data: { monthly_credit_limit?: number | null; daily_call_limit?: number | null },
   ) => api.put(`/quota/user/${userId}`, data),
   getTeamQuota: (teamId: string) => api.get(`/quota/team/${teamId}`),
   updateTeamQuota: (
     teamId: string,
-    data: { monthly_credit_limit?: number; daily_call_limit?: number },
+    data: { monthly_credit_limit?: number | null; daily_call_limit?: number | null },
   ) => api.put(`/quota/team/${teamId}`, data),
 };
 

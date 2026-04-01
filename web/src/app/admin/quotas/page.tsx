@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { User, Users as UsersIcon, ChevronRight, ChevronDown, Gauge, Search } from "lucide-react";
-import { adminApi } from "@/lib/api";
+import { adminApi, quotaApi } from "@/lib/api";
 import { TabBar } from "@/components/admin/tab-bar";
 import { FilterToolbar } from "@/components/admin/filter-toolbar";
 import { AdminPagination } from "@/components/admin/admin-pagination";
+import { ProgressBar } from "@/components/admin/progress-bar";
 
 interface AdminUser {
   id: string;
@@ -44,6 +46,15 @@ interface AdminTeamListResponse {
   offset: number;
 }
 
+interface QuotaData {
+  user_id?: string | null;
+  team_id?: string | null;
+  monthly_credit_limit: number | null;
+  daily_call_limit: number | null;
+  current_month_usage: number;
+  current_day_calls: number;
+}
+
 const tabs = [
   { id: "users", label: "Users", icon: <User size={14} /> },
   { id: "teams", label: "Teams", icon: <UsersIcon size={14} /> },
@@ -70,14 +81,16 @@ function SkeletonRow() {
 }
 
 export default function AdminQuotasPage() {
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<"users" | "teams">("users");
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 20 });
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  // saveMutation guard placeholder — replaced in Task 2 with real mutation
-  const savePending = false;
+  const [editValues, setEditValues] = useState<{
+    monthly_credit_limit: string;
+    daily_call_limit: string;
+  }>({ monthly_credit_limit: "", daily_call_limit: "" });
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchValue), 300);
@@ -130,13 +143,105 @@ export default function AdminQuotasPage() {
     enabled: activeTab === "teams",
   });
 
+  const quotaQuery = useQuery({
+    queryKey: ["admin", "quota", activeTab === "users" ? "user" : "team", expandedId],
+    queryFn: () => {
+      if (activeTab === "users") return quotaApi.getUserQuota(expandedId!).then((r) => r.data as QuotaData);
+      return quotaApi.getTeamQuota(expandedId!).then((r) => r.data as QuotaData);
+    },
+    enabled: !!expandedId,
+  });
+
+  useEffect(() => {
+    if (quotaQuery.data) {
+      setEditValues({
+        monthly_credit_limit: quotaQuery.data.monthly_credit_limit !== null ? String(quotaQuery.data.monthly_credit_limit) : "",
+        daily_call_limit: quotaQuery.data.daily_call_limit !== null ? String(quotaQuery.data.daily_call_limit) : "",
+      });
+    }
+  }, [quotaQuery.data]);
+
+  useEffect(() => {
+    setEditValues({ monthly_credit_limit: "", daily_call_limit: "" });
+  }, [expandedId]);
+
+  const getExpandedName = (): string => {
+    if (!expandedId) return "";
+    const activeItems = activeQuery.data?.items ?? [];
+    if (activeTab === "users") {
+      const u = (activeItems as AdminUser[]).find((i) => i.id === expandedId);
+      return u?.nickname ?? u?.email ?? expandedId;
+    }
+    const t = (activeItems as AdminTeam[]).find((i) => i.id === expandedId);
+    return t?.name ?? expandedId;
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: (data: { monthly_credit_limit?: number | null; daily_call_limit?: number | null }) => {
+      if (activeTab === "users") return quotaApi.updateUserQuota(expandedId!, data);
+      return quotaApi.updateTeamQuota(expandedId!, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "quota"] });
+      toast.success(`已更新 ${getExpandedName()} 的配额`);
+    },
+    onError: (err: unknown) => {
+      const message = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Unknown error";
+      toast.error(`配额更新失败: ${message}`);
+    },
+  });
+
+  const handleSave = () => {
+    const payload: { monthly_credit_limit?: number | null; daily_call_limit?: number | null } = {};
+    if (editValues.monthly_credit_limit === "") {
+      payload.monthly_credit_limit = null;
+    } else {
+      const v = parseFloat(editValues.monthly_credit_limit);
+      if (isNaN(v) || v < 0) return;
+      payload.monthly_credit_limit = v;
+    }
+    if (editValues.daily_call_limit === "") {
+      payload.daily_call_limit = null;
+    } else {
+      const v = parseInt(editValues.daily_call_limit, 10);
+      if (isNaN(v) || v < 0) return;
+      payload.daily_call_limit = v;
+    }
+    saveMutation.mutate(payload);
+  };
+
+  const handleReset = (field: "monthly_credit_limit" | "daily_call_limit") => {
+    setEditValues((prev) => ({ ...prev, [field]: "" }));
+    saveMutation.mutate(
+      { [field]: null },
+      {
+        onSuccess: () => {
+          toast.success(`已重置 ${getExpandedName()} 的配额为无限制`);
+          queryClient.invalidateQueries({ queryKey: ["admin", "quota"] });
+        },
+        onError: (err: unknown) => {
+          const message = (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? "Unknown error";
+          toast.error(`配额重置失败: ${message}`);
+        },
+      },
+    );
+  };
+
+  const isDirty = (() => {
+    if (!quotaQuery.data) return false;
+    const qd = quotaQuery.data;
+    const origMonthly = qd.monthly_credit_limit !== null ? String(qd.monthly_credit_limit) : "";
+    const origDaily = qd.daily_call_limit !== null ? String(qd.daily_call_limit) : "";
+    return editValues.monthly_credit_limit !== origMonthly || editValues.daily_call_limit !== origDaily;
+  })();
+
   const activeQuery = activeTab === "users" ? usersQuery : teamsQuery;
   const items: Array<AdminUser | AdminTeam> = activeQuery.data?.items ?? [];
   const total = activeQuery.data?.total ?? 0;
   const pageCount = Math.ceil(total / pagination.pageSize);
 
   const handleTabChange = (tab: string) => {
-    if (savePending) return;
+    if (saveMutation.isPending) return;
     setActiveTab(tab as "users" | "teams");
     setSearchValue("");
     setDebouncedSearch("");
@@ -145,7 +250,7 @@ export default function AdminQuotasPage() {
   };
 
   const handleRowClick = (id: string) => {
-    if (savePending) return;
+    if (saveMutation.isPending) return;
     setExpandedId((prev) => (prev === id ? null : id));
   };
 
@@ -489,7 +594,7 @@ export default function AdminQuotasPage() {
                     </span>
                   </div>
 
-                  {/* Expanded area placeholder */}
+                  {/* QuotaDetailArea */}
                   {isExpanded && (
                     <div
                       style={{
@@ -499,18 +604,182 @@ export default function AdminQuotasPage() {
                         borderBottom: isLast
                           ? "none"
                           : "1px solid var(--cv4-border-subtle)",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 24,
                       }}
                     >
-                      <p
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontSize: 12,
-                          color: "var(--cv4-text-muted)",
-                          margin: 0,
-                        }}
-                      >
-                        QuotaDetailArea placeholder
-                      </p>
+                      {quotaQuery.isLoading && (
+                        <>
+                          <div style={{ height: 60, borderRadius: 8, background: "var(--cv4-border-default)", animation: "pulse 1.5s ease-in-out infinite" }} />
+                          <div style={{ height: 60, borderRadius: 8, background: "var(--cv4-border-default)", animation: "pulse 1.5s ease-in-out infinite" }} />
+                        </>
+                      )}
+                      {quotaQuery.isError && (
+                        <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--cv4-text-muted)", margin: 0 }}>
+                          Failed to load quota data.
+                        </p>
+                      )}
+                      {quotaQuery.data && (
+                        <>
+                          {/* Monthly Credit Limit */}
+                          <div>
+                            <ProgressBar
+                              current={quotaQuery.data.current_month_usage}
+                              limit={quotaQuery.data.monthly_credit_limit}
+                              label="Monthly Credit Limit"
+                            />
+                            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+                              <input
+                                type="number"
+                                min="0"
+                                aria-label="Monthly credit limit"
+                                placeholder="Set limit..."
+                                value={editValues.monthly_credit_limit}
+                                onChange={(e) => setEditValues((prev) => ({ ...prev, monthly_credit_limit: e.target.value }))}
+                                readOnly={saveMutation.isPending}
+                                style={{
+                                  height: 36,
+                                  width: 120,
+                                  border: "1px solid var(--cv4-border-default)",
+                                  borderRadius: 8,
+                                  background: "var(--cv4-canvas-bg)",
+                                  fontFamily: "Manrope, sans-serif",
+                                  fontSize: 12,
+                                  fontWeight: 400,
+                                  color: "var(--cv4-text-primary)",
+                                  padding: "0 8px",
+                                  outline: "none",
+                                }}
+                              />
+                              {quotaQuery.data.monthly_credit_limit !== null && (
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => !saveMutation.isPending && handleReset("monthly_credit_limit")}
+                                  onKeyDown={(e) => {
+                                    if ((e.key === "Enter" || e.key === " ") && !saveMutation.isPending) {
+                                      e.preventDefault();
+                                      handleReset("monthly_credit_limit");
+                                    }
+                                  }}
+                                  style={{
+                                    fontFamily: "Manrope, sans-serif",
+                                    fontSize: 12,
+                                    fontWeight: 400,
+                                    color: "var(--cv4-text-secondary)",
+                                    cursor: saveMutation.isPending ? "not-allowed" : "pointer",
+                                    opacity: saveMutation.isPending ? 0.4 : 1,
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!saveMutation.isPending) {
+                                      e.currentTarget.style.textDecoration = "underline";
+                                      e.currentTarget.style.color = "var(--cv4-text-primary)";
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.textDecoration = "none";
+                                    e.currentTarget.style.color = "var(--cv4-text-secondary)";
+                                  }}
+                                >
+                                  Reset
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Daily Call Limit */}
+                          <div>
+                            <ProgressBar
+                              current={quotaQuery.data.current_day_calls}
+                              limit={quotaQuery.data.daily_call_limit}
+                              label="Daily Call Limit"
+                            />
+                            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8 }}>
+                              <input
+                                type="number"
+                                min="0"
+                                aria-label="Daily call limit"
+                                placeholder="Set limit..."
+                                value={editValues.daily_call_limit}
+                                onChange={(e) => setEditValues((prev) => ({ ...prev, daily_call_limit: e.target.value }))}
+                                readOnly={saveMutation.isPending}
+                                style={{
+                                  height: 36,
+                                  width: 120,
+                                  border: "1px solid var(--cv4-border-default)",
+                                  borderRadius: 8,
+                                  background: "var(--cv4-canvas-bg)",
+                                  fontFamily: "Manrope, sans-serif",
+                                  fontSize: 12,
+                                  fontWeight: 400,
+                                  color: "var(--cv4-text-primary)",
+                                  padding: "0 8px",
+                                  outline: "none",
+                                }}
+                              />
+                              {quotaQuery.data.daily_call_limit !== null && (
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() => !saveMutation.isPending && handleReset("daily_call_limit")}
+                                  onKeyDown={(e) => {
+                                    if ((e.key === "Enter" || e.key === " ") && !saveMutation.isPending) {
+                                      e.preventDefault();
+                                      handleReset("daily_call_limit");
+                                    }
+                                  }}
+                                  style={{
+                                    fontFamily: "Manrope, sans-serif",
+                                    fontSize: 12,
+                                    fontWeight: 400,
+                                    color: "var(--cv4-text-secondary)",
+                                    cursor: saveMutation.isPending ? "not-allowed" : "pointer",
+                                    opacity: saveMutation.isPending ? 0.4 : 1,
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    if (!saveMutation.isPending) {
+                                      e.currentTarget.style.textDecoration = "underline";
+                                      e.currentTarget.style.color = "var(--cv4-text-primary)";
+                                    }
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.textDecoration = "none";
+                                    e.currentTarget.style.color = "var(--cv4-text-secondary)";
+                                  }}
+                                >
+                                  Reset
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Save button */}
+                          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                            <button
+                              type="button"
+                              disabled={!isDirty || saveMutation.isPending}
+                              onClick={handleSave}
+                              style={{
+                                height: 36,
+                                padding: "0 16px",
+                                borderRadius: 8,
+                                border: "none",
+                                background: "var(--cv4-btn-primary)",
+                                color: "var(--cv4-btn-primary-text)",
+                                fontFamily: "Manrope, sans-serif",
+                                fontSize: 12,
+                                fontWeight: 700,
+                                cursor: !isDirty || saveMutation.isPending ? "not-allowed" : "pointer",
+                                opacity: !isDirty || saveMutation.isPending ? 0.4 : 1,
+                                transition: "opacity 100ms",
+                              }}
+                            >
+                              {saveMutation.isPending ? "..." : "Save Changes"}
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
