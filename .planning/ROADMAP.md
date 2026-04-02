@@ -58,7 +58,13 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
   3. PydanticAI Agent model instances are created with DB-resolved credentials; existing 14 skills work without behavior changes
   4. KeyRotator distributes requests across multiple keys for the same provider, auto-skipping unhealthy keys on 429/5xx with transparent retry
   5. Admin provider page shows per-key health status (last_used_at, error_count, is_active) and supports key-level enable/disable and error reset
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 12-01-PLAN.md — Redis infrastructure: KeyHealthManager, CredentialCache, refactored ProviderManager, tests
+- [ ] 12-02-PLAN.md — Call site migration: 13 call sites to unified async path, remove get_provider_sync, drop SQLite
+- [ ] 12-03-PLAN.md — Admin health UI: per-key health API endpoints, frontend health badges/toggle/reset/sparkline
+
 **UI hint**: yes
 
 ### Phase 13: SkillDescriptor Enhancement + Pipeline Fix
@@ -128,7 +134,7 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 | 09. User/Team UI | v2.1 | 3/3 | Complete | 2026-04-01 |
 | 10. Quota/Pricing/Provider | v2.1 | 4/4 | Complete | 2026-04-01 |
 | 11. Dashboard/Polish | v2.1 | 4/4 | Complete | 2026-04-01 |
-| 12. AI Call Convergence | v3.0 | 0/TBD | Not started | - |
+| 12. AI Call Convergence | v3.0 | 0/3 | Planning complete | - |
 | 13. Descriptor + Pipeline | v3.0 | 0/TBD | Not started | - |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
