@@ -22,6 +22,16 @@ async def lifespan(app: FastAPI):
     from app.core.database import init_db
     await init_db()
 
+    # Seed env-var API keys into DB + restore Redis health state from DB
+    from app.services.ai.provider_manager import (
+        seed_providers_from_env, restore_health_from_db, sync_health_to_db,
+    )
+    from app.services.ai.key_health import get_key_health_manager
+    from app.services.ai.credential_cache import get_credential_cache
+
+    await seed_providers_from_env()
+    await restore_health_from_db()
+
     # Register all Skills
     from app.skills.register_all import register_all_skills
     register_all_skills()
@@ -29,6 +39,11 @@ async def lifespan(app: FastAPI):
     logger.info("%s is ready", settings.PROJECT_NAME)
     yield
     logger.info("%s shutting down", settings.PROJECT_NAME)
+
+    # Graceful shutdown: sync Redis health to DB, close Redis connections
+    await sync_health_to_db()
+    await get_key_health_manager().close()
+    await get_credential_cache().close()
 
 
 app = FastAPI(

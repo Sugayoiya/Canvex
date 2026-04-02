@@ -35,4 +35,11 @@ celery_app.conf.update(
     },
 )
 
-celery_app.conf.include = ["app.tasks.skill_task"]
+celery_app.conf.include = ["app.tasks.skill_task", "app.tasks.health_sync"]
+
+celery_app.conf.beat_schedule = {
+    "sync-key-health": {
+        "task": "health_sync.sync_key_health_to_db",
+        "schedule": 300.0,
+    },
+}
