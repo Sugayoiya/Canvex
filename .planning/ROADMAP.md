@@ -53,17 +53,18 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 **Depends on**: Nothing (first phase of v3.0; builds on v2.0/v2.1 infrastructure)
 **Requirements**: CONV-01, CONV-02, CONV-03, CONV-04, CONV-05, CONV-06, CONV-07, CONV-08, CONV-09, CONV-10, CONV-11
 **Success Criteria** (what must be TRUE):
-  1. Any LLM skill invocation resolves API keys via ProviderManager async DB chain (team → personal → system → env fallback), not via direct settings/env reads
+  1. Any LLM skill invocation resolves API keys via ProviderManager async DB chain (team → personal → system → error), not via direct settings/env reads (no env fallback at runtime; env vars are seed-only)
   2. Image and video generation skills use the same unified credential resolution path as LLM skills
   3. PydanticAI Agent model instances are created with DB-resolved credentials; existing 14 skills work without behavior changes
   4. KeyRotator distributes requests across multiple keys for the same provider, auto-skipping unhealthy keys on 429/5xx with transparent retry
   5. Admin provider page shows per-key health status (last_used_at, error_count, is_active) and supports key-level enable/disable and error reset
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
-- [ ] 12-01-PLAN.md — Redis infrastructure: KeyHealthManager, CredentialCache, refactored ProviderManager, tests
-- [ ] 12-02-PLAN.md — Call site migration: 13 call sites to unified async path, remove get_provider_sync, drop SQLite
-- [ ] 12-03-PLAN.md — Admin health UI: per-key health API endpoints, frontend health badges/toggle/reset/sparkline
+- [ ] 12-01-PLAN.md — Redis modules: KeyHealthManager (atomic ops, degraded fallback, error redaction), CredentialCache (metadata-only, single-flight lock)
+- [ ] 12-02-PLAN.md — ProviderManager refactor: contextvars key tracking, Redis integration, lifecycle hooks, unit tests
+- [ ] 12-03-PLAN.md — Call site migration: 13 call sites to unified async path, remove get_provider_sync, drop SQLite, static verification
+- [ ] 12-04-PLAN.md — Admin health UI: batch health endpoint, per-key health badges/toggle/reset/sparkline
 
 **UI hint**: yes
 
@@ -134,7 +135,7 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 | 09. User/Team UI | v2.1 | 3/3 | Complete | 2026-04-01 |
 | 10. Quota/Pricing/Provider | v2.1 | 4/4 | Complete | 2026-04-01 |
 | 11. Dashboard/Polish | v2.1 | 4/4 | Complete | 2026-04-01 |
-| 12. AI Call Convergence | v3.0 | 0/3 | Planning complete | - |
+| 12. AI Call Convergence | v3.0 | 0/4 | Planning complete | - |
 | 13. Descriptor + Pipeline | v3.0 | 0/TBD | Not started | - |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
