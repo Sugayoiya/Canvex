@@ -38,6 +38,9 @@ New skills, new pipeline capabilities, or business logic changes are out of scop
 - **D-14:** Key-level operations: enable/disable toggle, reset error count button
 - **D-15:** Uses existing Admin Provider page as base, extends with health information per key
 
+### Infrastructure
+- **D-16:** Drop SQLite support — enforce PostgreSQL only. No need to maintain dual DB compatibility in the unified async path. Redis is already required (Celery + key health cache), so Docker is a given.
+
 ### Claude's Discretion
 - Migration strategy (incremental vs big bang, feature flags)
 - Redis key naming scheme and TTL values
