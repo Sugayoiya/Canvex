@@ -1,21 +1,18 @@
-"""Agent API endpoints — SSE streaming chat + session CRUD."""
+"""Agent API endpoints — LangGraph SSE streaming chat + session CRUD."""
 from __future__ import annotations
 
 import asyncio
-import json
 import logging
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from langchain_core.messages import HumanMessage, AIMessage
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sse_starlette.sse import EventSourceResponse
 
-from app.agent.agent_service import AgentDeps, AgentService
-from app.agent.context_tools import get_context_toolset
-from app.agent.pipeline_tools import get_pipeline_toolset
-from app.agent.skill_toolset import SkillToolset
+from app.agent.agent_service import AgentService
 from app.agent.sse_protocol import (
     sse_done,
     sse_error,
@@ -24,7 +21,7 @@ from app.agent.sse_protocol import (
     sse_tool_call,
     sse_tool_result,
 )
-from app.core.database import AsyncSessionLocal
+from app.agent.tool_context import set_tool_context, clear_tool_context
 from app.core.deps import get_current_user, get_db, resolve_project_access
 from app.models.agent_session import AgentMessage, AgentSession
 from app.models.canvas import Canvas
@@ -36,8 +33,6 @@ from app.schemas.agent import (
     SessionListResponse,
     SessionResponse,
 )
-from app.skills.context import SkillContext
-from app.skills.registry import skill_registry
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agent", tags=["agent"])
@@ -140,7 +135,7 @@ async def get_messages(
 
 
 # ---------------------------------------------------------------------------
-# SSE Chat
+# SSE Chat — LangGraph streaming with fallback matrix
 # ---------------------------------------------------------------------------
 
 
@@ -158,37 +153,30 @@ async def chat(
         collected_text = ""
         tool_calls_log: list[dict] = []
         tool_results_log: list[dict] = []
-        pending_tool_calls: list[dict] = []
 
         try:
             yield sse_thinking("analyzing", request_id=request_id)
 
+            set_tool_context(
+                project_id=session.project_id,
+                user_id=user.id,
+                team_id=getattr(user, "current_team_id", None),
+                canvas_id=session.canvas_id,
+            )
+
             history = await agent_service.load_message_history(db, session.id)
 
-            context = SkillContext(
-                user_id=user.id,
-                project_id=session.project_id,
-                canvas_id=session.canvas_id,
-                agent_session_id=session.id,
-                trigger_source="agent",
-            )
-            toolset = SkillToolset(registry=skill_registry, context=context)
-            pipeline_toolset = get_pipeline_toolset()
-            context_toolset = get_context_toolset()
-
-            project_name = None
-            canvas_name = None
-            canvas_summary = None
+            project_name, canvas_name, canvas_summary = None, None, None
             try:
                 project = await db.get(Project, session.project_id)
                 project_name = project.name if project else None
-
                 if session.canvas_id:
-                    canvas_stmt = select(Canvas).options(
-                        selectinload(Canvas.nodes)
-                    ).where(Canvas.id == session.canvas_id)
-                    canvas_result = await db.execute(canvas_stmt)
-                    canvas_obj = canvas_result.scalar_one_or_none()
+                    canvas_stmt = (
+                        select(Canvas)
+                        .options(selectinload(Canvas.nodes))
+                        .where(Canvas.id == session.canvas_id)
+                    )
+                    canvas_obj = (await db.execute(canvas_stmt)).scalar_one_or_none()
                     if canvas_obj:
                         canvas_name = canvas_obj.name
                         node_types: dict[str, int] = {}
@@ -196,7 +184,7 @@ async def chat(
                             node_types[n.node_type] = node_types.get(n.node_type, 0) + 1
                         canvas_summary = {"node_counts": node_types, "total_nodes": len(canvas_obj.nodes)}
             except Exception:
-                logger.warning("Failed to load project/canvas context for session %s — proceeding with degraded context", session_id)
+                logger.warning("Failed to load context for session %s", session_id)
 
             provider = body.provider or session.provider
             model_name = body.model_name or session.model_name
@@ -205,154 +193,86 @@ async def chat(
                 project_name=project_name,
                 canvas_name=canvas_name,
                 canvas_summary=canvas_summary,
-                team_id=context.team_id,
+                team_id=getattr(user, "current_team_id", None),
                 user_id=user.id,
+                has_canvas=bool(session.canvas_id),
+                has_episode=True,
             )
-
-            deps = AgentDeps(
-                user_id=user.id,
-                project_id=session.project_id,
-                canvas_id=session.canvas_id,
-                session_id=session.id,
-                db=db,
-                registry=skill_registry,
-                skill_context=context,
-            )
-
-            from pydantic_ai import Agent as AgentCls
 
             yield sse_thinking("processing", request_id=request_id)
 
-            async with agent.iter(
-                user_prompt=body.message,
-                message_history=history,
-                deps=deps,
-                toolsets=[toolset, pipeline_toolset, context_toolset],
-            ) as run:
-                async for node in run:
-                    if AgentCls.is_model_request_node(node):
-                        if pending_tool_calls:
-                            completed = toolset.pop_completed_results()
-                            completed_by_tool = {r["tool"]: r for r in completed}
-                            for ptc in pending_tool_calls:
-                                cr = completed_by_tool.get(ptc["tool"], {})
-                                success = cr.get("status") == "completed"
-                                result_data = cr.get("data") or {}
-                                summary = cr.get("message") or ("完成" if success else "失败")
-                                tool_results_log.append(
-                                    {"tool": ptc["tool"], "call_id": ptc["call_id"],
-                                     "success": success, "data": result_data}
-                                )
-                                yield sse_tool_result(
-                                    ptc["tool"], summary, ptc["call_id"],
-                                    success=success, data=result_data,
-                                    request_id=request_id,
-                                )
-                            pending_tool_calls.clear()
+            input_messages = [*history, HumanMessage(content=body.message)]
+            config = {"configurable": {"thread_id": session_id}}
 
-                        async with node.stream(run.ctx) as stream:
-                            async for text in stream.stream_text(delta=True):
-                                collected_text += text
-                                yield sse_token(text, request_id=request_id)
+            # --- Streaming fallback matrix ---
+            # Priority 1: astream_events v2 (token-level)
+            # Priority 3 (terminal): ainvoke (no streaming)
+            streamed = False
+            try:
+                async for event in agent.astream_events(
+                    {"messages": input_messages}, version="v2", config=config,
+                ):
+                    streamed = True
+                    kind = event["event"]
+                    if kind == "on_chat_model_stream":
+                        chunk = event["data"]["chunk"]
+                        if hasattr(chunk, "content") and chunk.content:
+                            collected_text += chunk.content
+                            yield sse_token(chunk.content, request_id=request_id)
+                    elif kind == "on_tool_start":
+                        tool_name = event["name"]
+                        tool_input = event["data"].get("input", {})
+                        run_id = str(event.get("run_id", ""))
+                        tool_calls_log.append({"tool": tool_name, "args": tool_input, "call_id": run_id})
+                        yield sse_tool_call(tool_name, tool_input, run_id, request_id=request_id)
+                    elif kind == "on_tool_end":
+                        tool_name = event["name"]
+                        output = str(event["data"].get("output", ""))
+                        run_id = str(event.get("run_id", ""))
+                        summary = output[:200] if len(output) > 200 else output
+                        tool_results_log.append({"tool": tool_name, "call_id": run_id, "success": True})
+                        yield sse_tool_result(tool_name, summary, run_id, success=True, request_id=request_id)
+            except Exception as stream_err:
+                if not streamed:
+                    # Terminal fallback — ainvoke (no streaming)
+                    logger.warning("Streaming failed, falling back to ainvoke: %s", stream_err)
+                    result = await agent.ainvoke({"messages": input_messages}, config=config)
+                    final_msg = result["messages"][-1]
+                    collected_text = final_msg.content if hasattr(final_msg, "content") else str(final_msg)
+                    yield sse_token(collected_text, request_id=request_id)
+                else:
+                    logger.warning("Streaming error mid-stream: %s", stream_err)
 
-                            resp = stream.response
-                            if resp:
-                                for tc in resp.tool_calls:
-                                    tc_args = tc.args_as_dict()
-                                    tc_id = tc.id or ""
-                                    tool_calls_log.append(
-                                        {"tool": tc.tool_name, "args": tc_args, "call_id": tc_id}
-                                    )
-                                    pending_tool_calls.append(
-                                        {"tool": tc.tool_name, "call_id": tc_id}
-                                    )
-                                    yield sse_tool_call(
-                                        tc.tool_name, tc_args, tc_id, request_id=request_id
-                                    )
+            usage = {"input_tokens": 0, "output_tokens": 0}
+            yield sse_done(collected_text, usage, request_id=request_id)
 
-                    elif AgentCls.is_call_tools_node(node):
-                        yield sse_thinking("executing tools", request_id=request_id)
-
-                if pending_tool_calls:
-                    completed = toolset.pop_completed_results()
-                    completed_by_tool = {r["tool"]: r for r in completed}
-                    for ptc in pending_tool_calls:
-                        cr = completed_by_tool.get(ptc["tool"], {})
-                        success = cr.get("status") == "completed"
-                        result_data = cr.get("data") or {}
-                        summary = cr.get("message") or ("完成" if success else "失败")
-                        tool_results_log.append(
-                            {"tool": ptc["tool"], "call_id": ptc["call_id"],
-                             "success": success, "data": result_data}
-                        )
-                        yield sse_tool_result(
-                            ptc["tool"], summary, ptc["call_id"],
-                            success=success, data=result_data,
-                            request_id=request_id,
-                        )
-                    pending_tool_calls.clear()
-
-                run_result = run.result
-                usage_info = run_result.usage()
-                usage = {
-                    "input_tokens": usage_info.input_tokens or 0,
-                    "output_tokens": usage_info.output_tokens or 0,
-                }
-
-                final_output = run_result.output if run_result else collected_text
-                yield sse_done(
-                    final_output or collected_text, usage, request_id=request_id
-                )
-
-                messages_json = run_result.all_messages_json()
-                await agent_service.save_messages(
-                    db,
-                    session.id,
-                    messages_json,
-                    user_content=body.message,
-                    assistant_content=final_output or collected_text,
-                    tool_calls=tool_calls_log or None,
-                    tool_results=tool_results_log or None,
-                    input_tokens=usage.get("input_tokens", 0),
-                    output_tokens=usage.get("output_tokens", 0),
-                )
+            final_messages = [*input_messages, AIMessage(content=collected_text)]
+            await agent_service.save_messages(
+                db, session.id, final_messages,
+                user_content=body.message, assistant_content=collected_text,
+                tool_calls=tool_calls_log or None, tool_results=tool_results_log or None,
+            )
 
         except asyncio.CancelledError:
-            toolset.cancel()
             logger.info("Client disconnected from session %s", session_id)
-            try:
-                async with AsyncSessionLocal() as fresh_db:
-                    await agent_service.save_messages(
-                        fresh_db,
-                        session.id,
-                        b"[]",
-                        user_content=body.message,
-                        assistant_content=collected_text,
-                    )
-                    await fresh_db.commit()
-            except Exception:
-                logger.exception("Failed to save partial messages on disconnect")
-            return
-
         except Exception as e:
             logger.exception("Chat error in session %s", session_id)
             yield sse_error(str(e), "INTERNAL", request_id=request_id)
-            try:
-                async with AsyncSessionLocal() as fresh_db:
-                    await agent_service.save_messages(
-                        fresh_db,
-                        session.id,
-                        b"[]",
-                        user_content=body.message,
-                        assistant_content=collected_text,
-                    )
-                    await fresh_db.commit()
-            except Exception:
-                logger.exception("Failed to save partial messages on error")
-
         finally:
-            pass
+            clear_tool_context()
 
     return EventSourceResponse(
         event_generator(), media_type="text/event-stream", ping=15
     )
+
+
+# ---------------------------------------------------------------------------
+# Skills listing
+# ---------------------------------------------------------------------------
+
+
+@router.get("/skills")
+async def list_skills(user=Depends(get_current_user)):
+    from app.agent.agent_service import _get_skill_loader
+    loader = _get_skill_loader()
+    return {"skills": loader.list_skills()}
