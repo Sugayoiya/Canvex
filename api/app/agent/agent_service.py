@@ -7,15 +7,10 @@ from typing import Any
 
 from pydantic_ai import Agent
 from pydantic_ai.messages import ModelMessagesTypeAdapter
-from pydantic_ai.models.openai import OpenAIModel
-from pydantic_ai.models.google import GoogleModel
-from pydantic_ai.providers.openai import OpenAIProvider
-from pydantic_ai.providers.google import GoogleProvider
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.context_builder import build_system_prompt
-from app.core.config import settings
 from app.models.agent_session import AgentMessage, AgentSession
 from app.skills.context import SkillContext
 from app.skills.registry import SkillRegistry
@@ -34,39 +29,39 @@ class AgentDeps:
     skill_context: SkillContext
 
 
-def create_pydantic_model(provider: str, model_name: str):
-    """Create a PydanticAI model instance with explicit API key from settings.
+async def resolve_pydantic_model(
+    provider: str,
+    model_name: str,
+    *,
+    team_id: str | None = None,
+    user_id: str | None = None,
+):
+    """Resolve a PydanticAI model via DB-backed ProviderManager credentials."""
+    from app.services.ai.provider_manager import get_provider_manager
 
-    Never relies on PydanticAI auto-env detection — always passes api_key.
-    """
-    if provider == "openai":
-        key = settings.OPENAI_API_KEY
-        if not key:
-            raise ValueError("OPENAI_API_KEY not configured")
-        return OpenAIModel(
-            model_name,
-            provider=OpenAIProvider(api_key=key),
-        )
+    pm = get_provider_manager()
+    provider_inst, _owner, _key_id = await pm.get_provider(
+        provider, model=model_name,
+        team_id=team_id, user_id=user_id,
+    )
+    api_key = provider_inst.api_key
 
     if provider == "gemini":
-        key = settings.GEMINI_API_KEY
-        if not key:
-            raise ValueError("GEMINI_API_KEY not configured")
-        return GoogleModel(
-            model_name,
-            provider=GoogleProvider(api_key=key),
-        )
+        from pydantic_ai.models.google import GoogleModel
+        from pydantic_ai.providers.google import GoogleProvider
+        return GoogleModel(model_name, provider=GoogleProvider(api_key=api_key))
+
+    if provider == "openai":
+        from pydantic_ai.models.openai import OpenAIModel
+        from pydantic_ai.providers.openai import OpenAIProvider
+        return OpenAIModel(model_name, provider=OpenAIProvider(api_key=api_key))
 
     if provider == "deepseek":
-        key = settings.DEEPSEEK_API_KEY
-        if not key:
-            raise ValueError("DEEPSEEK_API_KEY not configured")
+        from pydantic_ai.models.openai import OpenAIModel
+        from pydantic_ai.providers.openai import OpenAIProvider
         return OpenAIModel(
             model_name,
-            provider=OpenAIProvider(
-                api_key=key,
-                base_url="https://api.deepseek.com",
-            ),
+            provider=OpenAIProvider(api_key=api_key, base_url="https://api.deepseek.com"),
         )
 
     raise NotImplementedError(f"Provider '{provider}' is not supported yet")
@@ -75,15 +70,20 @@ def create_pydantic_model(provider: str, model_name: str):
 class AgentService:
     """Agent factory, provider resolution, session management."""
 
-    def create_agent(
+    async def create_agent(
         self,
         provider: str,
         model_name: str,
         project_name: str | None = None,
         canvas_name: str | None = None,
         canvas_summary: dict | None = None,
+        *,
+        team_id: str | None = None,
+        user_id: str | None = None,
     ) -> Agent[AgentDeps, str]:
-        model = create_pydantic_model(provider, model_name)
+        model = await resolve_pydantic_model(
+            provider, model_name, team_id=team_id, user_id=user_id,
+        )
         system_prompt = build_system_prompt(
             project_name=project_name,
             canvas_name=canvas_name,

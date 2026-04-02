@@ -95,6 +95,14 @@ class LLMProviderBase(AIProviderBase):
                             duration_ms=duration_ms,
                             status="success",
                         )
+                        from app.services.ai.provider_manager import _current_key_id_var
+                        _key_id = _current_key_id_var.get(None)
+                        if _key_id:
+                            from app.services.ai.key_health import get_key_health_manager
+                            try:
+                                await get_key_health_manager().report_success(_key_id)
+                            except Exception:
+                                pass
                         return result
                     except Exception as raw_exc:
                         duration_ms = int((time.monotonic() - start) * 1000)
@@ -106,6 +114,16 @@ class LLMProviderBase(AIProviderBase):
                             status="error",
                             error_message=_truncate(str(exc), 2000),
                         )
+                        from app.services.ai.provider_manager import _current_key_id_var
+                        _key_id = _current_key_id_var.get(None)
+                        if _key_id:
+                            from app.services.ai.key_health import get_key_health_manager
+                            try:
+                                await get_key_health_manager().report_error(
+                                    _key_id, type(exc).__name__, str(exc)[:200]
+                                )
+                            except Exception:
+                                pass
                         if isinstance(exc, (TransientError, RateLimitError)) and attempt == 0:
                             logger.warning(
                                 "Retrying %s/%s after %s (attempt %d)",

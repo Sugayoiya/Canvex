@@ -55,11 +55,11 @@ async def handle_llm_generate(params: dict[str, Any], ctx: SkillContext) -> Skil
         project_id=ctx.project_id,
     )
 
-    from app.services.ai.provider_manager import get_provider_manager
+    from app.services.ai.provider_manager import resolve_llm_provider
     from app.services.ai.base import Message
 
     try:
-        provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
+        provider, _key_id = await resolve_llm_provider(provider_name, model_name, ctx)
         messages: list[Message] = []
         if system_prompt:
             messages.append(Message(role="system", content=system_prompt))

@@ -71,17 +71,22 @@ async def handle_generate_video(params: dict[str, Any], ctx: SkillContext) -> Sk
     )
 
     from app.services.ai.ai_call_logger import set_ai_call_context, log_ai_call
+    from app.services.ai.provider_manager import get_provider_manager
+    from app.services.ai.key_health import get_key_health_manager
 
     set_ai_call_context(
         trace_id=ctx.trace_id, user_id=ctx.user_id,
         team_id=ctx.team_id, project_id=ctx.project_id,
     )
 
-    from app.core.config import settings
-
-    api_key = settings.GEMINI_API_KEY
-    if not api_key:
-        return SkillResult.failed("GEMINI_API_KEY 未配置", error_code="PROVIDER_NOT_CONFIGURED")
+    try:
+        pm = get_provider_manager()
+        provider_inst, _owner, key_id = await pm.get_provider(
+            "gemini", model=model, team_id=ctx.team_id, user_id=ctx.user_id,
+        )
+        api_key = provider_inst.api_key
+    except ValueError as e:
+        return SkillResult.failed(f"Gemini 未配置: {e}", error_code="PROVIDER_NOT_CONFIGURED")
 
     image_bytes = None
     if image_url:
@@ -98,8 +103,8 @@ async def handle_generate_video(params: dict[str, Any], ctx: SkillContext) -> Sk
     try:
         from app.services.ai.model_providers.gemini_video import GeminiVideoProvider
 
-        provider = GeminiVideoProvider(api_key=api_key, model=model)
-        result = await provider.generate_video(
+        video_provider = GeminiVideoProvider(api_key=api_key, model=model)
+        result = await video_provider.generate_video(
             prompt=prompt,
             image_bytes=image_bytes,
             aspect_ratio=aspect_ratio,
@@ -107,6 +112,7 @@ async def handle_generate_video(params: dict[str, Any], ctx: SkillContext) -> Sk
         )
         duration_ms = int((time.monotonic() - start) * 1000)
 
+        await get_key_health_manager().report_success(key_id)
         await log_ai_call(
             provider="gemini", model=model, model_type="video",
             status="success", duration_ms=duration_ms,
@@ -125,6 +131,7 @@ async def handle_generate_video(params: dict[str, Any], ctx: SkillContext) -> Sk
     except Exception as e:
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.exception("video.generate_video failed")
+        await get_key_health_manager().report_error(key_id, type(e).__name__, str(e)[:200])
         await log_ai_call(
             provider="gemini", model=model, model_type="video",
             status="error", error_message=str(e)[:200], duration_ms=duration_ms,

@@ -85,11 +85,11 @@ async def handle_extract_scenes(params: dict[str, Any], ctx: SkillContext) -> Sk
         project_id=ctx.project_id,
     )
 
-    from app.services.ai.provider_manager import get_provider_manager
+    from app.services.ai.provider_manager import resolve_llm_provider
     from app.services.ai.base import Message
 
     try:
-        provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
+        provider, _key_id = await resolve_llm_provider(provider_name, model_name, ctx)
         messages = [
             Message(role="system", content=_SYSTEM_PROMPT),
             Message(role="user", content=f"请从以下文本中提取场景：\n\n{text[:8000]}"),

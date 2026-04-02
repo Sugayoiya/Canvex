@@ -200,11 +200,13 @@ async def chat(
 
             provider = body.provider or session.provider
             model_name = body.model_name or session.model_name
-            agent = agent_service.create_agent(
+            agent = await agent_service.create_agent(
                 provider, model_name,
                 project_name=project_name,
                 canvas_name=canvas_name,
                 canvas_summary=canvas_summary,
+                team_id=context.team_id,
+                user_id=user.id,
             )
 
             deps = AgentDeps(

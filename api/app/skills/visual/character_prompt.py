@@ -58,7 +58,7 @@ async def handle_character_prompt(params: dict[str, Any], ctx: SkillContext) -> 
     logger.info("visual.character_prompt invoked (trace=%s, name=%s)", ctx.trace_id, name)
 
     from app.services.ai.ai_call_logger import set_ai_call_context, log_ai_call
-    from app.services.ai.provider_manager import get_provider_manager
+    from app.services.ai.provider_manager import resolve_llm_provider
     from app.services.ai.base import Message
     import time
 
@@ -69,7 +69,7 @@ async def handle_character_prompt(params: dict[str, Any], ctx: SkillContext) -> 
 
     provider_name = params.get("provider", "gemini")
     model_name = params.get("model")
-    provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
+    provider, _key_id = await resolve_llm_provider(provider_name, model_name, ctx)
 
     parts = [f"角色名：{name}"]
     if data:

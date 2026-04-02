@@ -101,14 +101,14 @@ async def handle_storyboard_detail(params: dict[str, Any], ctx: SkillContext) ->
         project_id=ctx.project_id,
     )
 
-    from app.services.ai.provider_manager import get_provider_manager
+    from app.services.ai.provider_manager import resolve_llm_provider
     from app.services.ai.base import Message
 
     style_ctx = f"视觉风格参考: {style}\n" if style else ""
     system_prompt = _SYSTEM_PROMPT.format(style_context=style_ctx)
 
     try:
-        provider = get_provider_manager().get_provider_sync(provider_name, model=model_name)
+        provider, _key_id = await resolve_llm_provider(provider_name, model_name, ctx)
         messages = [
             Message(role="system", content=system_prompt),
             Message(role="user", content=shots_text),
