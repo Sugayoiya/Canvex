@@ -10,12 +10,12 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 
 ### AI Call Convergence
 
-- [ ] **CONV-01**: All LLM skill invocations resolve API keys through unified ProviderManager async path (team → personal → system → env fallback)
-- [ ] **CONV-02**: PydanticAI Agent model construction uses unified ProviderManager instead of direct settings/env reads
-- [ ] **CONV-03**: Image generation skills (visual.generate_image) resolve credentials through unified ProviderManager
-- [ ] **CONV-04**: Video generation skills (video.generate_video) resolve credentials through unified ProviderManager
+- [x] **CONV-01**: All LLM skill invocations resolve API keys through unified ProviderManager async path (team → personal → system → env fallback)
+- [x] **CONV-02**: PydanticAI Agent model construction uses unified ProviderManager instead of direct settings/env reads
+- [x] **CONV-03**: Image generation skills (visual.generate_image) resolve credentials through unified ProviderManager
+- [x] **CONV-04**: Video generation skills (video.generate_video) resolve credentials through unified ProviderManager
 - [x] **CONV-05**: Dead code path `ProviderManager.get_provider()` (async DB key chain) is activated and tested as the single runtime entry point
-- [ ] **CONV-06**: Existing 14 skills continue working without behavior changes after convergence (regression-safe)
+- [x] **CONV-06**: Existing 14 skills continue working without behavior changes after convergence (regression-safe)
 - [x] **CONV-07**: KeyRotator round-robin activated — same provider with multiple keys distributes requests evenly
 - [x] **CONV-08**: KeyRotator error feedback closed-loop — 429/5xx triggers `report_error`, increments `error_count`, updates `last_used_at`; unhealthy keys auto-skipped
 - [x] **CONV-09**: Auto-retry on key failure — when current key returns 429/5xx, transparently retry with next healthy key from rotation pool
@@ -115,12 +115,12 @@ Deferred to next milestone. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CONV-01 | Phase 12 | Pending |
-| CONV-02 | Phase 12 | Pending |
-| CONV-03 | Phase 12 | Pending |
-| CONV-04 | Phase 12 | Pending |
+| CONV-01 | Phase 12 | Complete |
+| CONV-02 | Phase 12 | Complete |
+| CONV-03 | Phase 12 | Complete |
+| CONV-04 | Phase 12 | Complete |
 | CONV-05 | Phase 12 | Complete |
-| CONV-06 | Phase 12 | Pending |
+| CONV-06 | Phase 12 | Complete |
 | CONV-07 | Phase 12 | Complete |
 | CONV-08 | Phase 12 | Complete |
 | CONV-09 | Phase 12 | Complete |

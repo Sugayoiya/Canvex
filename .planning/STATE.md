@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: executing
-stopped_at: Completed 12-04-PLAN.md
-last_updated: "2026-04-02T10:26:31.725Z"
+status: verifying
+stopped_at: Completed 12-03-PLAN.md
+last_updated: "2026-04-02T10:37:41.490Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 5
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 Phase: 12 (ai-call-convergence) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-02
 
 Progress: [░░░░░░░░░░] 0%
@@ -50,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 12 P01 | 2min | 2 tasks | 2 files |
 | Phase 12 P02 | 4min | 2 tasks | 6 files |
 | Phase 12 P04 | 5min | 3 tasks | 7 files |
+| Phase 12 P03 | 7min | 2 tasks | 19 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,8 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 12]: Env-var fallback removed from runtime resolution — only DB chain at runtime
 - [Phase 12]: Batch health endpoint avoids N+1: single call returns all keys health
 - [Phase 12]: 60s polling interval (vs 30s in UI-SPEC) per review feedback to reduce overhead
+- [Phase 12]: All 13 AI call sites converged to unified async ProviderManager path — no env fallback at runtime
+- [Phase 12]: SQLite dropped (D-16), PostgreSQL only — validator rejects sqlite:// URLs
 
 ### Pending Todos
 
@@ -75,6 +78,6 @@ Progress: [░░░░░░░░░░] 0%
 
 ## Session Continuity
 
-Last session: 2026-04-02T10:26:31.721Z
-Stopped at: Completed 12-04-PLAN.md
+Last session: 2026-04-02T10:37:41.488Z
+Stopped at: Completed 12-03-PLAN.md
 Resume file: None
