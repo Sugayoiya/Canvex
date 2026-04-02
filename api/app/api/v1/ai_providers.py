@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
@@ -20,6 +21,9 @@ from app.schemas.ai_provider import (
     ProviderConfigResponse,
     ProviderKeyCreate,
     ProviderKeyResponse,
+    KeyHealthResponse,
+    KeyUpdateRequest,
+    ProviderHealthResponse,
     ModelConfigResponse,
 )
 
@@ -251,6 +255,154 @@ async def delete_provider_key(
 
     await db.delete(key)
     await db.flush()
+
+
+def _parse_iso_datetime(s: str | None) -> datetime | None:
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s)
+    except (ValueError, TypeError):
+        return None
+
+
+def _compute_health_badge(error_count: int) -> str:
+    if error_count == 0:
+        return "healthy"
+    elif error_count < 3:
+        return "degraded"
+    return "unhealthy"
+
+
+@router.get("/{provider_id}/health", response_model=ProviderHealthResponse)
+async def get_provider_health(
+    provider_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Batch health for ALL keys of a provider. Avoids N+1 per-key fetches."""
+    config = await _get_config_or_404(provider_id, user, db, load_keys=True)
+    from app.services.ai.key_health import get_key_health_manager
+    khm = get_key_health_manager()
+
+    keys_health = []
+    for key in config.keys:
+        health = await khm.get_health(key.id)
+        errors = await khm.get_recent_errors(key.id)
+        usage = await khm.get_usage_trend(key.id, hours=24)
+        error_count = health["error_count"]
+
+        keys_health.append(KeyHealthResponse(
+            key_id=key.id,
+            error_count=error_count,
+            last_used_at=_parse_iso_datetime(health.get("last_used_at")),
+            is_healthy=health["is_healthy"],
+            health_badge=_compute_health_badge(error_count),
+            recent_errors=errors,
+            usage_trend=usage,
+        ))
+
+    return ProviderHealthResponse(provider_id=provider_id, keys=keys_health)
+
+
+@router.get("/{provider_id}/keys/{key_id}/health", response_model=KeyHealthResponse)
+async def get_key_health(
+    provider_id: str,
+    key_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Per-key health status."""
+    await _get_config_or_404(provider_id, user, db)
+    key_result = await db.execute(
+        select(AIProviderKey).where(
+            AIProviderKey.id == key_id,
+            AIProviderKey.provider_config_id == provider_id,
+        )
+    )
+    key_obj = key_result.scalar_one_or_none()
+    if not key_obj:
+        raise HTTPException(status_code=404, detail="Key not found")
+
+    from app.services.ai.key_health import get_key_health_manager
+    khm = get_key_health_manager()
+    health = await khm.get_health(key_id)
+    errors = await khm.get_recent_errors(key_id)
+    usage = await khm.get_usage_trend(key_id, hours=24)
+    error_count = health["error_count"]
+
+    return KeyHealthResponse(
+        key_id=key_id,
+        error_count=error_count,
+        last_used_at=_parse_iso_datetime(health.get("last_used_at")),
+        is_healthy=health["is_healthy"],
+        health_badge=_compute_health_badge(error_count),
+        recent_errors=errors,
+        usage_trend=usage,
+    )
+
+
+@router.patch("/{provider_id}/keys/{key_id}", response_model=ProviderKeyResponse)
+async def update_key(
+    provider_id: str,
+    key_id: str,
+    data: KeyUpdateRequest,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Toggle key active/inactive or reset error count."""
+    config = await _get_config_or_404(provider_id, user, db, load_keys=True)
+    key_result = await db.execute(
+        select(AIProviderKey).where(
+            AIProviderKey.id == key_id,
+            AIProviderKey.provider_config_id == provider_id,
+        )
+    )
+    key_obj = key_result.scalar_one_or_none()
+    if not key_obj:
+        raise HTTPException(status_code=404, detail="Key not found")
+
+    from app.services.ai.key_health import get_key_health_manager
+    from app.services.ai.credential_cache import get_credential_cache
+
+    old_active = key_obj.is_active
+    changes: dict = {}
+
+    if data.is_active is not None and data.is_active != old_active:
+        key_obj.is_active = data.is_active
+        changes["is_active"] = {"old": old_active, "new": data.is_active}
+
+    if data.reset_error_count:
+        key_obj.error_count = 0
+        await get_key_health_manager().reset_error_count(key_id)
+        changes["error_count"] = {"old": "N/A", "new": 0}
+
+    await db.flush()
+
+    await get_credential_cache().invalidate(
+        config.provider_name, config.owner_type, config.owner_id
+    )
+
+    if changes:
+        audit = AuditContext(db, user.id)
+        await audit.log_if(
+            config.owner_type == "system",
+            action_type="provider.key.update",
+            target_type="ai_provider_key",
+            target_id=key_id,
+            changes=changes,
+        )
+
+    await db.commit()
+
+    return ProviderKeyResponse(
+        id=key_obj.id,
+        label=key_obj.label,
+        key_hint=key_obj.key_hint,
+        is_active=key_obj.is_active,
+        last_used_at=key_obj.last_used_at,
+        created_at=key_obj.created_at,
+    )
 
 
 @router.get("/models", response_model=list[ModelConfigResponse])

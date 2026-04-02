@@ -51,6 +51,27 @@ class ProviderConfigResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class KeyHealthResponse(BaseModel):
+    key_id: str
+    error_count: int
+    last_used_at: datetime | None = None
+    is_healthy: bool
+    health_badge: str  # "healthy" | "degraded" | "unhealthy"
+    recent_errors: list[dict] = []
+    usage_trend: list[dict] = []
+
+
+class KeyUpdateRequest(BaseModel):
+    is_active: bool | None = None
+    reset_error_count: bool | None = None
+
+
+class ProviderHealthResponse(BaseModel):
+    """Batch health response for all keys of a provider."""
+    provider_id: str
+    keys: list[KeyHealthResponse] = []
+
+
 class ModelConfigResponse(BaseModel):
     id: str
     display_name: str
