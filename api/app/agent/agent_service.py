@@ -1,68 +1,36 @@
-"""Core agent service — factory, provider resolution, session management."""
+"""Core agent service — LangChain/LangGraph factory, session management."""
 from __future__ import annotations
 
+import json
 import logging
-from dataclasses import dataclass
+import threading
 from typing import Any
 
-from pydantic_ai import Agent
-from pydantic_ai.messages import ModelMessagesTypeAdapter
-from sqlalchemy import select, func, desc
+from langchain_core.messages import messages_to_dict, messages_from_dict, HumanMessage, AIMessage
+from sqlalchemy import select, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agent.context_builder import build_system_prompt
-from app.models.agent_session import AgentMessage, AgentSession
-from app.skills.context import SkillContext
-from app.skills.registry import SkillRegistry
+from app.agent.skill_loader import SkillLoader
 
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class AgentDeps:
-    user_id: str
-    project_id: str
-    canvas_id: str | None
-    session_id: str
-    db: AsyncSession
-    registry: SkillRegistry
-    skill_context: SkillContext
+_skill_loader: SkillLoader | None = None
+_loader_init_lock = threading.Lock()
 
 
-async def resolve_pydantic_model(
-    provider: str,
-    model_name: str,
-    *,
-    team_id: str | None = None,
-    user_id: str | None = None,
-):
-    """Resolve a PydanticAI model via DB-backed ProviderManager credentials."""
-    from app.services.ai.provider_manager import get_provider_manager
-
-    pm = get_provider_manager()
-    api_key, _owner, _key_id = await pm._resolve_key(
-        provider, team_id, user_id, db=None,
-    )
-
-    if provider == "gemini":
-        from pydantic_ai.models.google import GoogleModel
-        from pydantic_ai.providers.google import GoogleProvider
-        return GoogleModel(model_name, provider=GoogleProvider(api_key=api_key))
-
-    if provider == "openai":
-        from pydantic_ai.models.openai import OpenAIModel
-        from pydantic_ai.providers.openai import OpenAIProvider
-        return OpenAIModel(model_name, provider=OpenAIProvider(api_key=api_key))
-
-    if provider == "deepseek":
-        from pydantic_ai.models.openai import OpenAIModel
-        from pydantic_ai.providers.openai import OpenAIProvider
-        return OpenAIModel(
-            model_name,
-            provider=OpenAIProvider(api_key=api_key, base_url="https://api.deepseek.com"),
-        )
-
-    raise NotImplementedError(f"Provider '{provider}' is not supported yet")
+def _get_skill_loader() -> SkillLoader:
+    """Thread-safe singleton SkillLoader with mtime-based hot-reload."""
+    global _skill_loader
+    if _skill_loader is None:
+        with _loader_init_lock:
+            if _skill_loader is None:
+                sl = SkillLoader()
+                sl.load_metadata()
+                _skill_loader = sl
+    else:
+        _skill_loader.reload_if_changed()
+    return _skill_loader
 
 
 class AgentService:
@@ -78,21 +46,31 @@ class AgentService:
         *,
         team_id: str | None = None,
         user_id: str | None = None,
-    ) -> Agent[AgentDeps, str]:
-        model = await resolve_pydantic_model(
+        has_canvas: bool = False,
+        has_episode: bool = False,
+    ):
+        """Create a LangChain agent with context-gated tools.
+
+        Uses langchain.agents.create_agent (NOT deprecated create_react_agent).
+        Returns a CompiledStateGraph supporting astream_events / ainvoke.
+        """
+        from app.services.ai.provider_manager import get_provider_manager
+        from app.agent.tools import get_tools_for_context
+        from langchain.agents import create_agent
+
+        pm = get_provider_manager()
+        llm = await pm.resolve_langchain_llm(
             provider, model_name, team_id=team_id, user_id=user_id,
         )
+        tools = get_tools_for_context(has_canvas=has_canvas, has_episode=has_episode)
+        skill_loader = _get_skill_loader()
         system_prompt = build_system_prompt(
+            skill_loader=skill_loader,
             project_name=project_name,
             canvas_name=canvas_name,
             canvas_summary=canvas_summary,
         )
-        return Agent(
-            model,
-            deps_type=AgentDeps,
-            instructions=system_prompt,
-            retries=1,
-        )
+        return create_agent(llm, tools, system_prompt=system_prompt)
 
     async def create_session(
         self,
@@ -103,7 +81,8 @@ class AgentService:
         title: str | None = None,
         model_name: str = "gemini-2.5-flash",
         provider: str = "gemini",
-    ) -> AgentSession:
+    ):
+        from app.models.agent_session import AgentSession
         session = AgentSession(
             user_id=user_id,
             project_id=project_id,
@@ -122,7 +101,8 @@ class AgentService:
         db: AsyncSession,
         session_id: str,
         user_id: str,
-    ) -> AgentSession | None:
+    ):
+        from app.models.agent_session import AgentSession
         stmt = select(AgentSession).where(
             AgentSession.id == session_id,
             AgentSession.user_id == user_id,
@@ -137,7 +117,8 @@ class AgentService:
         project_id: str,
         canvas_id: str | None = None,
         limit: int = 50,
-    ) -> list[AgentSession]:
+    ):
+        from app.models.agent_session import AgentSession
         stmt = (
             select(AgentSession)
             .where(
@@ -171,16 +152,16 @@ class AgentService:
         session_id: str,
         max_messages: int = 20,
     ) -> list:
-        """Load PydanticAI message history from the most recent snapshot.
+        """Load LangChain message history from the most recent snapshot.
 
-        Finds the last AgentMessage with pydantic_ai_messages_json and
-        deserializes via ModelMessagesTypeAdapter for roundtrip fidelity.
+        Falls back to empty for legacy PydanticAI sessions (no langchain_messages_json).
         """
+        from app.models.agent_session import AgentMessage
         stmt = (
             select(AgentMessage)
             .where(
                 AgentMessage.session_id == session_id,
-                AgentMessage.pydantic_ai_messages_json.isnot(None),
+                AgentMessage.langchain_messages_json.isnot(None),
             )
             .order_by(desc(AgentMessage.created_at))
             .limit(1)
@@ -188,25 +169,21 @@ class AgentService:
         result = await db.execute(stmt)
         last_msg = result.scalar_one_or_none()
 
-        if last_msg is None or not last_msg.pydantic_ai_messages_json:
+        if last_msg is None or not last_msg.langchain_messages_json:
             return []
 
         try:
-            messages = ModelMessagesTypeAdapter.validate_json(
-                last_msg.pydantic_ai_messages_json
-            )
-            if len(messages) > max_messages:
-                messages = messages[-max_messages:]
-            return messages
+            messages = messages_from_dict(json.loads(last_msg.langchain_messages_json))
+            return messages[-max_messages:] if len(messages) > max_messages else messages
         except Exception:
-            logger.exception("Failed to deserialize PydanticAI messages for session %s", session_id)
+            logger.exception("Failed to deserialize LangChain messages for session %s", session_id)
             return []
 
     async def save_messages(
         self,
         db: AsyncSession,
         session_id: str,
-        pydantic_ai_messages_json: bytes | str,
+        langchain_messages: list,
         user_content: str,
         assistant_content: str,
         tool_calls: list[dict[str, Any]] | None = None,
@@ -214,9 +191,9 @@ class AgentService:
         input_tokens: int = 0,
         output_tokens: int = 0,
     ) -> None:
-        """Persist user, assistant, tool-call, and tool-result messages."""
-        if isinstance(pydantic_ai_messages_json, bytes):
-            pydantic_ai_messages_json = pydantic_ai_messages_json.decode("utf-8")
+        """Persist messages in LangChain format (messages_to_dict serialization)."""
+        from app.models.agent_session import AgentMessage, AgentSession
+        langchain_json = json.dumps(messages_to_dict(langchain_messages), ensure_ascii=False)
 
         user_msg = AgentMessage(
             session_id=session_id,
@@ -230,26 +207,23 @@ class AgentService:
             session_id=session_id,
             role="assistant",
             content=assistant_content,
-            pydantic_ai_messages_json=pydantic_ai_messages_json,
+            langchain_messages_json=langchain_json,
             output_tokens=output_tokens,
         )
         db.add(assistant_msg)
 
         if tool_calls:
-            tc_msg = AgentMessage(
+            db.add(AgentMessage(
                 session_id=session_id,
                 role="tool_call",
-                tool_calls_json=tool_calls,
-            )
-            db.add(tc_msg)
-
+                tool_calls_json=json.dumps(tool_calls, ensure_ascii=False),
+            ))
         if tool_results:
-            tr_msg = AgentMessage(
+            db.add(AgentMessage(
                 session_id=session_id,
                 role="tool_result",
-                tool_results_json=tool_results,
-            )
-            db.add(tr_msg)
+                tool_results_json=json.dumps(tool_results, ensure_ascii=False),
+            ))
 
         session = await db.get(AgentSession, session_id)
         if session:

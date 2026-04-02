@@ -18,7 +18,7 @@ import contextvars
 import hashlib
 import itertools
 import logging
-from typing import TYPE_CHECKING, Type
+from typing import Type
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -29,9 +29,6 @@ from app.services.ai.entities import ProviderEntity
 from app.services.ai.key_health import get_key_health_manager
 from app.services.ai.credential_cache import get_credential_cache
 from app.core.config import settings
-
-if TYPE_CHECKING:
-    from app.skills.context import SkillContext
 
 logger = logging.getLogger(__name__)
 
@@ -327,6 +324,66 @@ class ProviderManager:
             if own_session:
                 await db.close()
 
+    async def resolve_api_key(
+        self,
+        provider: str,
+        *,
+        team_id: str | None = None,
+        user_id: str | None = None,
+        db: AsyncSession | None = None,
+    ) -> tuple[str, str, str]:
+        """Resolve decrypted API key without constructing a provider instance.
+
+        Returns (api_key, owner_description, key_id).
+        Only used by agent_service (PydanticAI needs raw key for its own SDK).
+        All skills should use get_provider() instead.
+        """
+        _ensure_registry()
+        if provider not in _PROVIDER_REGISTRY:
+            raise ValueError(f"Unknown provider: {provider}")
+        api_key, owner_desc, key_id = await self._resolve_key(provider, team_id, user_id, db)
+        _current_key_id_var.set(key_id)
+        return api_key, owner_desc, key_id
+
+    async def resolve_langchain_llm(
+        self,
+        provider_name: str,
+        model_name: str,
+        *,
+        team_id: str | None = None,
+        user_id: str | None = None,
+        **kwargs,
+    ) -> "BaseChatModel":
+        """Resolve a LangChain BaseChatModel via DB-backed credential chain.
+
+        Mapping: gemini → ChatGoogleGenerativeAI, openai → ChatOpenAI,
+        deepseek → ChatOpenAI(base_url=https://api.deepseek.com/v1).
+        Always sets streaming=True for SSE support.
+        """
+        _ensure_registry()
+        if provider_name not in _PROVIDER_REGISTRY:
+            raise ValueError(f"Unknown provider: {provider_name}")
+
+        api_key, _owner, key_id = await self._resolve_key(
+            provider_name, team_id, user_id, None,
+        )
+        _current_key_id_var.set(key_id)
+
+        if provider_name == "gemini":
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            return ChatGoogleGenerativeAI(
+                model=model_name, api_key=api_key, streaming=True, **kwargs,
+            )
+        elif provider_name in ("openai", "deepseek"):
+            from langchain_openai import ChatOpenAI
+            extra: dict = {}
+            if provider_name == "deepseek":
+                extra["base_url"] = "https://api.deepseek.com/v1"
+            return ChatOpenAI(
+                model=model_name, api_key=api_key, streaming=True, **extra, **kwargs,
+            )
+        raise ValueError(f"Unsupported provider for LangChain: {provider_name}")
+
     def get_configured_providers(self) -> list[str]:
         _ensure_registry()
         return list(_PROVIDER_REGISTRY.keys())
@@ -353,25 +410,6 @@ def get_provider_manager() -> ProviderManager:
     if _manager is None:
         _manager = ProviderManager()
     return _manager
-
-
-# ---------------------------------------------------------------------------
-# Convenience wrapper for Skill handlers
-# ---------------------------------------------------------------------------
-
-async def resolve_llm_provider(
-    provider_name: str = "gemini",
-    model_name: str | None = None,
-    ctx: SkillContext | None = None,
-) -> tuple[AIProviderBase, str]:
-    """Convenience wrapper for LLM skill handlers. Returns (provider, key_id)."""
-    pm = get_provider_manager()
-    provider_inst, _owner, key_id = await pm.get_provider(
-        provider_name, model=model_name,
-        team_id=ctx.team_id if ctx else None,
-        user_id=ctx.user_id if ctx else None,
-    )
-    return provider_inst, key_id
 
 
 # ---------------------------------------------------------------------------

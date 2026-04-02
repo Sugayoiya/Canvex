@@ -84,6 +84,9 @@ class AgentMessage(Base):
     pydantic_ai_messages_json: Mapped[str | None] = mapped_column(
         Text, nullable=True
     )
+    langchain_messages_json: Mapped[str | None] = mapped_column(
+        Text, nullable=True
+    )
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
