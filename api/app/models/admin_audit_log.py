@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, DateTime, Text, Boolean, Index
+from sqlalchemy import String, Text, Boolean, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.models.mixins import _utcnow
+from app.models.mixins import TZDateTime, _utcnow
 
 
 class AdminAuditLog(Base):
@@ -23,4 +23,4 @@ class AdminAuditLog(Base):
     changes: Mapped[str] = mapped_column(Text, nullable=False)
     success: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, index=True)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow, index=True)

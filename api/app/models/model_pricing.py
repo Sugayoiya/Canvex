@@ -2,11 +2,11 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import String, DateTime, Text, Numeric, Boolean
+from sqlalchemy import String, Text, Numeric, Boolean
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.models.mixins import _utcnow
+from app.models.mixins import TZDateTime, _utcnow
 
 
 class ModelPricing(Base):
@@ -37,13 +37,13 @@ class ModelPricing(Base):
     )
 
     effective_from: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow
+        TZDateTime, default=_utcnow
     )
-    effective_to: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    effective_to: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow, onupdate=_utcnow
+        TZDateTime, default=_utcnow, onupdate=_utcnow
     )

@@ -2,11 +2,11 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import String, Integer, DateTime, Numeric, Text, UniqueConstraint
+from sqlalchemy import String, Integer, Numeric, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.models.mixins import _utcnow
+from app.models.mixins import TZDateTime, _utcnow
 
 
 class UserQuota(Base):
@@ -18,10 +18,10 @@ class UserQuota(Base):
     daily_call_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
     current_month_usage: Mapped[Decimal] = mapped_column(Numeric(12, 4), default=Decimal("0"))
     current_day_calls: Mapped[int] = mapped_column(Integer, default=0)
-    last_month_reset: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    last_day_reset: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+    last_month_reset: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    last_day_reset: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow, onupdate=_utcnow)
 
 
 class TeamQuota(Base):
@@ -33,10 +33,10 @@ class TeamQuota(Base):
     daily_call_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
     current_month_usage: Mapped[Decimal] = mapped_column(Numeric(12, 4), default=Decimal("0"))
     current_day_calls: Mapped[int] = mapped_column(Integer, default=0)
-    last_month_reset: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    last_day_reset: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+    last_month_reset: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    last_day_reset: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow, onupdate=_utcnow)
 
 
 class TeamMemberQuota(Base):
@@ -52,10 +52,10 @@ class TeamMemberQuota(Base):
     daily_call_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
     current_month_usage: Mapped[Decimal] = mapped_column(Numeric(12, 4), default=Decimal("0"))
     current_day_calls: Mapped[int] = mapped_column(Integer, default=0)
-    last_month_reset: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    last_day_reset: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+    last_month_reset: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    last_day_reset: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow, onupdate=_utcnow)
 
 
 class QuotaUsageLog(Base):
@@ -68,4 +68,4 @@ class QuotaUsageLog(Base):
     credit_amount: Mapped[Decimal] = mapped_column(Numeric(12, 4), default=Decimal("0"))
     action: Mapped[str] = mapped_column(String(20), nullable=False)  # "check" | "increment" | "admin_set"
     details: Mapped[str | None] = mapped_column(Text, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)

@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Boolean, DateTime
+from sqlalchemy import String, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.mixins import _utcnow
+from app.models.mixins import TZDateTime, _utcnow
 
 
 class User(Base):
@@ -18,12 +18,12 @@ class User(Base):
     email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     status: Mapped[str] = mapped_column(String(20), default="active")
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
-    last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow, onupdate=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    updated_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow, onupdate=_utcnow)
 
     refresh_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
-    refresh_token_expires: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    refresh_token_expires: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
 
     team_memberships = relationship("TeamMember", back_populates="user", cascade="all, delete-orphan")

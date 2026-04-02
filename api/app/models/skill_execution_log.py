@@ -1,11 +1,11 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import String, DateTime, Text, Integer, Numeric, Index
+from sqlalchemy import String, Text, Integer, Numeric, Index
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.models.mixins import _utcnow
+from app.models.mixins import TZDateTime, _utcnow
 
 
 class SkillExecutionLog(Base):
@@ -35,9 +35,9 @@ class SkillExecutionLog(Base):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
-    queued_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    queued_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
+    started_at: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
     duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     ai_call_count: Mapped[int] = mapped_column(Integer, default=0)

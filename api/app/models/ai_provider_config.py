@@ -1,13 +1,13 @@
 import uuid
 from datetime import datetime
 from sqlalchemy import (
-    String, Integer, Boolean, DateTime, Text, ForeignKey,
+    String, Integer, Boolean, Text, ForeignKey,
     Index, UniqueConstraint,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.mixins import TimestampMixin
+from app.models.mixins import TimestampMixin, TZDateTime
 
 
 class AIProviderConfig(Base, TimestampMixin):
@@ -39,7 +39,7 @@ class AIProviderKey(Base, TimestampMixin):
     key_hint: Mapped[str | None] = mapped_column(String(8), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     rate_limit_rpm: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    last_used_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_used_at: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
     error_count: Mapped[int] = mapped_column(Integer, default=0)
 
     provider_config = relationship("AIProviderConfig", back_populates="keys")

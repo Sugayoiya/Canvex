@@ -7,9 +7,12 @@ def _utcnow():
     return datetime.now(timezone.utc)
 
 
+TZDateTime = DateTime(timezone=True)
+
+
 class SoftDeleteMixin:
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, index=True)
-    deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    deleted_at: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
 
     def soft_delete(self):
         self.is_deleted = True
@@ -21,7 +24,7 @@ class SoftDeleteMixin:
 
 
 class TimestampMixin:
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow, onupdate=_utcnow
+        TZDateTime, default=_utcnow, onupdate=_utcnow
     )

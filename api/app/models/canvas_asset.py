@@ -1,10 +1,10 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Text, DateTime, JSON, Integer
+from sqlalchemy import String, Text, JSON, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.models.mixins import SoftDeleteMixin, _utcnow
+from app.models.mixins import SoftDeleteMixin, TZDateTime, _utcnow
 
 
 class CanvasAsset(Base, SoftDeleteMixin):
@@ -24,7 +24,7 @@ class CanvasAsset(Base, SoftDeleteMixin):
     source_node_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow, onupdate=_utcnow
+        TZDateTime, default=_utcnow, onupdate=_utcnow
     )

@@ -8,7 +8,6 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    DateTime,
     ForeignKey,
     Index,
     Integer,
@@ -19,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.mixins import _utcnow
+from app.models.mixins import TZDateTime, _utcnow
 
 
 class AgentSession(Base):
@@ -49,10 +48,10 @@ class AgentSession(Base):
     message_count: Mapped[int] = mapped_column(Integer, default=0)
     total_tokens: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow
+        TZDateTime, default=_utcnow
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow, onupdate=_utcnow
+        TZDateTime, default=_utcnow, onupdate=_utcnow
     )
 
     messages: Mapped[list["AgentMessage"]] = relationship(
@@ -88,7 +87,7 @@ class AgentMessage(Base):
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)
     output_tokens: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, default=_utcnow
+        TZDateTime, default=_utcnow
     )
 
     session: Mapped["AgentSession"] = relationship(
