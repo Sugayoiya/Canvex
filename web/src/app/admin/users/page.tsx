@@ -63,11 +63,11 @@ function formatRelativeTime(dateStr: string | null): string {
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
   if (days <= 30) return `${days}d ago`;
-  return new Date(dateStr).toISOString().slice(0, 10);
+  return new Date(dateStr).toLocaleDateString();
 }
 
 function formatDate(dateStr: string): string {
-  return new Date(dateStr).toISOString().slice(0, 10);
+  return new Date(dateStr).toLocaleDateString();
 }
 
 const columnHelper = createColumnHelper<AdminUser>();
