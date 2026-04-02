@@ -128,7 +128,7 @@ Row height: 44px (matches existing pattern).
 └─────────────────────┘
 ```
 
-- Dot indicator: 6px circle filled with badge color, margin-right 6px
+- Dot indicator: 6px circle filled with badge color, margin-right: 4px (xs token)
 - Label font: Manrope 12px weight 700
 - Background: badge color at 12.5% opacity (`{color}20`)
 - Follows exact `StatusBadge` component pattern
@@ -166,7 +166,7 @@ When a key row is clicked (or via a chevron toggle), an inline detail panel expa
 └──────────────────────────────────┘
 ```
 
-- Item spacing: 12px gap between items
+- Item spacing: 8px gap between items (sm token)
 - Separator: `1px solid var(--cv4-border-subtle)` between items
 - Max items shown: 20 (API-limited)
 
@@ -189,7 +189,7 @@ When a key row is clicked (or via a chevron toggle), an inline detail panel expa
 | Action | Visual | Behavior |
 |--------|--------|----------|
 | Enable/Disable toggle | Inline toggle switch, 36×20px | Green when active (--ob-success), gray when inactive (--cv4-text-muted). Toggles `is_active` via PATCH API. No confirmation needed. |
-| Reset errors | Text button "Reset" in Manrope 12px 400 | Color: `var(--cv4-text-secondary)`. Hover: underline. Resets error_count to 0. No confirmation needed (non-destructive). |
+| Reset errors | Text button "Reset Errors" in Manrope 12px 400 | Color: `var(--cv4-text-secondary)`. Hover: underline. Resets error_count to 0. No confirmation needed (non-destructive). |
 | Revoke | Text link "Revoke" in Manrope 12px 400 | Color: `var(--ob-error)`. Opens ConfirmationModal (existing pattern). |
 
 Button group layout: flex row, gap 12px, align-items center.
@@ -222,7 +222,7 @@ Inactive: [━━━●]  background: var(--cv4-text-muted), knob: white
 | Error history empty | "No errors recorded" |
 | Usage sparkline empty | "No usage data yet" |
 | Toggle enable tooltip | "Disable this key" / "Enable this key" |
-| Reset errors button | "Reset" |
+| Reset errors button | "Reset Errors" |
 | Reset success toast | "已重置 Key 错误计数: {label}" |
 | Toggle success toast (disable) | "已禁用 API Key: {label}" |
 | Toggle success toast (enable) | "已启用 API Key: {label}" |
@@ -256,7 +256,7 @@ Inactive: [━━━●]  background: var(--cv4-text-muted), knob: white
 | Sparkline loading | Gray rectangular placeholder 192×40px with pulse animation |
 | Error list loading | Two gray line placeholders with pulse animation |
 | Toggle pending | Toggle switch at 70% opacity, cursor not-allowed |
-| Reset pending | "Reset" text replaced with "..." |
+| Reset pending | "Reset Errors" text replaced with "..." |
 
 ### Error States
 
@@ -274,7 +274,7 @@ Inactive: [━━━●]  background: var(--cv4-text-muted), knob: white
 |---------|------------|
 | HealthBadge | `aria-label="Health: {status}"` |
 | Toggle switch | `role="switch"`, `aria-checked={is_active}`, `aria-label="Toggle key {label}"` |
-| Reset button | `aria-label="Reset error count for {label}"` |
+| Reset button | `aria-label="Reset errors for {label}"` |
 | Error history list | `role="list"`, items `role="listitem"` |
 | Sparkline SVG | `role="img"`, `aria-label="Usage trend: {total} requests in last 24 hours"` |
 | Key detail expansion | `aria-expanded` on row, detail panel has `role="region"` |
