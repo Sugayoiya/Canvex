@@ -71,19 +71,15 @@ async def handle_generate_image(params: dict[str, Any], ctx: SkillContext) -> Sk
 
     try:
         pm = get_provider_manager()
-        provider_inst, _owner, key_id = await pm.get_provider(
-            "gemini", model=model, team_id=ctx.team_id, user_id=ctx.user_id,
+        provider, _owner, key_id = await pm.get_provider(
+            "gemini", team_id=ctx.team_id, user_id=ctx.user_id,
         )
-        api_key = provider_inst.api_key
     except ValueError as e:
         return SkillResult.failed(f"Gemini 未配置: {e}")
 
     start = time.monotonic()
     try:
-        from app.services.ai.model_providers.gemini_image import GeminiImageProvider
-
-        image_provider = GeminiImageProvider(api_key=api_key, model=model)
-        result = await image_provider.generate_image(prompt, aspect_ratio=aspect_ratio)
+        result = await provider.generate_image(prompt, aspect_ratio=aspect_ratio, model=model)
         duration_ms = int((time.monotonic() - start) * 1000)
 
         await get_key_health_manager().report_success(key_id)

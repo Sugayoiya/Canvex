@@ -81,10 +81,9 @@ async def handle_generate_video(params: dict[str, Any], ctx: SkillContext) -> Sk
 
     try:
         pm = get_provider_manager()
-        provider_inst, _owner, key_id = await pm.get_provider(
-            "gemini", model=model, team_id=ctx.team_id, user_id=ctx.user_id,
+        provider, _owner, key_id = await pm.get_provider(
+            "gemini", team_id=ctx.team_id, user_id=ctx.user_id,
         )
-        api_key = provider_inst.api_key
     except ValueError as e:
         return SkillResult.failed(f"Gemini 未配置: {e}", error_code="PROVIDER_NOT_CONFIGURED")
 
@@ -101,14 +100,12 @@ async def handle_generate_video(params: dict[str, Any], ctx: SkillContext) -> Sk
 
     start = time.monotonic()
     try:
-        from app.services.ai.model_providers.gemini_video import GeminiVideoProvider
-
-        video_provider = GeminiVideoProvider(api_key=api_key, model=model)
-        result = await video_provider.generate_video(
+        result = await provider.generate_video(
             prompt=prompt,
             image_bytes=image_bytes,
             aspect_ratio=aspect_ratio,
             duration_seconds=duration_seconds,
+            model=model,
         )
         duration_ms = int((time.monotonic() - start) * 1000)
 

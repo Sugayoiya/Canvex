@@ -1,7 +1,10 @@
 """
-Google Gemini LLM Provider — trimmed whitelist for Canvex.
+Google Gemini Unified Provider — LLM, Image (Imagen), and Video (Veo) via single genai.Client.
 """
+import asyncio
 import logging
+import os
+import uuid
 from typing import Any, AsyncGenerator, Optional
 
 from google import genai
@@ -10,6 +13,7 @@ from google.genai import types
 from app.services.ai.llm_provider_base import LLMProviderBase
 from app.services.ai.base import Message
 from app.services.ai.entities import AIModelEntity, ProviderEntity, ModelType, infer_model_type
+from app.services.ai.errors import ContentBlockedError, TransientError
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +156,131 @@ class GeminiProvider(LLMProviderBase):
 
         system_instruction = "\n".join(system_parts) if system_parts else None
         return contents, system_instruction
+
+    # ------------------------------------------------------------------
+    # Image generation (Imagen)
+    # ------------------------------------------------------------------
+
+    async def generate_image(
+        self,
+        prompt: str,
+        aspect_ratio: str = "16:9",
+        model: str = "imagen-4.0-generate-001",
+        number_of_images: int = 1,
+    ) -> dict:
+        """Generate image via Gemini Imagen API. Returns {url, filename, size}."""
+        try:
+            response = await self.client.aio.models.generate_images(
+                model=model,
+                prompt=prompt,
+                config=types.GenerateImagesConfig(
+                    number_of_images=number_of_images,
+                    aspect_ratio=aspect_ratio,
+                ),
+            )
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "safety" in err_msg or "blocked" in err_msg or "prohibited" in err_msg:
+                raise ContentBlockedError(
+                    f"Image generation blocked by safety policy: {str(e)[:200]}"
+                )
+            if "quota" in err_msg or "rate" in err_msg:
+                raise TransientError(
+                    f"Image generation rate limited: {str(e)[:200]}"
+                )
+            raise
+
+        if not response.generated_images:
+            raise ContentBlockedError(
+                "Imagen returned no images (likely content safety filter)"
+            )
+
+        from app.core.config import settings
+
+        img_data = response.generated_images[0].image.image_bytes
+        filename = f"gen_{uuid.uuid4().hex[:12]}.png"
+        upload_dir = os.path.join(settings.UPLOAD_DIR, "generated")
+        os.makedirs(upload_dir, exist_ok=True)
+        filepath = os.path.join(upload_dir, filename)
+
+        with open(filepath, "wb") as f:
+            f.write(img_data)
+
+        url = f"/api/v1/files/generated/{filename}"
+        logger.info("Image saved: %s (%d bytes)", filepath, len(img_data))
+        return {"url": url, "filename": filename, "size": len(img_data)}
+
+    # ------------------------------------------------------------------
+    # Video generation (Veo)
+    # ------------------------------------------------------------------
+
+    async def generate_video(
+        self,
+        prompt: str,
+        image_bytes: bytes | None = None,
+        aspect_ratio: str = "16:9",
+        duration_seconds: int = 5,
+        model: str = "veo-2.0-generate-001",
+    ) -> dict:
+        """Generate video via Gemini Veo API. Returns {url, filename, size, duration_seconds}."""
+        try:
+            config = types.GenerateVideosConfig(
+                aspect_ratio=aspect_ratio,
+                number_of_videos=1,
+            )
+            kwargs: dict = {"model": model, "prompt": prompt, "config": config}
+            if image_bytes:
+                kwargs["image"] = types.Image(image_bytes=image_bytes)
+
+            operation = await self.client.aio.models.generate_videos(**kwargs)
+
+            for _ in range(120):
+                if operation.done:
+                    break
+                await asyncio.sleep(5)
+                operation = await self.client.aio.operations.get(operation)
+
+            if not operation.done:
+                raise TransientError("Video generation timed out after 10 minutes")
+
+            if not operation.response or not operation.response.generated_videos:
+                raise ContentBlockedError("No video generated — content may have been blocked")
+
+            generated_video = operation.response.generated_videos[0]
+
+            filename = f"video_{uuid.uuid4().hex[:12]}.mp4"
+            from app.core.config import settings
+
+            gen_dir = os.path.join(settings.UPLOAD_DIR, "generated")
+            os.makedirs(gen_dir, exist_ok=True)
+            filepath = os.path.join(gen_dir, filename)
+
+            await self.client.aio.files.download(file=generated_video.video)
+            generated_video.video.save(filepath)
+
+            file_size = os.path.getsize(filepath)
+            url = f"/api/v1/files/generated/{filename}"
+
+            logger.info("Video generated: %s (%d bytes)", filename, file_size)
+            return {
+                "url": url,
+                "filename": filename,
+                "size": file_size,
+                "duration_seconds": duration_seconds,
+            }
+
+        except (ContentBlockedError, TransientError):
+            raise
+        except Exception as e:
+            error_msg = str(e)
+            if "not found" in error_msg.lower() or "not supported" in error_msg.lower():
+                raise TransientError(f"视频生成模型不可用: {model}. 请检查 API 密钥权限。")
+            logger.exception("Video generation failed")
+            raise TransientError(f"视频生成失败: {error_msg}")
+
+    # ------------------------------------------------------------------
+    # Model listing
+    # ------------------------------------------------------------------
 
     async def list_models(self) -> list[AIModelEntity]:
         api_models_map: dict[str, Any] = {}
