@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: executing
-stopped_at: Completed 12.1-04-PLAN.md (Frontend Agent Chat Wiring + Feature Flags)
-last_updated: "2026-04-02T17:19:10.159Z"
+status: verifying
+stopped_at: Completed 12.1-05-PLAN.md (PydanticAI cleanup + migration tests)
+last_updated: "2026-04-02T17:25:53.724Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
   percent: 16
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 Phase: 12.1 (agent-first-architecture-langchain-anthropic-skills) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-02
 
 Progress: [██░░░░░░░░] 16%
@@ -55,6 +55,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12.1 P01 | 5min | 3 tasks | 8 files |
 | Phase 12.1 P03 | 5min | 2 tasks | 6 files |
 | Phase 12.1 P04 | 1min | 2 tasks | 3 files |
+| Phase 12.1 P05 | 6min | 3 tasks | 27 files |
 
 ## Accumulated Context
 
@@ -79,6 +80,7 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.1]: create_agent from langchain.agents (not deprecated create_react_agent) + DeepSeek via ChatOpenAI base_url verified
 - [Phase 12.1]: Streaming fallback: astream_events(v2) primary → ainvoke terminal; langchain_messages_json alongside pydantic_ai_messages_json for backward compat
 - [Phase 12.1]: AGENT_CHAT_FOR_CANVAS defaults to false — legacy invoke active until agent proven stable in chat-only mode
+- [Phase 12.1]: Explicit google-genai + openai deps kept (not transitive from langchain-*); SkillExecutor removed in favor of direct registry.invoke(); 14 files deleted (13 planned + context_tools.py)
 
 ### Roadmap Evolution
 
@@ -96,6 +98,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-02T17:19:10.157Z
-Stopped at: Completed 12.1-04-PLAN.md (Frontend Agent Chat Wiring + Feature Flags)
+Last session: 2026-04-02T17:25:53.722Z
+Stopped at: Completed 12.1-05-PLAN.md (PydanticAI cleanup + migration tests)
 Resume file: None

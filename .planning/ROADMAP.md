@@ -41,7 +41,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 **Milestone Goal:** 统一 AI 调用路径、增强 Agent 引擎层（QueryEngine / ArtifactStore / ToolInterceptor / SkillDescriptor），修复 Pipeline，建立成本跟踪和 Admin 技能管理——为后续 30+ 业务 Skill 扩展奠定坚实基础。
 
 - [x] **Phase 12: AI Call Convergence** — 收敛 3 条割裂 AI 调用栈为统一 ProviderManager 路径，激活 DB 级异步密钥链 + KeyRotator (completed 2026-04-02)
-- [ ] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪
+- [x] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪 (completed 2026-04-02)
 - [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），修复 Pipeline 参数对齐和 Celery 异步衔接
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
@@ -89,7 +89,7 @@ Plans:
 - [x] 12.1-02-PLAN.md — Anthropic SKILL.md 10 个目录 + SkillLoader 三级渐进加载 + mtime 缓存失效 + 递归深度守卫
 - [x] 12.1-03-PLAN.md — LangChain Agent: create_agent (非已废弃 create_react_agent) + resolve_langchain_llm + SSE 流式回退矩阵 + LangSmith
 - [x] 12.1-04-PLAN.md — 前端适配: 废弃 skillsApi.invoke, agentApi.listSkills, feature-flag adapter 渐进式 canvas 迁移 + 遥测
-- [ ] 12.1-05-PLAN.md — 清理: 删除 13 文件 + E2E 验证门控 + 保留显式 provider deps + 迁移兼容性测试矩阵
+- [x] 12.1-05-PLAN.md — 清理: 删除 13 文件 + E2E 验证门控 + 保留显式 provider deps + 迁移兼容性测试矩阵
 
 ### Phase 13: SkillDescriptor Enhancement + Pipeline Fix
 **Goal**: Skill metadata system supports dependency declarations, tiered classification, and safety metadata; pipeline parameter mismatches fixed and Celery async chain repaired
