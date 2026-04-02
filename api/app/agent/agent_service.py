@@ -40,11 +40,9 @@ async def resolve_pydantic_model(
     from app.services.ai.provider_manager import get_provider_manager
 
     pm = get_provider_manager()
-    provider_inst, _owner, _key_id = await pm.get_provider(
-        provider, model=model_name,
-        team_id=team_id, user_id=user_id,
+    api_key, _owner, _key_id = await pm._resolve_key(
+        provider, team_id, user_id, db=None,
     )
-    api_key = provider_inst.api_key
 
     if provider == "gemini":
         from pydantic_ai.models.google import GoogleModel
