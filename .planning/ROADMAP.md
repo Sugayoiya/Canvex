@@ -4,7 +4,7 @@
 
 - ✅ **v2.0 Skill + Celery Refactor** — Phases 01-06 (shipped 2026-03-30)
 - ✅ **v2.1 Admin Console** — Phases 07-11 (shipped 2026-04-02)
-- 🚧 **v3.0 Agent System Upgrade** — Phases 12-16 (in progress)
+- 🚧 **v3.0 Agent System Upgrade** — Phases 12-16 + 12.1 inserted (in progress)
 
 ## Phases
 
@@ -41,6 +41,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 **Milestone Goal:** 统一 AI 调用路径、增强 Agent 引擎层（QueryEngine / ArtifactStore / ToolInterceptor / SkillDescriptor），修复 Pipeline，建立成本跟踪和 Admin 技能管理——为后续 30+ 业务 Skill 扩展奠定坚实基础。
 
 - [x] **Phase 12: AI Call Convergence** — 收敛 3 条割裂 AI 调用栈为统一 ProviderManager 路径，激活 DB 级异步密钥链 + KeyRotator (completed 2026-04-02)
+- [ ] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪
 - [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），修复 Pipeline 参数对齐和 Celery 异步衔接
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
@@ -67,6 +68,28 @@ Plans:
 - [x] 12-04-PLAN.md — Admin health UI: batch health endpoint, per-key health badges/toggle/reset/sparkline
 
 **UI hint**: yes
+
+### Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills (INSERTED)
+
+**Goal:** 将 Canvex AI 架构从 PydanticAI + Skill-Centric 模式重构为 LangChain + Anthropic Agent Skills 模式。Agent 成为唯一 LLM 推理者；Skill 变为声明式 SKILL.md 目录（三级渐进加载）；Tools 变为 @tool 纯函数；支持多供应商 LLM 切换（Gemini/OpenAI/DeepSeek）；集成 LangSmith 全链路追踪。
+**Depends on:** Phase 12 (unified ProviderManager credential path)
+**Requirements**: AGENT-01 (LangChain @tool 纯函数工具集), AGENT-02 (Anthropic SKILL.md 三级加载), AGENT-03 (LangChain Agent 多供应商切换), AGENT-04 (前端全部走 Agent Chat), AGENT-05 (清理 PydanticAI + 旧 skill handlers)
+**Success Criteria** (what must be TRUE):
+  1. All 14+ tools (read/write/AI) defined as LangChain `@tool` pure functions, no embedded LLM reasoning
+  2. 10 SKILL.md directories created following Anthropic spec (YAML name+description, <500 lines body)
+  3. SkillLoader implements three-level progressive disclosure (metadata at startup, instructions on trigger, resources on demand)
+  4. LangChain `create_react_agent` replaces PydanticAI agent loop; `resolve_langchain_llm()` supports Gemini/OpenAI/DeepSeek switching
+  5. LangSmith tracing enabled, all agent reasoning chains visible
+  6. Frontend all AI operations go through `POST /agent/chat` SSE; `POST /skills/invoke` deprecated
+  7. PydanticAI dependency removed; old reasoning skill Python handlers deleted
+**Plans**: 5 plans (Phase 0-4 from plan)
+
+Plans:
+- [ ] 12.1-01-PLAN.md — LangChain @tool 纯函数工具集: 17 tools (7 read + 6 write + 2 AI + 2 skill) + contextvars 上下文传播
+- [ ] 12.1-02-PLAN.md — Anthropic SKILL.md 10 个目录 + SkillLoader 三级渐进加载 (L1 元数据 / L2 指令 / L3 资源)
+- [ ] 12.1-03-PLAN.md — LangChain Agent 替代 PydanticAI: create_react_agent + resolve_langchain_llm 多供应商 + LangSmith + SSE 流式
+- [ ] 12.1-04-PLAN.md — 前端适配: 废弃 skillsApi.invoke, 新增 agentApi.listSkills, 标记 canvas 迁移
+- [ ] 12.1-05-PLAN.md — 清理: 删除 13 文件 (PydanticAI + 10 reasoning handlers + executor + pipeline_tools) + 修复 imports
 
 ### Phase 13: SkillDescriptor Enhancement + Pipeline Fix
 **Goal**: Skill metadata system supports dependency declarations, tiered classification, and safety metadata; pipeline parameter mismatches fixed and Celery async chain repaired
@@ -119,7 +142,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
+Phases execute in numeric order: 12 → **12.1 (INSERTED)** → 13 → 14 → 15 → 16
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
@@ -135,7 +158,8 @@ Phases execute in numeric order: 12 → 13 → 14 → 15 → 16
 | 09. User/Team UI | v2.1 | 3/3 | Complete | 2026-04-01 |
 | 10. Quota/Pricing/Provider | v2.1 | 4/4 | Complete | 2026-04-01 |
 | 11. Dashboard/Polish | v2.1 | 4/4 | Complete | 2026-04-01 |
-| 12. AI Call Convergence | v3.0 | 4/4 | Complete    | 2026-04-02 |
+| 12. AI Call Convergence | v3.0 | 4/4 | Complete | 2026-04-02 |
+| **12.1. Agent-First (INSERTED)** | **v3.0** | **0/5** | **Not started** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 0/TBD | Not started | - |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
