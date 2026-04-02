@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { skillsApi, canvasApi } from "@/lib/api";
 import { useCanvasStore } from "@/stores/canvas-store";
+import { FEATURE_FLAGS, trackEndpointUsage } from "@/lib/feature-flags";
 
 type NodeExecutionStatus =
   | "idle"
@@ -159,6 +160,13 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
     }
   }, [nodeId, onComplete]);
 
+  /**
+   * Execute a canvas node skill.
+   *
+   * Phase 12.1A: Uses skillsApi.invoke (legacy path).
+   * Phase 12.1B (future): When AGENT_CHAT_FOR_CANVAS=true, will route through agent chat SSE.
+   * Migration tracked via feature-flags.ts telemetry.
+   */
   const execute = useCallback(
     async (skillName: string, params: Record<string, any> = {}) => {
       if (state.status === "running" || state.status === "queued") return;
@@ -173,6 +181,18 @@ export function useNodeExecution(nodeId: string, onComplete?: (data: any) => voi
       });
       pollCountRef.current = 0;
       pollIntervalRef.current = INITIAL_POLL_INTERVAL;
+
+      if (FEATURE_FLAGS.AGENT_CHAT_FOR_CANVAS) {
+        trackEndpointUsage("agent/chat");
+        // TODO(Phase 12.1B): Implement agent chat path for canvas nodes.
+        // Requires: creating/reusing a canvas agent session, sending a
+        // structured message, and parsing SSE response to update node state.
+        console.warn(
+          "[Canvas Migration] AGENT_CHAT_FOR_CANVAS is true but agent path not yet implemented — using legacy invoke",
+        );
+      }
+
+      trackEndpointUsage("skills/invoke");
 
       try {
         const res = await skillsApi.invoke({
