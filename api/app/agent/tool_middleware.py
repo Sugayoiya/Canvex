@@ -47,14 +47,18 @@ def get_tools_for_context(
 
     Default set: 7 core + 3 script tools (10).
     With canvas: +1 (11).
-    With episode/storyboard: +6 (up to 14 max with overlap).
+    With episode/storyboard: replace script tools with 6 storyboard tools (13).
+    With both: 14 max.
     """
-    allowed_names = set(_ALWAYS_TOOLS) | set(_SCRIPT_TOOLS)
+    allowed_names = set(_ALWAYS_TOOLS)
+
+    if has_episode:
+        allowed_names |= _STORYBOARD_TOOLS
+    else:
+        allowed_names |= _SCRIPT_TOOLS
 
     if has_canvas:
         allowed_names |= _CANVAS_TOOLS
-    if has_episode:
-        allowed_names |= _STORYBOARD_TOOLS
 
     selected = [t for t in all_tools if t.name in allowed_names]
 
