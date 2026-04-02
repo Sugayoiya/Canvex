@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: verifying
-stopped_at: Completed 12-03-PLAN.md
-last_updated: "2026-04-02T10:43:03.654Z"
+status: executing
+stopped_at: Completed 12.1-02-PLAN.md
+last_updated: "2026-04-02T17:06:45.332Z"
 last_activity: 2026-04-02
 progress:
-  total_phases: 5
+  total_phases: 6
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 0
+  total_plans: 9
+  completed_plans: 5
+  percent: 16
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 12 — ai-call-convergence
+**Current focus:** Phase 12.1 — agent-first-architecture-langchain-anthropic-skills
 
 ## Current Position
 
-Phase: 13
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 12.1 (agent-first-architecture-langchain-anthropic-skills) — EXECUTING
+Plan: 2 of 5
+Status: Ready to execute
 Last activity: 2026-04-02
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 16%
 
 ## Performance Metrics
 
@@ -51,6 +51,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 12 P02 | 4min | 2 tasks | 6 files |
 | Phase 12 P04 | 5min | 3 tasks | 7 files |
 | Phase 12 P03 | 7min | 2 tasks | 19 files |
+| Phase 12.1 P02 | 4min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -67,6 +68,14 @@ Progress: [░░░░░░░░░░] 0%
 - [Phase 12]: 60s polling interval (vs 30s in UI-SPEC) per review feedback to reduce overhead
 - [Phase 12]: All 13 AI call sites converged to unified async ProviderManager path — no env fallback at runtime
 - [Phase 12]: SQLite dropped (D-16), PostgreSQL only — validator rejects sqlite:// URLs
+- [Phase 12.1]: SkillLoader uses threading.Lock for singleton safety + mtime-based cache invalidation
+- [Phase 12.1]: SKILL.md bilingual triggers (Chinese + English) and no embedded Python — tool names only
+
+### Roadmap Evolution
+
+- Phase 12.1 inserted after Phase 12: Agent-First Architecture: LangChain + Anthropic Skills (URGENT)
+- Phase 17 removed (superseded by Phase 12.1)
+- Phase 13-16 may need revision after 12.1 completes (PydanticAI assumptions invalidated)
 
 ### Pending Todos
 
@@ -74,10 +83,10 @@ Progress: [░░░░░░░░░░] 0%
 
 ### Blockers/Concerns
 
-(None)
+- Phase 13-16 currently assume PydanticAI architecture — after 12.1 completes, their scope and requirements need re-evaluation
 
 ## Session Continuity
 
-Last session: 2026-04-02T10:37:41.488Z
-Stopped at: Completed 12-03-PLAN.md
+Last session: 2026-04-02T17:06:45.330Z
+Stopped at: Completed 12.1-02-PLAN.md
 Resume file: None
