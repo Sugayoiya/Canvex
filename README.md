@@ -129,7 +129,7 @@ bash scripts/init-npm.sh
 ```bash
 cd api
 cp ../.env.example ../.env
-# 在 .env 中设置 USE_SQLITE=true 使用 SQLite 免装数据库
+# 需要先启动 PostgreSQL 和 Redis (docker compose up -d postgres redis)
 uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```

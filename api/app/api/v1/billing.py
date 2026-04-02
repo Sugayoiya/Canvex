@@ -5,7 +5,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select, func, String, cast
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
 from app.core.deps import get_db, get_current_user, require_admin
 from app.models.model_pricing import ModelPricing
 from app.services.admin_audit import AuditContext, serialize_changes
@@ -126,13 +125,9 @@ async def get_usage_timeseries(
     if end_date.tzinfo is not None:
         end_date = end_date.astimezone(timezone.utc).replace(tzinfo=None)
 
-    if settings.USE_SQLITE:
-        fmt_map = {"hour": "%Y-%m-%d %H:00", "day": "%Y-%m-%d", "week": "%Y-%W"}
-        date_group = func.strftime(fmt_map[granularity], AICallLog.created_at)
-    else:
-        date_group = cast(
-            func.date_trunc(granularity, AICallLog.created_at), String
-        )
+    date_group = cast(
+        func.date_trunc(granularity, AICallLog.created_at), String
+    )
 
     stmt = select(
         date_group.label("period"),
