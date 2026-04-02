@@ -69,7 +69,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 
 ## Context
 
-- Backend: FastAPI + SQLAlchemy async + Celery + Redis + PostgreSQL/SQLite. ~11.5K LOC Python.
+- Backend: FastAPI + SQLAlchemy async + Celery + Redis + PostgreSQL. ~11.5K LOC Python.
 - Frontend: Next.js 16 App Router + React 19 + Zustand + Axios + TanStack Table + Sonner. ~92K LOC TypeScript.
 - UI: Obsidian Lens design system (--ob-* tokens, Space Grotesk + Manrope).
 - Auth: JWT HS256 + Google/GitHub OAuth, `User.is_admin` boolean for system admin.
@@ -83,6 +83,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 ## Constraints
 
 - **Architecture**: SkillRegistry + Celery remains the core invocation path.
+- **Database**: PostgreSQL only — SQLite support dropped. Redis required (Celery + key health cache).
 - **UI consistency**: All pages must use Obsidian Lens design system (--ob-* tokens).
 - **Permission isolation**: Admin routes `require_admin`-guarded; frontend hides admin UI for non-admins.
 - **Backward compatibility**: Existing team/personal AI Console continues working independently.
@@ -100,6 +101,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 | Fail-silent alerts query on dashboard | Badges omitted on API error, no user-visible error | ✓ Good |
 | AdminErrorBoundary with setState remount | Clean error recovery with query invalidation | ✓ Good |
 | Shared useAdminLogTable hook | Eliminates duplication across 3 log tab components | ✓ Good |
+| PostgreSQL only, drop SQLite | Redis already required; no dual-DB maintenance overhead | ✓ Good |
 
 ## Evolution
 
