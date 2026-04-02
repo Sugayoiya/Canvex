@@ -59,6 +59,7 @@ def _auto_migrate_columns(connection):
 
     migrations = [
         ("ai_provider_keys", "key_hint", "VARCHAR(8)"),
+        ("agent_messages", "langchain_messages_json", "TEXT"),
     ]
     for table, column, col_type in migrations:
         if table not in table_names:
