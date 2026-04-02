@@ -1,3 +1,9 @@
+"""E2E tests for skill and canvas API endpoints.
+
+Post-Phase 12.1: Only 4 skills remain in SkillRegistry (canvas_ops, asset,
+visual.generate_image, video.generate_video). Reasoning skills now live in
+SKILL.md and are loaded by SkillLoader for the LangChain agent.
+"""
 import uuid
 
 import pytest
@@ -7,12 +13,10 @@ import pytest
 async def test_skill_invoke_endpoint(async_client):
     """Invoke a skill via the API endpoint (may fail without provider but endpoint should respond)."""
     resp = await async_client.post("/api/v1/skills/invoke", json={
-        "skill_name": "text.llm_generate",
+        "skill_name": "visual.generate_image",
         "params": {"prompt": "Hello world"},
         "project_id": "test-project-id",
     })
-    # Skill invocation may fail due to missing AI provider config, but 
-    # the endpoint should accept the request (200/500, not 404/422)
     assert resp.status_code != 404, "Skill invoke endpoint should exist"
 
 
@@ -23,10 +27,10 @@ async def test_skill_list_endpoint(async_client):
     assert resp.status_code == 200
     skills = resp.json()
     assert isinstance(skills, list)
-    assert len(skills) >= 13
+    assert len(skills) >= 3
     names = [s["name"] for s in skills]
-    assert "text.llm_generate" in names
     assert "visual.generate_image" in names
+    assert "canvas.get_state" in names
 
 
 @pytest.mark.asyncio
@@ -36,7 +40,7 @@ async def test_skill_tool_definitions(async_client):
     assert resp.status_code == 200
     tools = resp.json()
     assert isinstance(tools, list)
-    assert len(tools) >= 13
+    assert len(tools) >= 3
 
 
 @pytest.mark.asyncio
@@ -62,12 +66,9 @@ async def test_contextvar_propagation():
 @pytest.mark.asyncio
 async def test_canvas_to_skill_flow(async_client):
     """E2E: verify canvas endpoints + skill endpoints are both reachable and consistent."""
-    # Canvas list (should be empty or require project)
     canvas_resp = await async_client.get("/api/v1/canvas/", params={"project_id": "e2e-test"})
-    # Expect 404 (project not found) since we have no real project
     assert canvas_resp.status_code in (200, 404)
 
-    # Skills list should always succeed
     skills_resp = await async_client.get("/api/v1/skills/")
     assert skills_resp.status_code == 200
     skills = skills_resp.json()
@@ -77,12 +78,15 @@ async def test_canvas_to_skill_flow(async_client):
 
 @pytest.mark.asyncio
 async def test_skill_invoke_unknown_skill(async_client):
-    """Invoking a non-existent skill should raise KeyError or return error status."""
-    try:
-        resp = await async_client.post("/api/v1/skills/invoke", json={
-            "skill_name": "nonexistent.skill",
-            "params": {},
-        })
+    """Invoking a non-existent skill should return error status or HTTP error."""
+    resp = await async_client.post("/api/v1/skills/invoke", json={
+        "skill_name": "nonexistent.skill",
+        "params": {},
+        "project_id": "test-project-id",
+    })
+    if resp.status_code == 200:
+        data = resp.json()
+        assert data.get("status") == "failed", \
+            f"Unknown skill should return failed status, got: {data}"
+    else:
         assert resp.status_code in (404, 422, 500)
-    except KeyError as e:
-        assert "nonexistent.skill" in str(e)

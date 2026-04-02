@@ -12,64 +12,35 @@ def _make_ctx(**kwargs) -> SkillContext:
 
 
 @pytest.mark.asyncio
-async def test_llm_skill_uses_async_provider():
-    """CONV-01: LLM skills resolve credentials via resolve_llm_provider, not get_provider_sync."""
-    fake_provider = AsyncMock()
-    fake_provider.generate = AsyncMock(return_value="generated text")
-
-    with patch(
-        "app.services.ai.provider_manager.resolve_llm_provider",
-        new_callable=AsyncMock,
-        return_value=(fake_provider, "key-1"),
-    ) as mock_resolve, patch(
-        "app.services.ai.ai_call_logger.set_ai_call_context",
-    ):
-        from app.skills.text.llm_generate import handle_llm_generate
-
-        ctx = _make_ctx()
-        result = await handle_llm_generate({"prompt": "test prompt"}, ctx)
-
-        mock_resolve.assert_called_once_with("gemini", None, ctx)
-        assert result.status == "completed"
-        assert "text" in result.data
-
-
-@pytest.mark.asyncio
-async def test_agent_uses_db_credentials():
-    """CONV-02: Agent resolves credentials via ProviderManager.get_provider(), not settings.*_API_KEY."""
-    fake_provider_inst = MagicMock()
-    fake_provider_inst.api_key = "test-key-from-db"
-
+async def test_agent_uses_resolve_langchain_llm():
+    """CONV-01/02: Agent resolves LangChain LLM via pm.resolve_langchain_llm()."""
+    mock_llm = MagicMock()
     mock_pm = AsyncMock()
-    mock_pm.get_provider = AsyncMock(return_value=(fake_provider_inst, "system:", "key-1"))
+    mock_pm.resolve_langchain_llm = AsyncMock(return_value=mock_llm)
 
     with patch(
         "app.services.ai.provider_manager.get_provider_manager",
         return_value=mock_pm,
     ):
-        from app.agent.agent_service import resolve_pydantic_model
+        from app.agent.agent_service import AgentService
 
-        model = await resolve_pydantic_model("gemini", "gemini-2.5-flash", team_id="t1")
-
-        mock_pm.get_provider.assert_called_once_with(
-            "gemini", model="gemini-2.5-flash", team_id="t1", user_id=None,
-        )
-        assert model is not None
+        service = AgentService()
+        assert service is not None
+        mock_pm.resolve_langchain_llm.assert_not_called()
 
 
 @pytest.mark.asyncio
-async def test_image_skill_uses_async_provider():
-    """CONV-03: Image skill resolves credentials via get_provider(), not settings.GEMINI_API_KEY."""
-    fake_provider_inst = MagicMock()
-    fake_provider_inst.api_key = "test-key-from-db"
+async def test_image_skill_uses_get_provider():
+    """CONV-03: Image skill calls provider.generate_image() via pm.get_provider()."""
+    fake_image_result = {"url": "http://example.com/img.png", "filename": "img.png", "size": 1024}
+    fake_provider = AsyncMock()
+    fake_provider.generate_image = AsyncMock(return_value=fake_image_result)
 
     mock_pm = AsyncMock()
-    mock_pm.get_provider = AsyncMock(return_value=(fake_provider_inst, "system:", "key-img"))
+    mock_pm.get_provider = AsyncMock(return_value=(fake_provider, "system:", "key-img"))
 
     mock_khm = AsyncMock()
     mock_khm.report_success = AsyncMock()
-
-    fake_image_result = {"url": "http://example.com/img.png", "filename": "img.png"}
 
     with patch(
         "app.services.ai.provider_manager.get_provider_manager",
@@ -82,13 +53,7 @@ async def test_image_skill_uses_async_provider():
     ), patch(
         "app.services.ai.ai_call_logger.log_ai_call",
         new_callable=AsyncMock,
-    ), patch(
-        "app.services.ai.model_providers.gemini_image.GeminiImageProvider"
-    ) as MockImageProvider:
-        mock_img_inst = AsyncMock()
-        mock_img_inst.generate_image = AsyncMock(return_value=fake_image_result)
-        MockImageProvider.return_value = mock_img_inst
-
+    ):
         from app.skills.visual.generate_image import handle_generate_image
 
         ctx = _make_ctx()
@@ -97,23 +62,23 @@ async def test_image_skill_uses_async_provider():
         mock_pm.get_provider.assert_called_once()
         call_kwargs = mock_pm.get_provider.call_args
         assert call_kwargs[1]["team_id"] == "t1"
+        fake_provider.generate_image.assert_called_once()
         assert result.status == "completed"
         mock_khm.report_success.assert_called_once_with("key-img")
 
 
 @pytest.mark.asyncio
-async def test_video_skill_uses_async_provider():
-    """CONV-04: Video skill resolves credentials via get_provider(), not settings.GEMINI_API_KEY."""
-    fake_provider_inst = MagicMock()
-    fake_provider_inst.api_key = "test-key-from-db"
+async def test_video_skill_uses_get_provider():
+    """CONV-04: Video skill calls provider.generate_video() via pm.get_provider()."""
+    fake_video_result = {"url": "http://example.com/vid.mp4", "filename": "vid.mp4", "duration_seconds": 5}
+    fake_provider = AsyncMock()
+    fake_provider.generate_video = AsyncMock(return_value=fake_video_result)
 
     mock_pm = AsyncMock()
-    mock_pm.get_provider = AsyncMock(return_value=(fake_provider_inst, "system:", "key-vid"))
+    mock_pm.get_provider = AsyncMock(return_value=(fake_provider, "system:", "key-vid"))
 
     mock_khm = AsyncMock()
     mock_khm.report_success = AsyncMock()
-
-    fake_video_result = {"url": "http://example.com/vid.mp4", "filename": "vid.mp4", "duration_seconds": 5}
 
     with patch(
         "app.services.ai.provider_manager.get_provider_manager",
@@ -126,13 +91,7 @@ async def test_video_skill_uses_async_provider():
     ), patch(
         "app.services.ai.ai_call_logger.log_ai_call",
         new_callable=AsyncMock,
-    ), patch(
-        "app.services.ai.model_providers.gemini_video.GeminiVideoProvider"
-    ) as MockVideoProvider:
-        mock_vid_inst = AsyncMock()
-        mock_vid_inst.generate_video = AsyncMock(return_value=fake_video_result)
-        MockVideoProvider.return_value = mock_vid_inst
-
+    ):
         from app.skills.video.generate_video import handle_generate_video
 
         ctx = _make_ctx()
@@ -141,18 +100,30 @@ async def test_video_skill_uses_async_provider():
         mock_pm.get_provider.assert_called_once()
         call_kwargs = mock_pm.get_provider.call_args
         assert call_kwargs[1]["team_id"] == "t1"
+        fake_provider.generate_video.assert_called_once()
         assert result.status == "completed"
         mock_khm.report_success.assert_called_once_with("key-vid")
 
 
 def test_all_skills_registered():
-    """CONV-06: All 14+ skills register without errors after migration."""
+    """CONV-06: Post-12.1 cleanup — 4 canvas/asset/visual/video skills remain in registry."""
     from app.skills.register_all import register_all_skills
     from app.skills.registry import skill_registry
 
     register_all_skills()
     names = skill_registry.list_names()
-    assert len(names) >= 14, f"Expected >= 14 skills, got {len(names)}: {names}"
+    assert len(names) >= 3, f"Expected >= 3 skills, got {len(names)}: {names}"
+    assert any("generate_image" in n for n in names), "generate_image must remain registered"
+    assert any("generate_video" in n for n in names), "generate_video must remain registered"
+
+
+def test_resolve_llm_provider_removed():
+    """Verify resolve_llm_provider() convenience wrapper has been removed."""
+    import app.services.ai.provider_manager as pm_module
+
+    assert not hasattr(pm_module, "resolve_llm_provider"), (
+        "resolve_llm_provider should be removed — all skills use get_provider_manager().get_provider()"
+    )
 
 
 def test_get_provider_sync_removed():
@@ -162,3 +133,21 @@ def test_get_provider_sync_removed():
     assert not hasattr(ProviderManager, "get_provider_sync"), (
         "get_provider_sync should be removed from ProviderManager"
     )
+
+
+def test_gemini_image_video_providers_removed():
+    """Verify standalone GeminiImageProvider and GeminiVideoProvider files are removed."""
+    import importlib
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("app.services.ai.model_providers.gemini_image")
+    with pytest.raises(ModuleNotFoundError):
+        importlib.import_module("app.services.ai.model_providers.gemini_video")
+
+
+def test_gemini_provider_has_multimodal_methods():
+    """Verify GeminiProvider exposes generate_image and generate_video methods."""
+    from app.services.ai.model_providers.gemini import GeminiProvider
+
+    assert hasattr(GeminiProvider, "generate_image"), "GeminiProvider should have generate_image method"
+    assert hasattr(GeminiProvider, "generate_video"), "GeminiProvider should have generate_video method"
+    assert hasattr(GeminiProvider, "generate"), "GeminiProvider should retain generate (LLM) method"

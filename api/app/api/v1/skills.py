@@ -8,7 +8,7 @@ from app.schemas.skill import (
     SkillResultResponse,
     SkillPollRequest,
 )
-from app.skills import skill_registry, SkillContext, SkillExecutor
+from app.skills import skill_registry, SkillContext
 
 router = APIRouter(prefix="/skills", tags=["skills"])
 
@@ -44,7 +44,21 @@ async def invoke_skill(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Invoke a Skill by name."""
+    """Invoke a Skill by name (direct registry invocation)."""
+    from app.services.quota_service import QuotaService
+    from app.skills.descriptor import SkillResult
+
+    quota_result = await QuotaService.check_quota(
+        user_id=user.id,
+        team_id=getattr(user, "current_team_id", None),
+    )
+    if not quota_result.allowed:
+        return SkillResultResponse(
+            status="failed",
+            data={"error_code": quota_result.error_code},
+            message=quota_result.reason,
+        )
+
     ctx = SkillContext(
         user_id=user.id,
         project_id=req.project_id,
@@ -53,8 +67,7 @@ async def invoke_skill(
         trigger_source="user_ui",
     )
 
-    executor = SkillExecutor(skill_registry)
-    result = await executor.invoke(req.skill_name, req.params, ctx)
+    result = await skill_registry.invoke(req.skill_name, req.params, ctx)
 
     return SkillResultResponse(
         status=result.status,

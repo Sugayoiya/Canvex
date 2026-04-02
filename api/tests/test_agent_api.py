@@ -234,140 +234,28 @@ class TestSSEProtocol:
 
 
 # ---------------------------------------------------------------------------
-# TestSkillToolset
+# TestLangChainTools (replaces TestSkillToolset / TestPipelineTool / TestContextTools)
 # ---------------------------------------------------------------------------
 
 
-class TestSkillToolset:
+class TestLangChainTools:
     @pytest.mark.asyncio
-    async def test_tool_defs_generated(self):
-        from app.agent.skill_toolset import SkillToolset
-        from app.skills.context import SkillContext
-        from app.skills.registry import skill_registry
+    async def test_all_tools_available(self):
+        from app.agent.tools import get_all_tools
 
-        toolset = SkillToolset(registry=skill_registry, context=SkillContext())
-        defs = await toolset.tool_defs()
-        assert len(defs) > 0
-        names = [d.name for d in defs]
-        assert len(names) == len(set(names)), "Duplicate tool names detected"
+        tools = get_all_tools()
+        assert len(tools) > 0, "No tools registered"
+        names = [t.name for t in tools]
+        assert len(names) == len(set(names)), f"Duplicate tool names: {names}"
 
     @pytest.mark.asyncio
-    async def test_tool_names_use_double_underscore(self):
-        from app.agent.skill_toolset import SkillToolset
-        from app.skills.context import SkillContext
-        from app.skills.registry import skill_registry
+    async def test_context_gated_tools(self):
+        from app.agent.tools import get_tools_for_context
 
-        toolset = SkillToolset(registry=skill_registry, context=SkillContext())
-        names = await toolset.tool_names()
-        for name in names:
-            assert "__" in name, f"Tool name '{name}' missing double-underscore namespace"
-
-    @pytest.mark.asyncio
-    async def test_cancel_sets_flag(self):
-        from app.agent.skill_toolset import SkillToolset
-        from app.skills.context import SkillContext
-        from app.skills.registry import skill_registry
-
-        toolset = SkillToolset(registry=skill_registry, context=SkillContext())
-        assert not toolset._cancelled
-        toolset.cancel()
-        assert toolset._cancelled
-
-
-# ---------------------------------------------------------------------------
-# TestPipelineTool
-# ---------------------------------------------------------------------------
-
-
-class TestPipelineTool:
-    @pytest.mark.asyncio
-    async def test_pipeline_toolset_created(self):
-        from app.agent.pipeline_tools import get_pipeline_toolset
-
-        toolset = get_pipeline_toolset()
-        assert toolset is not None
-
-    @pytest.mark.asyncio
-    async def test_pipeline_steps_config(self):
-        from app.agent.pipeline_tools import EPISODE_PIPELINE_STEPS, STEP_CONFIG
-
-        assert len(EPISODE_PIPELINE_STEPS) == 4
-        assert "script.split_clips" in EPISODE_PIPELINE_STEPS
-        assert "storyboard.detail" in EPISODE_PIPELINE_STEPS
-        for step in EPISODE_PIPELINE_STEPS:
-            assert step in STEP_CONFIG
-            assert "timeout" in STEP_CONFIG[step]
-            assert "retries" in STEP_CONFIG[step]
-
-    @pytest.mark.asyncio
-    async def test_pipeline_step_timeouts(self):
-        from app.agent.pipeline_tools import STEP_CONFIG
-
-        assert STEP_CONFIG["script.split_clips"]["timeout"] == 60
-        assert STEP_CONFIG["script.split_clips"]["retries"] == 1
-        assert STEP_CONFIG["storyboard.plan"]["timeout"] == 90
-        assert STEP_CONFIG["storyboard.plan"]["retries"] == 0
-
-    @pytest.mark.asyncio
-    async def test_chain_params_logic(self):
-        from app.agent.pipeline_tools import _chain_params
-
-        p1 = _chain_params("script.split_clips", "story text", {})
-        assert p1 == {"text": "story text"}
-
-        p2 = _chain_params(
-            "script.convert_screenplay",
-            "story",
-            {"script.split_clips": {"clips": ["a", "b"]}},
-        )
-        assert p2 == {"clips": ["a", "b"]}
-
-        p3 = _chain_params(
-            "storyboard.plan",
-            "story",
-            {"script.convert_screenplay": {"screenplay": "text"}},
-        )
-        assert p3 == {"screenplay": "text"}
-
-        p4 = _chain_params(
-            "storyboard.detail",
-            "story",
-            {"storyboard.plan": {"shots": [1, 2]}},
-        )
-        assert p4 == {"shot_plan": [1, 2]}
-
-
-# ---------------------------------------------------------------------------
-# TestAgentAuth
-# ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
-# TestContextTools
-# ---------------------------------------------------------------------------
-
-
-class TestContextTools:
-    @pytest.mark.asyncio
-    async def test_context_toolset_created(self):
-        from app.agent.context_tools import get_context_toolset
-
-        toolset = get_context_toolset()
-        assert toolset is not None
-
-    @pytest.mark.asyncio
-    async def test_context_tool_functions_exist(self):
-        from app.agent.context_tools import (
-            get_canvas_state,
-            get_project_characters,
-            get_project_scenes,
-            get_script_content,
-        )
-
-        assert callable(get_project_characters)
-        assert callable(get_project_scenes)
-        assert callable(get_script_content)
-        assert callable(get_canvas_state)
+        tools_no_ctx = get_tools_for_context(has_canvas=False, has_episode=False)
+        tools_full = get_tools_for_context(has_canvas=True, has_episode=True)
+        assert len(tools_full) >= len(tools_no_ctx), \
+            "Full context should have >= tools than no context"
 
 
 # ---------------------------------------------------------------------------
