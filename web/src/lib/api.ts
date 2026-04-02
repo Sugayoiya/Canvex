@@ -100,6 +100,11 @@ export const skillsApi = {
     api.get("/skills/", { params: category ? { category } : {} }),
   tools: (category?: string) =>
     api.get("/skills/tools", { params: category ? { category } : {} }),
+  /**
+   * @deprecated Phase 12.1: Use agent chat (POST /agent/chat/:sessionId) instead.
+   * Canvas nodes still use this when AGENT_CHAT_FOR_CANVAS=false.
+   * Will be removed once canvas migration is verified complete.
+   */
   invoke: (data: {
     skill_name: string;
     params?: Record<string, unknown>;
@@ -108,6 +113,10 @@ export const skillsApi = {
     node_id?: string;
     idempotency_key?: string;
   }) => api.post("/skills/invoke", data),
+  /**
+   * @deprecated Phase 12.1: Use agent chat SSE streaming instead of polling.
+   * Will be removed once canvas migration is verified complete.
+   */
   poll: (task_id: string) => api.post("/skills/poll", { task_id }),
 };
 
@@ -204,6 +213,11 @@ export const agentApi = {
     api.get(`/agent/sessions/${sessionId}/messages`, {
       params: { limit, offset },
     }),
+  /** List available agent skills (SKILL.md metadata) */
+  listSkills: () =>
+    api.get<{ skills: Array<{ name: string; description: string }> }>(
+      "/agent/skills",
+    ),
 };
 
 export const taskApi = {
