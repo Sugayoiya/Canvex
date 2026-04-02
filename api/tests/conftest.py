@@ -7,6 +7,7 @@ import pytest_asyncio
 from httpx import AsyncClient, ASGITransport
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+import fakeredis.aioredis
 
 os.environ.setdefault("USE_SQLITE", "true")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
@@ -131,4 +132,66 @@ def make_project(db_session):
         db_session.add(project)
         await db_session.flush()
         return project
+    return _make
+
+
+# ---------------------------------------------------------------------------
+# Redis fixtures for Phase 12+ provider management tests
+# ---------------------------------------------------------------------------
+
+@pytest_asyncio.fixture
+async def fake_redis():
+    """Provide a fakeredis instance for isolated unit tests."""
+    r = fakeredis.aioredis.FakeRedis(decode_responses=True)
+    yield r
+    await r.aclose()
+
+
+@pytest.fixture
+def mock_key_health(fake_redis, monkeypatch):
+    """Patch KeyHealthManager to use fake Redis."""
+    from app.services.ai.key_health import KeyHealthManager
+    manager = KeyHealthManager()
+    manager._redis = fake_redis
+    monkeypatch.setattr("app.services.ai.key_health._manager", manager)
+    monkeypatch.setattr("app.services.ai.provider_manager.get_key_health_manager", lambda: manager)
+    return manager
+
+
+@pytest.fixture
+def mock_credential_cache(fake_redis, monkeypatch):
+    """Patch CredentialCache to use fake Redis."""
+    from app.services.ai.credential_cache import CredentialCache
+    cache = CredentialCache()
+    cache._redis = fake_redis
+    monkeypatch.setattr("app.services.ai.credential_cache._cache", cache)
+    monkeypatch.setattr("app.services.ai.provider_manager.get_credential_cache", lambda: cache)
+    return cache
+
+
+@pytest.fixture
+def make_provider_config(db_session):
+    """Factory fixture for creating AIProviderConfig + AIProviderKey test data."""
+    async def _make(provider_name="gemini", owner_type="system", owner_id=None, keys=None):
+        from app.models.ai_provider_config import AIProviderConfig, AIProviderKey
+        from app.services.ai.provider_manager import encrypt_api_key
+        config = AIProviderConfig(
+            id=str(uuid.uuid4()), provider_name=provider_name,
+            display_name=provider_name.title(), is_enabled=True, priority=0,
+            owner_type=owner_type, owner_id=owner_id,
+        )
+        db_session.add(config)
+        await db_session.flush()
+        created_keys = []
+        for k in (keys or [{"api_key": f"test-key-{uuid.uuid4().hex[:8]}", "label": "key-1"}]):
+            key = AIProviderKey(
+                id=str(uuid.uuid4()), provider_config_id=config.id,
+                api_key_encrypted=encrypt_api_key(k["api_key"]),
+                label=k.get("label"), is_active=k.get("is_active", True),
+            )
+            db_session.add(key)
+            created_keys.append(key)
+        await db_session.flush()
+        await db_session.refresh(config)
+        return config, created_keys
     return _make
