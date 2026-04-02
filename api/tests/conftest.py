@@ -9,8 +9,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 import fakeredis.aioredis
 
-os.environ.setdefault("USE_SQLITE", "true")
-os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
+os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/canvas_studio_test")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-unit-tests")
 os.environ.setdefault("DEFAULT_ADMIN_EMAIL", "admin@test.com")
 os.environ.setdefault("DEFAULT_ADMIN_PASSWORD", "testpassword")

@@ -43,13 +43,6 @@ _current_key_id_var: contextvars.ContextVar[str | None] = contextvars.ContextVar
 
 _PROVIDER_REGISTRY: dict[str, tuple[Type[AIProviderBase], str]] = {}
 
-_ENV_KEY_MAP = {
-    "gemini": "GEMINI_API_KEY",
-    "openai": "OPENAI_API_KEY",
-    "deepseek": "DEEPSEEK_API_KEY",
-}
-
-
 def _ensure_registry():
     if _PROVIDER_REGISTRY:
         return
@@ -63,14 +56,6 @@ def _ensure_registry():
         "openai": (OpenAIProvider, "gpt-4o"),
         "deepseek": (DeepSeekProvider, "deepseek-chat"),
     })
-
-
-def _get_env_api_key(provider: str) -> str | None:
-    attr = _ENV_KEY_MAP.get(provider)
-    if attr:
-        val = getattr(settings, attr, None)
-        return val if val else None
-    return None
 
 
 # ---------------------------------------------------------------------------
@@ -139,46 +124,6 @@ class ProviderManager:
 
     def __init__(self):
         self._key_rotator = KeyRotator()
-
-    # ---- Backward-compatible sync API (deprecated — will be removed in Plan 12-03) ----
-
-    def get_provider_sync(
-        self,
-        provider: str,
-        model: str | None = None,
-        api_key: str | None = None,
-    ) -> AIProviderBase:
-        """Sync fallback for existing callers — env-var credentials only."""
-        logger.warning(
-            "get_provider_sync_deprecated: get_provider_sync() is deprecated. "
-            "Use get_provider() async path. Will be removed in Plan 12-03."
-        )
-        _ensure_registry()
-
-        if provider == "auto":
-            for candidate in ["gemini", "openai", "deepseek"]:
-                candidate_key = api_key or _get_env_api_key(candidate)
-                if candidate_key:
-                    provider = candidate
-                    api_key = candidate_key
-                    break
-            else:
-                raise ValueError(
-                    "No AI provider configured. Set GEMINI_API_KEY, OPENAI_API_KEY, or DEEPSEEK_API_KEY."
-                )
-
-        key = api_key or _get_env_api_key(provider)
-        if not key:
-            env_var = _ENV_KEY_MAP.get(provider, f"{provider.upper()}_API_KEY")
-            raise ValueError(f"No API key for '{provider}'. Set {env_var} env var.")
-
-        if provider not in _PROVIDER_REGISTRY:
-            raise ValueError(f"Unknown provider: {provider}")
-
-        cls, default_model = _PROVIDER_REGISTRY[provider]
-        return cls(api_key=key, model=model or default_model)
-
-    # ---- Async DB-backed API with Redis cache + health ----
 
     async def get_provider(
         self,
@@ -384,7 +329,7 @@ class ProviderManager:
 
     def get_configured_providers(self) -> list[str]:
         _ensure_registry()
-        return [name for name in _PROVIDER_REGISTRY if _get_env_api_key(name)]
+        return list(_PROVIDER_REGISTRY.keys())
 
     def get_all_provider_entities(self) -> list[ProviderEntity]:
         _ensure_registry()

@@ -1,5 +1,6 @@
 import warnings
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 _INSECURE_DEFAULT_KEY = "your-secret-key-change-in-production"
@@ -9,16 +10,17 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Canvex"
     API_V1_STR: str = "/api/v1"
 
-    # Database
-    USE_SQLITE: bool = True
+    # Database (PostgreSQL only — SQLite dropped in Phase 12 D-16)
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/canvas_studio"
-    SQLITE_URL: str = "sqlite+aiosqlite:///./dev.db"
 
-    @property
-    def database_url(self) -> str:
-        if self.USE_SQLITE:
-            return self.SQLITE_URL
-        return self.DATABASE_URL
+    @model_validator(mode="after")
+    def validate_database_url(self) -> "Settings":
+        if self.DATABASE_URL.startswith("sqlite"):
+            raise ValueError(
+                "SQLite is no longer supported (Phase 12, D-16). "
+                "Use PostgreSQL: DATABASE_URL=postgresql+asyncpg://..."
+            )
+        return self
 
     # Redis (required for Celery)
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -63,6 +65,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 
 settings = Settings()

@@ -2,33 +2,18 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy import event, inspect, text
+from sqlalchemy import inspect, text
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_sqlite_connect_args = {
-    "check_same_thread": False,
-    "timeout": 30,
-}
-
 engine = create_async_engine(
-    settings.database_url,
+    settings.DATABASE_URL,
     echo=False,
     future=True,
-    connect_args=_sqlite_connect_args if settings.USE_SQLITE else {},
     pool_pre_ping=True,
 )
-
-if settings.USE_SQLITE:
-    @event.listens_for(engine.sync_engine, "connect")
-    def _set_sqlite_pragma(dbapi_connection, connection_record):
-        cursor = dbapi_connection.cursor()
-        cursor.execute("PRAGMA journal_mode=WAL")
-        cursor.execute("PRAGMA busy_timeout=30000")
-        cursor.execute("PRAGMA synchronous=NORMAL")
-        cursor.close()
 
 AsyncSessionLocal = async_sessionmaker(
     engine,
@@ -53,20 +38,13 @@ def _migrate_refresh_token_column(connection):
         return
 
     if "refresh_token" in columns:
-        if settings.USE_SQLITE:
-            connection.execute(
-                text("ALTER TABLE users ADD COLUMN refresh_token_hash VARCHAR(64)")
-            )
-            connection.execute(text("UPDATE users SET refresh_token_hash = NULL"))
-            logger.info("Migrated users.refresh_token → refresh_token_hash (SQLite: added new column)")
-        else:
-            connection.execute(
-                text("ALTER TABLE users RENAME COLUMN refresh_token TO refresh_token_hash")
-            )
-            connection.execute(
-                text("ALTER TABLE users ALTER COLUMN refresh_token_hash TYPE VARCHAR(64)")
-            )
-            logger.info("Migrated users.refresh_token → refresh_token_hash (PostgreSQL: renamed)")
+        connection.execute(
+            text("ALTER TABLE users RENAME COLUMN refresh_token TO refresh_token_hash")
+        )
+        connection.execute(
+            text("ALTER TABLE users ALTER COLUMN refresh_token_hash TYPE VARCHAR(64)")
+        )
+        logger.info("Migrated users.refresh_token → refresh_token_hash")
     else:
         connection.execute(
             text("ALTER TABLE users ADD COLUMN refresh_token_hash VARCHAR(64)")
