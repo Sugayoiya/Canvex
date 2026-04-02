@@ -40,11 +40,9 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ v2.1 Phase 9 user & team management UI — TanStack Table user directory + Teams overview
 - ✓ v2.1 Phase 10 quota/pricing/provider management — dual-tab quota editor, pricing CRUD, provider key management
 - ✓ v2.1 Phase 11 monitoring dashboard & polish — KPI cards, 4-tab logs, AdminErrorBoundary on all pages
+- ✓ v3.0 Phase 12 AI call convergence — 3 stacks unified to ProviderManager async path, Redis key health, credential cache, SQLite dropped
 
 ### Active
-
-- [ ] AI 调用路径收敛——Agent/文本技能/图视频技能共享统一 ProviderManager 解析逻辑
-- [ ] DB 级密钥链激活——team → personal → system → env 异步解析路径接入运行时
 - [ ] QueryEngine——Token 预算、轮次限制、递减检测、"先计划再执行"模式
 - [ ] ArtifactStore + ToolInterceptor——会话级产物自动注入/持久化
 - [ ] SkillDescriptor 增强——依赖声明、mode 参数、三层分类
@@ -76,7 +74,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - Admin console: 7 pages (Dashboard, Users, Teams, Quotas, Pricing, Providers, Monitoring).
 - Agent system: PydanticAI + SkillToolset + context_tools + pipeline_tools + SSE chat sidebar.
 - Skills: 14 registered skills (TEXT×2, EXTRACT×2, SCRIPT×2, STORYBOARD×2, VISUAL×3, VIDEO×1, CANVAS×1, ASSET×1).
-- AI call paths: 3 separate stacks — (A) PydanticAI+settings, (B) ProviderManager sync+LLMProviderBase, (C) raw Gemini Image/Video+env key. DB async key chain (`get_provider`) is dead code.
+- AI call paths: Unified — all 13 call sites (10 LLM skills, Agent, Image, Video) use ProviderManager.get_provider() async DB chain (team→personal→system). Redis-backed KeyHealthManager + CredentialCache. No env fallback at runtime.
 - 7-stage creation pipeline: Story Workshop → Import Episodes → Asset Extraction → Story-to-Script → Storyboard → Voice Analysis → Video Generation. Documented in `docs/framework/story-to-storyboard-dataflow.md`.
 - Pipeline bugs: pipeline_tools.py has field name mismatches with skill handlers; Celery async return not properly awaited in chain.
 
@@ -121,4 +119,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-02 after milestone v3.0 started*
+*Last updated: 2026-04-02 after Phase 12 AI Call Convergence complete*
