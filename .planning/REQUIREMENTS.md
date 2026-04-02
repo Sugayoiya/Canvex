@@ -16,8 +16,8 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 - [ ] **CONV-04**: Video generation skills (video.generate_video) resolve credentials through unified ProviderManager
 - [ ] **CONV-05**: Dead code path `ProviderManager.get_provider()` (async DB key chain) is activated and tested as the single runtime entry point
 - [ ] **CONV-06**: Existing 14 skills continue working without behavior changes after convergence (regression-safe)
-- [ ] **CONV-07**: KeyRotator round-robin activated — same provider with multiple keys distributes requests evenly
-- [ ] **CONV-08**: KeyRotator error feedback closed-loop — 429/5xx triggers `report_error`, increments `error_count`, updates `last_used_at`; unhealthy keys auto-skipped
+- [x] **CONV-07**: KeyRotator round-robin activated — same provider with multiple keys distributes requests evenly
+- [x] **CONV-08**: KeyRotator error feedback closed-loop — 429/5xx triggers `report_error`, increments `error_count`, updates `last_used_at`; unhealthy keys auto-skipped
 - [ ] **CONV-09**: Auto-retry on key failure — when current key returns 429/5xx, transparently retry with next healthy key from rotation pool
 - [ ] **CONV-10**: Admin API supports per-key management — enable/disable individual keys, reset error_count, configure rate_limit_rpm
 - [ ] **CONV-11**: Admin provider page shows per-key health status (last_used_at, error_count, is_active) and supports key-level operations
@@ -121,8 +121,8 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | CONV-04 | Phase 12 | Pending |
 | CONV-05 | Phase 12 | Pending |
 | CONV-06 | Phase 12 | Pending |
-| CONV-07 | Phase 12 | Pending |
-| CONV-08 | Phase 12 | Pending |
+| CONV-07 | Phase 12 | Complete |
+| CONV-08 | Phase 12 | Complete |
 | CONV-09 | Phase 12 | Pending |
 | CONV-10 | Phase 12 | Pending |
 | CONV-11 | Phase 12 | Pending |
