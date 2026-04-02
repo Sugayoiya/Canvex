@@ -85,11 +85,11 @@ Plans:
 **Plans**: 5 plans (Phase 0-4 from plan)
 
 Plans:
-- [ ] 12.1-01-PLAN.md — LangChain @tool 纯函数工具集: 17 tools (7 read + 6 write + 2 AI + 2 skill) + contextvars 上下文传播
-- [ ] 12.1-02-PLAN.md — Anthropic SKILL.md 10 个目录 + SkillLoader 三级渐进加载 (L1 元数据 / L2 指令 / L3 资源)
-- [ ] 12.1-03-PLAN.md — LangChain Agent 替代 PydanticAI: create_react_agent + resolve_langchain_llm 多供应商 + LangSmith + SSE 流式
-- [ ] 12.1-04-PLAN.md — 前端适配: 废弃 skillsApi.invoke, 新增 agentApi.listSkills, 标记 canvas 迁移
-- [ ] 12.1-05-PLAN.md — 清理: 删除 13 文件 (PydanticAI + 10 reasoning handlers + executor + pipeline_tools) + 修复 imports
+- [ ] 12.1-01-PLAN.md — LangChain @tool 纯函数工具集: 17 tools + tool gating (≤14/context) + timeout middleware + contextvars 安全传播
+- [ ] 12.1-02-PLAN.md — Anthropic SKILL.md 10 个目录 + SkillLoader 三级渐进加载 + mtime 缓存失效 + 递归深度守卫
+- [ ] 12.1-03-PLAN.md — LangChain Agent: create_agent (非已废弃 create_react_agent) + resolve_langchain_llm + SSE 流式回退矩阵 + LangSmith
+- [ ] 12.1-04-PLAN.md — 前端适配: 废弃 skillsApi.invoke, agentApi.listSkills, feature-flag adapter 渐进式 canvas 迁移 + 遥测
+- [ ] 12.1-05-PLAN.md — 清理: 删除 13 文件 + E2E 验证门控 + 保留显式 provider deps + 迁移兼容性测试矩阵
 
 ### Phase 13: SkillDescriptor Enhancement + Pipeline Fix
 **Goal**: Skill metadata system supports dependency declarations, tiered classification, and safety metadata; pipeline parameter mismatches fixed and Celery async chain repaired
