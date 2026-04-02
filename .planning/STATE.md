@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
 status: executing
-stopped_at: Completed 12.1-01-PLAN.md (LangChain Tool Toolkit)
-last_updated: "2026-04-02T17:09:53.209Z"
+stopped_at: Completed 12.1-03-PLAN.md (LangChain Agent Engine + SSE Streaming)
+last_updated: "2026-04-02T17:15:31.468Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
+  completed_plans: 7
   percent: 16
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 ## Current Position
 
 Phase: 12.1 (agent-first-architecture-langchain-anthropic-skills) — EXECUTING
-Plan: 3 of 5
+Plan: 4 of 5
 Status: Ready to execute
 Last activity: 2026-04-02
 
@@ -53,6 +53,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12 P03 | 7min | 2 tasks | 19 files |
 | Phase 12.1 P02 | 4min | 2 tasks | 11 files |
 | Phase 12.1 P01 | 5min | 3 tasks | 8 files |
+| Phase 12.1 P03 | 5min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.1]: Episode context replaces script tools in gating to keep ≤14 tools exposed to LLM
 - [Phase 12.1]: ToolContext dataclass frozen=True for immutability across async boundaries
 - [Phase 12.1]: AI tools use inline asyncio.wait_for(120s) for explicit key health error handling
+- [Phase 12.1]: create_agent from langchain.agents (not deprecated create_react_agent) + DeepSeek via ChatOpenAI base_url verified
+- [Phase 12.1]: Streaming fallback: astream_events(v2) primary → ainvoke terminal; langchain_messages_json alongside pydantic_ai_messages_json for backward compat
 
 ### Roadmap Evolution
 
@@ -91,6 +94,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-02T17:09:53.207Z
-Stopped at: Completed 12.1-01-PLAN.md (LangChain Tool Toolkit)
+Last session: 2026-04-02T17:15:31.466Z
+Stopped at: Completed 12.1-03-PLAN.md (LangChain Agent Engine + SSE Streaming)
 Resume file: None
