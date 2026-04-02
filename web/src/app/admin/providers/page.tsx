@@ -152,12 +152,67 @@ export default function AdminProvidersPage() {
     },
   });
 
+  const toggleKeyMutation = useMutation({
+    mutationFn: (vars: {
+      providerId: string;
+      keyId: string;
+      isActive: boolean;
+      keyLabel?: string;
+    }) =>
+      aiProvidersApi.updateKey(vars.providerId, vars.keyId, {
+        is_active: vars.isActive,
+      }),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "providers"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "provider-health", vars.providerId],
+      });
+      toast.success(
+        vars.isActive
+          ? `已启用 API Key: ${vars.keyLabel || "key"}`
+          : `已禁用 API Key: ${vars.keyLabel || "key"}`,
+      );
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ?? "Unknown error";
+      toast.error(`切换 Key 状态失败: ${msg}`);
+    },
+  });
+
+  const resetErrorsMutation = useMutation({
+    mutationFn: (vars: {
+      providerId: string;
+      keyId: string;
+      keyLabel?: string;
+    }) =>
+      aiProvidersApi.updateKey(vars.providerId, vars.keyId, {
+        reset_error_count: true,
+      }),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "providers"] });
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "provider-health", vars.providerId],
+      });
+      toast.success(`已重置 Key 错误计数: ${vars.keyLabel || "key"}`);
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ?? "Unknown error";
+      toast.error(`重置错误计数失败: ${msg}`);
+    },
+  });
+
   const anyPending =
     createMutation.isPending ||
     updateMutation.isPending ||
     deleteMutation.isPending ||
     addKeyMutation.isPending ||
-    revokeKeyMutation.isPending;
+    revokeKeyMutation.isPending ||
+    toggleKeyMutation.isPending ||
+    resetErrorsMutation.isPending;
 
   // --- Form modal handler ---
   const handleFormSubmit = (data: Record<string, unknown>) => {
@@ -352,11 +407,46 @@ export default function AdminProvidersPage() {
                   keyHint: key?.key_hint ?? null,
                 });
               }}
+              onToggleKey={(keyId, isActive) => {
+                const key = p.keys.find((k) => k.id === keyId);
+                toggleKeyMutation.mutate({
+                  providerId: p.id,
+                  keyId,
+                  isActive,
+                  keyLabel: key?.label ?? undefined,
+                });
+              }}
+              onResetErrors={(keyId) => {
+                const key = p.keys.find((k) => k.id === keyId);
+                resetErrorsMutation.mutate({
+                  providerId: p.id,
+                  keyId,
+                  keyLabel: key?.label ?? undefined,
+                });
+              }}
               isAddingKey={addKeyMutation.isPending}
               revokingKeyId={
                 revokeKeyMutation.isPending
                   ? (
                       revokeKeyMutation.variables as {
+                        keyId: string;
+                      } | undefined
+                    )?.keyId ?? null
+                  : null
+              }
+              togglingKeyId={
+                toggleKeyMutation.isPending
+                  ? (
+                      toggleKeyMutation.variables as {
+                        keyId: string;
+                      } | undefined
+                    )?.keyId ?? null
+                  : null
+              }
+              resettingKeyId={
+                resetErrorsMutation.isPending
+                  ? (
+                      resetErrorsMutation.variables as {
                         keyId: string;
                       } | undefined
                     )?.keyId ?? null

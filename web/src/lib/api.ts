@@ -312,6 +312,26 @@ export const aiProvidersApi = {
     api.delete(`/ai-providers/${providerId}/keys/${keyId}`),
   listModels: (params?: { model_type?: string }) =>
     api.get("/ai-providers/models", { params }),
+  getProviderHealth: (providerId: string) =>
+    api.get<{
+      provider_id: string;
+      keys: Array<{
+        key_id: string;
+        error_count: number;
+        last_used_at: string | null;
+        is_healthy: boolean;
+        health_badge: "healthy" | "degraded" | "unhealthy";
+        recent_errors: Array<{ type: string; message: string; at: string }>;
+        usage_trend: Array<{ hour: string; count: number }>;
+      }>;
+    }>(`/ai-providers/${providerId}/health`),
+  getKeyHealth: (providerId: string, keyId: string) =>
+    api.get(`/ai-providers/${providerId}/keys/${keyId}/health`),
+  updateKey: (
+    providerId: string,
+    keyId: string,
+    data: { is_active?: boolean; reset_error_count?: boolean },
+  ) => api.patch(`/ai-providers/${providerId}/keys/${keyId}`, data),
 };
 
 export const adminApi = {
