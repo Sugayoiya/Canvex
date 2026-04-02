@@ -85,7 +85,7 @@ Plans:
 **Plans**: 5 plans (Phase 0-4 from plan)
 
 Plans:
-- [ ] 12.1-01-PLAN.md — LangChain @tool 纯函数工具集: 17 tools + tool gating (≤14/context) + timeout middleware + contextvars 安全传播
+- [x] 12.1-01-PLAN.md — LangChain @tool 纯函数工具集: 17 tools + tool gating (≤14/context) + timeout middleware + contextvars 安全传播
 - [x] 12.1-02-PLAN.md — Anthropic SKILL.md 10 个目录 + SkillLoader 三级渐进加载 + mtime 缓存失效 + 递归深度守卫
 - [ ] 12.1-03-PLAN.md — LangChain Agent: create_agent (非已废弃 create_react_agent) + resolve_langchain_llm + SSE 流式回退矩阵 + LangSmith
 - [ ] 12.1-04-PLAN.md — 前端适配: 废弃 skillsApi.invoke, agentApi.listSkills, feature-flag adapter 渐进式 canvas 迁移 + 遥测
