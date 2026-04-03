@@ -43,7 +43,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 - [x] **Phase 12: AI Call Convergence** — 收敛 3 条割裂 AI 调用栈为统一 ProviderManager 路径，激活 DB 级异步密钥链 + KeyRotator (completed 2026-04-02)
 - [x] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪 (completed 2026-04-02)
 - [x] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格） (completed 2026-04-03)
-- [ ] **Phase 12.3: Model Selection Feature** — (INSERTED) 可用模型 API + 四层 fallback 链 + ModelSelector 组件 + Chat/Canvas 集成 + 项目/个人/Team 默认模型设置
+- [x] **Phase 12.3: Model Selection Feature** — (INSERTED) 可用模型 API + 四层 fallback 链 + ModelSelector 组件 + Chat/Canvas 集成 + 项目/个人/Team 默认模型设置 (completed 2026-04-03)
 - [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），修复 Pipeline 参数对齐和 Celery 异步衔接
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
@@ -145,7 +145,7 @@ Plans:
 - [x] 12.3-01-PLAN.md — Backend data model (SystemSetting, User/Team settings) + Available Models API + resolve functions + settings endpoints
 - [x] 12.3-02-PLAN.md — SkillContext model_name injection + Agent chat auto-resolve provider
 - [x] 12.3-03-PLAN.md — Frontend ModelSelector component (Pill+Popover) + ProviderIcon relocation + store extensions
-- [ ] 12.3-04-PLAN.md — Chat ModelSelector integration + Canvas AI Generate Panel + LLM Node cleanup
+- [x] 12.3-04-PLAN.md — Chat ModelSelector integration + Canvas AI Generate Panel + LLM Node cleanup
 - [x] 12.3-05-PLAN.md — Project/Personal/Team default model settings pages
 
 Canonical refs:

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: executing
-stopped_at: Completed 12.3-05-PLAN.md
-last_updated: "2026-04-03T10:22:56.050Z"
+status: verifying
+stopped_at: Completed 12.3-04-PLAN.md
+last_updated: "2026-04-03T10:23:55.586Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 8
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 17
-  completed_plans: 16
+  completed_plans: 17
   percent: 16
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 Phase: 12.3 (model-selection-feature-inserted) — EXECUTING
 Plan: 5 of 5
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-03
 
 Progress: [██░░░░░░░░] 16%
@@ -63,6 +63,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12.3 P02 | 2min | 2 tasks | 8 files |
 | Phase 12.3 P03 | 3min | 2 tasks | 6 files |
 | Phase 12.3 P05 | 3min | 2 tasks | 6 files |
+| Phase 12.3 P04 | 4min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,7 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.3]: SessionCreateRequest.provider deprecated — backend auto-resolves from model_name
 - [Phase 12.3]: ProviderIcon relocated to common/ with admin re-export for backward compat; ModelSelector uses combobox+listbox ARIA pattern
 - [Phase 12.3]: ProjectUpdate.settings merge semantics for partial settings updates
+- [Phase 12.3]: Chat ModelSelector uses requiredFeatures=['llm','image'] to show only full-capability models; LLM Node stripped to display-only — execution centralized through AIGeneratePanel
 
 ### Roadmap Evolution
 
@@ -114,6 +116,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-03T10:22:56.047Z
-Stopped at: Completed 12.3-05-PLAN.md
+Last session: 2026-04-03T10:23:55.583Z
+Stopped at: Completed 12.3-04-PLAN.md
 Resume file: None
