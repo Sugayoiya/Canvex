@@ -44,7 +44,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 - [x] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪 (completed 2026-04-02)
 - [x] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格） (completed 2026-04-03)
 - [x] **Phase 12.3: Model Selection Feature** — (INSERTED) 可用模型 API + 四层 fallback 链 + ModelSelector 组件 + Chat/Canvas 集成 + 项目/个人/Team 默认模型设置 (completed 2026-04-03)
-- [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），修复 Pipeline 参数对齐和 Celery 异步衔接
+- [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），废弃冗余 handler，元数据驱动动态工具筛选（PIPE-01/02/04 延迟至 Phase 14）
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
 - [ ] **Phase 16: Admin Skill Management** — Admin 技能管理页面（列表/统计/启停控制）
@@ -159,15 +159,21 @@ Canonical refs:
 **UI hint**: yes
 
 ### Phase 13: SkillDescriptor Enhancement + Pipeline Fix
-**Goal**: Skill metadata system supports dependency declarations, tiered classification, and safety metadata; pipeline parameter mismatches fixed and Celery async chain repaired
-**Depends on**: Phase 12 (unified credential path must be stable before expanding skill metadata)
-**Requirements**: DESC-01, DESC-02, DESC-03, DESC-04, DESC-05, DESC-06, DESC-07, DESC-08, PIPE-01, PIPE-02, PIPE-04
+**Goal**: Skill metadata system supports dependency declarations, tiered classification, and safety metadata; dynamic tool filtering replaces hardcoded name sets; 4 deprecated handlers removed (PIPE-01/02/04 deferred to Phase 14)
+**Depends on**: Phase 12.3 (model selection + skill context must be stable)
+**Requirements**: DESC-01, DESC-02, DESC-03, DESC-04, DESC-05, DESC-06, DESC-07, DESC-08
 **Success Criteria** (what must be TRUE):
-  1. Every registered skill has a complete descriptor with skill_kind, require_prior_kind, supports_skip, skill_tier, and Claude Code-style safety metadata (backward-compatible defaults for unannotated skills)
-  2. SkillToolset dynamically filters skills exposed to Agent based on session context, keeping ≤10 tools per context window
-  3. Pipeline chain executes multi-step workflows with correctly aligned parameter names between pipeline_tools and skill handlers
-  4. Pipeline properly handles Celery async skill results with poll loop and reports per-step progress via SSE events
-**Plans**: TBD
+  1. SkillDescriptor has skill_kind, require_prior_kind, default_require_prior_kind, supports_skip, skill_tier, is_read_only, is_destructive, timeout, max_result_size_chars fields with backward-compatible defaults
+  2. SkillMeta upgraded to dataclass; SkillLoader parses all new YAML frontmatter fields with type coercion
+  3. All 10 SKILL.md files annotated with complete Phase 13 frontmatter; all 17 @tools have metadata dicts
+  4. get_tools_for_context() uses metadata-driven filtering instead of hardcoded name sets, producing ≤14 tools per context
+  5. System prompt includes safety annotations ([只读] / [⚠️ 破坏性操作]) for each skill
+  6. 4 deprecated SkillRegistry handlers (visual.generate_image, video.generate_video, canvas.get_state, asset.get_project_info) removed
+**Plans**: 2 plans
+
+Plans:
+- [ ] 13-01-PLAN.md — SkillDescriptor extension (9 new fields) + SkillMeta upgrade + SkillLoader enhanced parsing + 4 handler deprecation + tests
+- [ ] 13-02-PLAN.md — 10 SKILL.md annotation + TOOL_METADATA for 17 @tools + metadata-driven tool filtering refactor + tests
 
 ### Phase 14: ArtifactStore + ToolInterceptor
 **Goal**: Session-scoped artifact persistence with automatic injection/persistence hooks replaces inline data passing between tool calls
