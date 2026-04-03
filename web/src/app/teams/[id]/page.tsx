@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/app-shell";
 import { teamsApi, usersApi } from "@/lib/api";
-import { Plus, Copy, Check, Search } from "lucide-react";
+import { useAuthStore } from "@/stores/auth-store";
+import { ModelSelector } from "@/components/common/model-selector";
+import { Plus, Copy, Check, Search, Info } from "lucide-react";
 
 interface TeamMember {
   id: string;
@@ -71,6 +73,32 @@ export default function TeamDetailPage() {
       setSearchQuery("");
     },
   });
+
+  const currentUser = useAuthStore((s) => s.user);
+  const myMembership = members.find((m) => m.user_id === currentUser?.id);
+  const canManageDefaults =
+    myMembership?.role === "owner" || myMembership?.role === "admin" || myMembership?.role === "team_admin";
+
+  const { data: teamSettings } = useQuery({
+    queryKey: ["team-settings", id],
+    queryFn: () => teamsApi.getSettings(id).then((r) => r.data?.settings ?? {}),
+    enabled: !!id && !!canManageDefaults,
+  });
+
+  const updateTeamSettingsMutation = useMutation({
+    mutationFn: (data: { default_llm_model?: string; default_image_model?: string }) =>
+      teamsApi.updateSettings(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-settings", id] });
+    },
+  });
+
+  const handleTeamModelUpdate = useCallback(
+    (key: string, value: string) => {
+      updateTeamSettingsMutation.mutate({ [key]: value });
+    },
+    [updateTeamSettingsMutation],
+  );
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -334,6 +362,86 @@ export default function TeamDetailPage() {
           ))
         )}
       </div>
+
+      {/* Team default models (owner/admin only) */}
+      {canManageDefaults && (
+        <div
+          style={{
+            background: "var(--ob-glass-bg)",
+            border: "1px solid var(--ob-glass-border)",
+            borderRadius: 12,
+            padding: "16px 20px",
+            marginTop: 24,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "var(--font-headline)",
+              fontSize: 10,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.15em",
+              color: "var(--ob-text-muted)",
+              marginBottom: 12,
+            }}
+          >
+            团队默认模型
+          </div>
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+            <div style={{ flex: "1 1 200px" }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 12,
+                  color: "var(--ob-text-muted)",
+                  marginBottom: 8,
+                }}
+              >
+                LLM 模型
+              </div>
+              <ModelSelector
+                value={teamSettings?.default_llm_model ?? null}
+                onChange={(name) => handleTeamModelUpdate("default_llm_model", name)}
+                modelType="llm"
+                size="md"
+              />
+            </div>
+            <div style={{ flex: "1 1 200px" }}>
+              <div
+                style={{
+                  fontFamily: "var(--font-body)",
+                  fontSize: 12,
+                  color: "var(--ob-text-muted)",
+                  marginBottom: 8,
+                }}
+              >
+                图像模型
+              </div>
+              <ModelSelector
+                value={teamSettings?.default_image_model ?? null}
+                onChange={(name) => handleTeamModelUpdate("default_image_model", name)}
+                modelType="image"
+                size="md"
+              />
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              marginTop: 12,
+              fontFamily: "var(--font-body)",
+              fontSize: 12,
+              color: "var(--ob-text-muted)",
+              opacity: 0.7,
+            }}
+          >
+            <Info size={12} />
+            用于团队内所有项目的 fallback 默认值
+          </div>
+        </div>
+      )}
 
       {/* Invite Member Dialog */}
       {inviteOpen && (
