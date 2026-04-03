@@ -38,13 +38,12 @@ created: 2026-04-04
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 14-01-01 | 01 | 1 | ARTS-01 | unit | `uv run pytest tests/test_artifact_store.py -k test_model` | ❌ W0 | ⬜ pending |
-| 14-01-02 | 01 | 1 | ARTS-02 | unit | `uv run pytest tests/test_artifact_store.py -k test_crud` | ❌ W0 | ⬜ pending |
-| 14-02-01 | 02 | 1 | ARTS-03,ARTS-04 | unit | `uv run pytest tests/test_tool_interceptor.py -k test_before_hook` | ❌ W0 | ⬜ pending |
-| 14-02-02 | 02 | 1 | ARTS-05 | unit | `uv run pytest tests/test_tool_interceptor.py -k test_after_hook` | ❌ W0 | ⬜ pending |
-| 14-02-03 | 02 | 1 | ARTS-06 | unit | `uv run pytest tests/test_tool_interceptor.py -k test_recursive_backfill` | ❌ W0 | ⬜ pending |
-| 14-03-01 | 03 | 2 | PIPE-05 | integration | `uv run pytest tests/test_celery_tasks.py` | ❌ W0 | ⬜ pending |
-| 14-04-01 | 04 | 2 | PIPE-03 | integration | `uv run pytest tests/test_pipeline_artifacts.py` | ❌ W0 | ⬜ pending |
+| 14-01-T1 | 01 | 1 | ARTS-01, ARTS-02, ARTS-06 | unit | `uv run python -c "from app.models.agent_artifact import AgentArtifact; ..."` | ❌ W0 | ⬜ pending |
+| 14-01-T2 | 01 | 1 | ARTS-01, ARTS-02, ARTS-06 | unit | `uv run pytest tests/test_artifact_store.py -x -v` | ❌ W0 | ⬜ pending |
+| 14-02-T1 | 02 | 1 | PIPE-05 | unit | `uv run python -c "from app.tasks.ai_generation_task import ..."` | ❌ W0 | ⬜ pending |
+| 14-02-T2 | 02 | 1 | PIPE-05 | unit | `uv run pytest tests/test_celery_generation.py -x -v` | ❌ W0 | ⬜ pending |
+| 14-03-T1 | 03 | 2 | ARTS-03, ARTS-04, ARTS-05 | unit | `uv run python -c "from app.agent.tool_interceptor import ..."` | ❌ W0 | ⬜ pending |
+| 14-03-T2 | 03 | 2 | ARTS-03, ARTS-04, ARTS-05, PIPE-03 | unit | `uv run pytest tests/test_tool_interceptor.py -x -v` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -52,11 +51,9 @@ created: 2026-04-04
 
 ## Wave 0 Requirements
 
-- [ ] `api/tests/test_artifact_store.py` — stubs for ARTS-01, ARTS-02
-- [ ] `api/tests/test_tool_interceptor.py` — stubs for ARTS-03, ARTS-04, ARTS-05, ARTS-06
-- [ ] `api/tests/test_celery_tasks.py` — stubs for PIPE-05
-- [ ] `api/tests/test_pipeline_artifacts.py` — stubs for PIPE-03
-- [ ] `api/tests/conftest.py` — shared fixtures (db session, mock celery)
+- [ ] `api/tests/test_artifact_store.py` — stubs for ARTS-01, ARTS-02, ARTS-06
+- [ ] `api/tests/test_celery_generation.py` — stubs for PIPE-05
+- [ ] `api/tests/test_tool_interceptor.py` — stubs for ARTS-03, ARTS-04, ARTS-05, PIPE-03
 
 *Existing pytest infrastructure covers framework needs; only test files need creation.*
 
@@ -66,7 +63,7 @@ created: 2026-04-04
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| SSE tool return format shows summary instead of JSON blob | ARTS-04 | Requires browser + real agent session | 1. Start agent chat 2. Trigger generate_image 3. Verify SSE shows summary text not raw JSON |
+| SSE tool return format shows summary instead of JSON blob | ARTS-05 | Requires browser + real agent session | 1. Start agent chat 2. Trigger generate_image 3. Verify SSE shows summary text not raw JSON |
 | Celery worker processes queued tasks under load | PIPE-05 | Requires running Celery worker + Redis | 1. Start worker 2. Submit 3+ concurrent image gen 3. Verify tasks complete with retry |
 
 ---
