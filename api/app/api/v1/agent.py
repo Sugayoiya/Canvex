@@ -52,6 +52,29 @@ async def get_owned_session(
     return session
 
 
+async def _resolve_provider_with_fallback(
+    model_name: str,
+    *,
+    db: AsyncSession,
+    fallback_provider: str | None = None,
+) -> str:
+    """Resolve provider from model mapping, with deprecated provider fallback."""
+    from app.services.ai.provider_manager import resolve_provider_for_model
+
+    try:
+        resolved_provider, _ = await resolve_provider_for_model(model_name, db=db)
+        return resolved_provider
+    except ValueError:
+        if fallback_provider:
+            logger.warning(
+                "Falling back to deprecated provider field '%s' for model '%s'",
+                fallback_provider,
+                model_name,
+            )
+            return fallback_provider
+        raise
+
+
 # ---------------------------------------------------------------------------
 # Session CRUD
 # ---------------------------------------------------------------------------
@@ -63,7 +86,7 @@ async def create_session(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    from app.services.ai.provider_manager import resolve_model_for_task, resolve_provider_for_model
+    from app.services.ai.provider_manager import resolve_model_for_task
 
     await resolve_project_access(body.project_id, user, db)
 
@@ -74,7 +97,11 @@ async def create_session(
         team_id=getattr(user, "current_team_id", None),
         db=db,
     )
-    resolved_provider, _ = await resolve_provider_for_model(resolved_model, db=db)
+    resolved_provider = await _resolve_provider_with_fallback(
+        resolved_model,
+        db=db,
+        fallback_provider=body.provider,
+    )
 
     session = await agent_service.create_session(
         db,
@@ -198,7 +225,7 @@ async def chat(
             except Exception:
                 logger.warning("Failed to load context for session %s", session_id)
 
-            from app.services.ai.provider_manager import resolve_model_for_task, resolve_provider_for_model
+            from app.services.ai.provider_manager import resolve_model_for_task
 
             requested_model = body.model_name or session.model_name
             resolved_model = await resolve_model_for_task(
@@ -208,7 +235,11 @@ async def chat(
                 team_id=getattr(user, "current_team_id", None),
                 db=db,
             )
-            resolved_provider, _ = await resolve_provider_for_model(resolved_model, db=db)
+            resolved_provider = await _resolve_provider_with_fallback(
+                resolved_model,
+                db=db,
+                fallback_provider=body.provider or session.provider,
+            )
 
             agent = await agent_service.create_agent(
                 resolved_provider, resolved_model,

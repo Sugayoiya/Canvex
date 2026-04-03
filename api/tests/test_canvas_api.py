@@ -50,4 +50,4 @@ async def test_node_valid_types(async_client):
     """Valid node types from schema should be accepted (given a real canvas)."""
     from app.schemas.canvas import VALID_NODE_TYPES
     assert len(VALID_NODE_TYPES) >= 3, "Expected at least 3 valid node types"
-    assert "llm-generate" in VALID_NODE_TYPES
+    assert {"text", "image", "video"}.issubset(VALID_NODE_TYPES)

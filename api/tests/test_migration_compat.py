@@ -75,13 +75,15 @@ def test_no_pydantic_ai_imports():
     assert not violations, f"PydanticAI imports found:\n" + "\n".join(violations)
 
 
-def test_canvas_skills_still_registered():
-    """Verify generate_image and generate_video are still in SkillRegistry."""
+def test_canvas_skills_available_via_langchain_tools():
+    """Verify canvas generation moved from SkillRegistry to LangChain tools."""
+    from app.agent.tools import get_all_tools
     from app.skills.registry import skill_registry
     from app.skills.register_all import register_all_skills
+
     register_all_skills()
-    names = skill_registry.list_names()
-    assert any("generate_image" in n for n in names), \
-        f"generate_image not found in registry: {names}"
-    assert any("generate_video" in n for n in names), \
-        f"generate_video not found in registry: {names}"
+    assert skill_registry.list_names() == []
+
+    tool_names = [tool.name for tool in get_all_tools()]
+    assert "generate_image" in tool_names
+    assert "generate_video" in tool_names
