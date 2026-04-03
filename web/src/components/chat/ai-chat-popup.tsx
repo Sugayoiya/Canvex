@@ -424,6 +424,7 @@ export function AIChatPopup({ projectId, canvasId }: AIChatPopupProps) {
                   modelType="llm"
                   size="sm"
                   disabled={isStreaming}
+                  popoverPosition="above"
                 />
                 <span style={{ flex: 1 }} />
                 <button

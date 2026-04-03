@@ -14,6 +14,7 @@ interface ModelSelectorProps {
   size?: "sm" | "md";
   disabled?: boolean;
   placeholder?: string;
+  popoverPosition?: "above" | "below";
 }
 
 function formatPrice(model: AvailableModel): string {
@@ -37,6 +38,7 @@ export function ModelSelector({
   size = "sm",
   disabled = false,
   placeholder = "自动选择",
+  popoverPosition = "below",
 }: ModelSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -251,7 +253,9 @@ export function ModelSelector({
         <div
           style={{
             position: "absolute",
-            top: "calc(100% + 4px)",
+            ...(popoverPosition === "above"
+              ? { bottom: "calc(100% + 4px)" }
+              : { top: "calc(100% + 4px)" }),
             left: 0,
             width: popoverWidth,
             maxHeight: 320,
