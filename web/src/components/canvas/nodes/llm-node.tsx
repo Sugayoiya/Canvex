@@ -1,20 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { Handle, Position, useReactFlow, type NodeProps } from "@xyflow/react";
 import {
   Sparkles,
-  Play,
   Loader2,
   CheckCircle2,
   XCircle,
   Clock,
 } from "lucide-react";
 import { useNodeExecution } from "../hooks/use-node-execution";
-import { useUpstreamData } from "../hooks/use-upstream-data";
 import { useNodePersistence } from "../hooks/use-node-persistence";
-
-type ModelProvider = "auto" | "gemini" | "openai" | "deepseek";
 
 const STATUS_STYLES: Record<
   string,
@@ -54,13 +50,11 @@ const STATUS_STYLES: Record<
 
 export function LLMNode({ id, data }: NodeProps) {
   const nodeData = data as Record<string, unknown>;
-  const config = (nodeData.config as Record<string, unknown>) ?? {};
   const { setNodes } = useReactFlow();
-  const upstream = useUpstreamData(id);
   const persistence = useNodePersistence(id);
   const [expanded, setExpanded] = useState(false);
 
-  const handleExecutionComplete = useCallback((resultData: any) => {
+  const handleExecutionComplete = (resultData: any) => {
     persistence.cancelPending();
     setNodes((nds) =>
       nds.map((n) =>
@@ -77,37 +71,10 @@ export function LLMNode({ id, data }: NodeProps) {
           : n,
       ),
     );
-  }, [id, setNodes, persistence]);
+  };
 
   const execution = useNodeExecution(id, handleExecutionComplete);
-
-  const provider = (config.provider as ModelProvider) ?? "auto";
   const style = STATUS_STYLES[execution.status] ?? STATUS_STYLES.idle;
-
-  const updateProvider = useCallback(
-    (value: string) => {
-      const newConfig = { ...(config as Record<string, unknown>), provider: value };
-      setNodes((nds) =>
-        nds.map((n) =>
-          n.id === id
-            ? { ...n, data: { ...n.data, config: newConfig } }
-            : n,
-        ),
-      );
-      persistence.saveDebounced({ config: newConfig });
-    },
-    [id, setNodes, config, persistence],
-  );
-
-  const handleExecute = useCallback(() => {
-    const inputText = upstream.text.join("\n") || (nodeData.text as string) || "";
-    persistence.cancelPending();
-    execution.execute("text.llm_generate", {
-      provider,
-      ...(inputText ? { text: inputText } : {}),
-    });
-    persistence.saveImmediate({ config, status: "queued" });
-  }, [execution, provider, upstream.text, nodeData.text, config, persistence]);
 
   const resultText =
     typeof execution.data === "string"
@@ -139,37 +106,6 @@ export function LLMNode({ id, data }: NodeProps) {
       />
 
       <div className="space-y-3 p-3">
-        <div>
-          <label className="mb-1 block text-[10px] text-zinc-500">
-            模型提供商
-          </label>
-          <select
-            value={provider}
-            onChange={(e) => updateProvider(e.target.value)}
-            className="w-full rounded-md border border-zinc-600 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-200 focus:border-blue-500/50 focus:outline-none"
-          >
-            <option value="auto">自动选择</option>
-            <option value="gemini">Gemini</option>
-            <option value="openai">OpenAI</option>
-            <option value="deepseek">DeepSeek</option>
-          </select>
-        </div>
-
-        <button
-          onClick={handleExecute}
-          disabled={
-            execution.status === "running" || execution.status === "queued"
-          }
-          className="flex w-full items-center justify-center gap-1.5 rounded-md bg-violet-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {execution.status === "running" || execution.status === "queued" ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Play className="h-3 w-3" />
-          )}
-          执行
-        </button>
-
         {execution.status === "completed" && resultText && (
           <div className="space-y-1">
             <div className="max-h-40 overflow-y-auto whitespace-pre-wrap rounded-md bg-zinc-900 p-2 text-xs text-zinc-300">

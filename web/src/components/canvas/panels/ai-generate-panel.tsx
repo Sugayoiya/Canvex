@@ -5,7 +5,6 @@ import {
   MapPin,
   Target,
   Maximize2,
-  Sparkles,
   ChevronDown,
   Zap,
   ArrowUp,
@@ -16,6 +15,7 @@ import {
 import { usePromptBuilder } from "../hooks/use-prompt-builder";
 import { useNodeExecution } from "../hooks/use-node-execution";
 import { useCanvasStore } from "@/stores/canvas-store";
+import { ModelSelector } from "@/components/common/model-selector";
 
 interface AIGeneratePanelProps {
   nodeId: string;
@@ -35,7 +35,7 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
   const prevNodeIdRef = useRef(nodeId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { finalPrompt, upstreamImages } = usePromptBuilder(nodeId);
-  const { canvasId, focusedNodeType } = useCanvasStore();
+  const { canvasId, focusedNodeType, nodeModelSelections, setNodeModel } = useCanvasStore();
   const { status: execStatus, message: execMessage, execute } = useNodeExecution(nodeId);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +58,11 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
   const isExecuting = execStatus === "queued" || execStatus === "running";
   const isDisabled = quotaExceeded || isExecuting;
 
+  const modelType: "llm" | "image" | "all" =
+    focusedNodeType === "text" ? "llm"
+    : focusedNodeType === "image" ? "image"
+    : "all";
+
   const skillForNodeType = (type: string | null) => {
     switch (type) {
       case "image": return "visual.generate_image";
@@ -73,7 +78,11 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
     if (!combined.trim()) return;
 
     const skillName = skillForNodeType(focusedNodeType);
+    const selectedModel = nodeModelSelections[nodeId];
     const params: Record<string, unknown> = { prompt: combined };
+    if (selectedModel) {
+      params.model_name = selectedModel;
+    }
     if (upstreamImages.length > 0) {
       params.reference_images = upstreamImages;
     }
@@ -185,22 +194,14 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
 
       {/* Bottom bar */}
       <div className="flex items-center gap-2" style={{ padding: "8px 16px 12px 16px" }}>
-        {/* Model selector pill */}
-        <button
-          className="flex items-center gap-1 cursor-pointer"
-          style={{
-            padding: "8px 12px",
-            background: "var(--cv4-surface-primary)",
-            borderRadius: "var(--cv4-radius-tag)",
-            border: "none",
-          }}
-        >
-          <Sparkles size={12} style={{ color: "var(--cv4-text-secondary)" }} />
-          <span style={{ fontFamily: "Manrope, sans-serif", fontSize: 12, color: "var(--cv4-text-secondary)" }}>
-            Lib Nano Pro
-          </span>
-          <ChevronDown size={10} style={{ color: "var(--cv4-text-disabled)" }} />
-        </button>
+        {/* Model selector */}
+        <ModelSelector
+          value={nodeModelSelections[nodeId] ?? null}
+          onChange={(name) => setNodeModel(nodeId, name)}
+          modelType={modelType}
+          size="sm"
+          disabled={isExecuting}
+        />
 
         {/* Aspect ratio pill */}
         <button
