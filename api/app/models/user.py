@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Boolean
+from sqlalchemy import String, Boolean, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -19,6 +19,7 @@ class User(Base):
     status: Mapped[str] = mapped_column(String(20), default="active")
     is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0", nullable=False)
     last_login_at: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
+    settings: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow, onupdate=_utcnow)

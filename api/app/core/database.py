@@ -79,6 +79,8 @@ def _auto_migrate_columns(connection):
         ("ai_model_configs", "input_types", "TEXT"),
         ("ai_model_configs", "output_types", "TEXT"),
         ("ai_model_configs", "deprecated", "BOOLEAN DEFAULT FALSE"),
+        ("users", "settings", "JSON"),
+        ("teams", "settings", "JSON"),
     ]
     for table, column, col_type in migrations:
         if table not in table_names:
@@ -103,6 +105,7 @@ async def init_db():
     from app.models.oauth_account import OAuthAccount  # noqa
     from app.models.ai_provider_config import AIProviderConfig, AIProviderKey, AIModelConfig  # noqa
     from app.models.admin_audit_log import AdminAuditLog  # noqa
+    from app.models.system_setting import SystemSetting  # noqa
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -121,8 +124,25 @@ async def init_db():
         await seed_preset_models_and_pricing(session)
         await session.commit()
 
+    await _seed_system_defaults()
+
     if settings.SEED_TEST_DATA:
         await _seed_test_data()
+
+
+async def _seed_system_defaults():
+    """Seed system-wide default model settings if not already present."""
+    from app.models.system_setting import SystemSetting
+
+    async with AsyncSessionLocal() as session:
+        for key, default_val in [
+            ("default_llm_model", "gemini-2.5-flash"),
+            ("default_image_model", "imagen-4.0-generate-001"),
+        ]:
+            existing = await session.get(SystemSetting, key)
+            if not existing:
+                session.add(SystemSetting(key=key, value=default_val))
+        await session.commit()
 
 
 async def _seed_demo_project():
