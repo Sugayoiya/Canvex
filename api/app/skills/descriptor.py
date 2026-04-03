@@ -34,6 +34,20 @@ class SkillDescriptor:
     estimated_duration: str = "medium"    # "quick" (<10s) | "medium" (10s-2min) | "long" (>2min)
     requires_canvas: bool = False
     requires_project: bool = False
+    # Phase 13: Dependency declarations (OpenStoryline NodeMeta pattern, per D-02)
+    skill_kind: str = ""
+    require_prior_kind: list[str] = field(default_factory=list)
+    default_require_prior_kind: list[str] = field(default_factory=list)
+    supports_skip: bool = False
+
+    # Phase 13: Classification (per D-06)
+    skill_tier: str = "capability"  # "workflow" | "capability" | "meta"
+
+    # Phase 13: Safety metadata — annotation-only, no runtime enforcement (per D-11)
+    is_read_only: bool = False
+    is_destructive: bool = False
+    timeout: int = 120
+    max_result_size_chars: int = 50000
 
     def to_tool_definition(self) -> dict[str, Any]:
         """Convert to OpenAI Function Calling format."""
