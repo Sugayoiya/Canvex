@@ -109,7 +109,7 @@ Plans:
 
 Plans:
 - [x] 12.2-01-PLAN.md — Backend data model extensions + PROVIDER_META + preset seed logic
-- [ ] 12.2-02-PLAN.md — resolve_langchain_llm DB-backed base_url + model CRUD endpoints + preset protection
+- [x] 12.2-02-PLAN.md — resolve_langchain_llm DB-backed base_url + model CRUD endpoints + preset protection
 - [ ] 12.2-03-PLAN.md — Frontend restructure: ProviderIcon, group separation, simplified modal, model list
 
 **UI hint**: yes

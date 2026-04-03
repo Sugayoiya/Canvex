@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
 status: executing
-stopped_at: Completed 12.2-01-PLAN.md
-last_updated: "2026-04-03T04:57:15.048Z"
+stopped_at: Completed 12.2-02-PLAN.md
+last_updated: "2026-04-03T05:01:58.241Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 12
-  completed_plans: 10
+  completed_plans: 11
   percent: 16
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 ## Current Position
 
 Phase: 12.2 (provider-model-preset-management-inserted) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-03
 
@@ -57,6 +57,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12.1 P04 | 1min | 2 tasks | 3 files |
 | Phase 12.1 P05 | 6min | 3 tasks | 27 files |
 | Phase 12.2 P01 | 4min | 2 tasks | 9 files |
+| Phase 12.2 P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,7 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.1]: AGENT_CHAT_FOR_CANVAS defaults to false — legacy invoke active until agent proven stable in chat-only mode
 - [Phase 12.1]: Explicit google-genai + openai deps kept (not transitive from langchain-*); SkillExecutor removed in favor of direct registry.invoke(); 14 files deleted (13 planned + context_tools.py)
 - [Phase 12.2]: ModelPricing replaces AIModelProviderMapping as provider-model association; seed_version gating prevents overwriting user-modified records
+- [Phase 12.2]: resolve_langchain_llm dispatches on sdk_type (native/openai_compatible) from DB instead of provider_name string matching
 
 ### Roadmap Evolution
 
@@ -100,6 +102,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-03T04:57:15.045Z
-Stopped at: Completed 12.2-01-PLAN.md
+Last session: 2026-04-03T05:01:58.238Z
+Stopped at: Completed 12.2-02-PLAN.md
 Resume file: None

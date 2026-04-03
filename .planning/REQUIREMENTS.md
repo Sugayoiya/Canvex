@@ -73,10 +73,10 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 - [x] **PROV-01**: 系统启动时自动种子 Gemini/OpenAI/DeepSeek 预置 Provider（is_preset=True 不可删），每个含 icon/description/default_base_url
 - [x] **PROV-02**: 预置常用模型（≥7 个 LLM + Image 模型）写入 AIModelConfig（is_preset=True），并通过 ModelPricing 关联到对应 Provider
 - [x] **PROV-03**: ModelPricing 同时作为 Provider-Model 关联表和定价表，AIModelProviderMapping 删除
-- [ ] **PROV-04**: Provider 配置弹窗简化为只需填 API Key + 可选 Base URL
-- [ ] **PROV-05**: Provider 卡片内可展开模型列表，显示名称/类型/context_size/定价/启用状态
-- [ ] **PROV-06**: 用户可手动添加自定义模型并关联到指定 Provider
-- [ ] **PROV-07**: base_url 字段正确传递到 resolve_langchain_llm，支持 OpenAI 兼容类 Provider 自定义端点
+- [x] **PROV-04**: Provider 配置弹窗简化为只需填 API Key + 可选 Base URL
+- [x] **PROV-05**: Provider 卡片内可展开模型列表，显示名称/类型/context_size/定价/启用状态
+- [x] **PROV-06**: 用户可手动添加自定义模型并关联到指定 Provider
+- [x] **PROV-07**: base_url 字段正确传递到 resolve_langchain_llm，支持 OpenAI 兼容类 Provider 自定义端点
 
 ### Admin Skill Management
 
@@ -139,10 +139,10 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | PROV-01 | Phase 12.2 | Complete |
 | PROV-02 | Phase 12.2 | Complete |
 | PROV-03 | Phase 12.2 | Complete |
-| PROV-04 | Phase 12.2 | Pending |
-| PROV-05 | Phase 12.2 | Pending |
-| PROV-06 | Phase 12.2 | Pending |
-| PROV-07 | Phase 12.2 | Pending |
+| PROV-04 | Phase 12.2 | Complete |
+| PROV-05 | Phase 12.2 | Complete |
+| PROV-06 | Phase 12.2 | Complete |
+| PROV-07 | Phase 12.2 | Complete |
 | DESC-01 | Phase 13 | Pending |
 | DESC-02 | Phase 13 | Pending |
 | DESC-03 | Phase 13 | Pending |
