@@ -33,6 +33,12 @@ export interface Provider {
   active_key_count: number;
   keys: ProviderKey[];
   created_at: string;
+  description?: string | null;
+  icon?: string | null;
+  sdk_type?: string;
+  default_base_url?: string | null;
+  base_url?: string | null;
+  is_preset?: boolean;
 }
 
 interface KeyHealthData {
@@ -50,7 +56,7 @@ interface ProviderCardProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete?: () => void;
   onAddKey: (data: { api_key: string; label?: string }) => void;
   onRevokeKey: (keyId: string) => void;
   onToggleKey?: (keyId: string, isActive: boolean) => void;
@@ -443,7 +449,7 @@ export function ProviderCard({
           aria-label={`Delete ${provider.display_name}`}
           onClick={(e) => {
             e.stopPropagation();
-            onDelete();
+            onDelete?.();
           }}
           onMouseEnter={() => setHoverDelete(true)}
           onMouseLeave={() => setHoverDelete(false)}

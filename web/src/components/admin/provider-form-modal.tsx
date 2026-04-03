@@ -2,61 +2,42 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { aiProvidersApi } from "@/lib/api";
+import type { Provider } from "./provider-card";
 
 interface ProviderFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: {
-    provider_name: string;
-    display_name: string;
-    is_enabled: boolean;
-    priority: number;
-    owner_type: string;
-  }) => void;
-  isLoading?: boolean;
-  editData?: {
-    provider_name: string;
-    display_name: string;
-    is_enabled: boolean;
-    priority: number;
-  } | null;
+  provider: Provider | null;
 }
 
 export function ProviderFormModal({
   isOpen,
   onClose,
-  onSubmit,
-  isLoading,
-  editData,
+  provider,
 }: ProviderFormModalProps) {
+  const queryClient = useQueryClient();
   const [mounted, setMounted] = useState(false);
-  const [providerName, setProviderName] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [isEnabled, setIsEnabled] = useState(true);
-  const [priority, setPriority] = useState(0);
+  const [apiKey, setApiKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
+  const [validationError, setValidationError] = useState<string | null>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const confirmRef = useRef<HTMLButtonElement>(null);
 
-  const isEdit = !!editData;
+  const showBaseUrl = provider?.sdk_type === "openai_compatible";
 
   useEffect(() => {
-    if (isOpen) {
-      if (editData) {
-        setProviderName(editData.provider_name);
-        setDisplayName(editData.display_name);
-        setIsEnabled(editData.is_enabled);
-        setPriority(editData.priority);
-      } else {
-        setProviderName("");
-        setDisplayName("");
-        setIsEnabled(true);
-        setPriority(0);
-      }
+    if (isOpen && provider) {
+      setApiKey("");
+      setBaseUrl(provider.base_url || provider.default_base_url || "");
+      setValidationError(null);
       requestAnimationFrame(() => setMounted(true));
     } else {
       setMounted(false);
     }
-  }, [isOpen, editData]);
+  }, [isOpen, provider]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -90,24 +71,44 @@ export function ProviderFormModal({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  const addKeyMutation = useMutation({
+    mutationFn: async () => {
+      if (!provider) return;
+      await aiProvidersApi.addKey(provider.id, { api_key: apiKey.trim(), label: "Admin configured" });
+      if (showBaseUrl && baseUrl.trim() && baseUrl.trim() !== (provider.default_base_url || "")) {
+        await aiProvidersApi.update(provider.id, { base_url: baseUrl.trim() });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "providers"] });
+      toast.success("已添加 API Key");
+      onClose();
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ?? "Unknown error";
+      toast.error(`保存配置失败: ${msg}`);
+    },
+  });
+
+  if (!isOpen || !provider) return null;
 
   const handleSubmit = () => {
-    if (!providerName.trim() || !displayName.trim()) return;
-    onSubmit({
-      provider_name: providerName.trim(),
-      display_name: displayName.trim(),
-      is_enabled: isEnabled,
-      priority,
-      owner_type: "system",
-    });
+    if (!apiKey.trim()) {
+      setValidationError("API Key 不能为空");
+      return;
+    }
+    if (showBaseUrl && baseUrl.trim() && !baseUrl.trim().startsWith("https://")) {
+      setValidationError("Base URL 必须以 https:// 开头");
+      return;
+    }
+    setValidationError(null);
+    addKeyMutation.mutate();
   };
 
   const titleId = "provider-form-modal-title";
-  const title = isEdit
-    ? `Edit Provider — ${editData!.display_name}`
-    : "Add Provider";
-  const submitLabel = isEdit ? "Update Provider" : "Add Provider";
+  const isLoading = addKeyMutation.isPending;
 
   const inputStyle = {
     height: 36,
@@ -163,7 +164,6 @@ export function ProviderFormModal({
           transition: "opacity 150ms ease-out, transform 150ms ease-out",
         }}
       >
-        {/* Title */}
         <h2
           id={titleId}
           style={{
@@ -175,80 +175,58 @@ export function ProviderFormModal({
             lineHeight: 1.3,
           }}
         >
-          {title}
+          配置 {provider.display_name}
         </h2>
 
-        {/* Form */}
         <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}>
-          {/* Provider Name */}
           <div>
-            <label style={labelStyle}>Provider Name</label>
+            <label style={labelStyle}>API Key</label>
             <input
-              type="text"
-              value={providerName}
-              onChange={(e) => setProviderName(e.target.value)}
-              readOnly={isEdit}
-              placeholder="e.g. openai, gemini"
-              style={{
-                ...inputStyle,
-                opacity: isEdit ? 0.6 : 1,
-                cursor: isEdit ? "not-allowed" : "text",
-              }}
-            />
-          </div>
-
-          {/* Display Name */}
-          <div>
-            <label style={labelStyle}>Display Name</label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="e.g. OpenAI, Google Gemini"
+              type="password"
+              value={apiKey}
+              onChange={(e) => { setApiKey(e.target.value); setValidationError(null); }}
+              placeholder="Enter API Key"
               style={inputStyle}
             />
           </div>
 
-          {/* Enabled toggle group */}
-          <div>
-            <label style={labelStyle}>Status</label>
-            <div
-              role="radiogroup"
-              aria-label="Provider status"
-              style={{ display: "flex", gap: 0, borderRadius: 8, overflow: "hidden", border: "1px solid var(--cv4-border-default)" }}
-            >
-              <ToggleOption
-                label="Enabled"
-                isActive={isEnabled}
-                onClick={() => setIsEnabled(true)}
+          {showBaseUrl && (
+            <div>
+              <label style={labelStyle}>Base URL (可选)</label>
+              <input
+                type="text"
+                value={baseUrl}
+                onChange={(e) => { setBaseUrl(e.target.value); setValidationError(null); }}
+                placeholder={provider.default_base_url || "https://"}
+                style={inputStyle}
               />
-              <ToggleOption
-                label="Disabled"
-                isActive={!isEnabled}
-                onClick={() => setIsEnabled(false)}
-              />
+              {provider.default_base_url && (
+                <span style={{
+                  fontFamily: "Manrope, sans-serif",
+                  fontSize: 11,
+                  fontWeight: 400,
+                  color: "var(--cv4-text-muted)",
+                  marginTop: 4,
+                  display: "block",
+                }}>
+                  默认: {provider.default_base_url}
+                </span>
+              )}
             </div>
-          </div>
+          )}
 
-          {/* Priority */}
-          <div>
-            <label style={labelStyle}>Priority</label>
-            <input
-              type="number"
-              min={0}
-              max={99}
-              value={priority}
-              onChange={(e) =>
-                setPriority(
-                  Math.min(99, Math.max(0, parseInt(e.target.value) || 0))
-                )
-              }
-              style={{ ...inputStyle, width: 120 }}
-            />
-          </div>
+          {validationError && (
+            <div style={{
+              fontFamily: "Manrope, sans-serif",
+              fontSize: 12,
+              fontWeight: 400,
+              color: "var(--ob-error)",
+            }}>
+              {validationError}
+            </div>
+          )}
         </div>
 
-        {/* Footer */}
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 24 }}>
           <button
             ref={cancelRef}
@@ -267,13 +245,13 @@ export function ProviderFormModal({
               cursor: "pointer",
             }}
           >
-            Cancel
+            取消
           </button>
           <button
             ref={confirmRef}
             type="button"
             onClick={handleSubmit}
-            disabled={isLoading || !providerName.trim() || !displayName.trim()}
+            disabled={isLoading || !apiKey.trim()}
             style={{
               height: 36,
               padding: "0 16px",
@@ -289,57 +267,11 @@ export function ProviderFormModal({
               pointerEvents: isLoading ? "none" : "auto",
             }}
           >
-            {isLoading ? "..." : submitLabel}
+            {isLoading ? "..." : "保存配置"}
           </button>
         </div>
       </div>
     </div>,
     document.body
-  );
-}
-
-function ToggleOption({
-  label,
-  isActive,
-  onClick,
-}: {
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}) {
-  const [hover, setHover] = useState(false);
-
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={isActive}
-      onClick={onClick}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        flex: 1,
-        height: 36,
-        border: "none",
-        background: isActive
-          ? "var(--cv4-active-highlight)"
-          : hover
-            ? "var(--cv4-hover-highlight)"
-            : "transparent",
-        color: isActive
-          ? "var(--cv4-text-primary)"
-          : hover
-            ? "var(--cv4-text-secondary)"
-            : "var(--cv4-text-muted)",
-        fontFamily: "Manrope, sans-serif",
-        fontSize: 12,
-        fontWeight: isActive ? 700 : 400,
-        cursor: "pointer",
-        transition: "background 100ms, color 100ms",
-        padding: 0,
-      }}
-    >
-      {label}
-    </button>
   );
 }

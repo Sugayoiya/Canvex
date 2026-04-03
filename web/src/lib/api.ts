@@ -346,6 +346,12 @@ export const aiProvidersApi = {
     keyId: string,
     data: { is_active?: boolean; reset_error_count?: boolean },
   ) => api.patch(`/ai-providers/${providerId}/keys/${keyId}`, data),
+  listProviderModels: (providerId: string) =>
+    api.get(`/ai-providers/${providerId}/models`),
+  createProviderModel: (providerId: string, data: { model_name: string; display_name: string; model_type: string }) =>
+    api.post(`/ai-providers/${providerId}/models`, data),
+  updateProviderModel: (providerId: string, modelId: string, data: { is_enabled?: boolean; display_name?: string }) =>
+    api.patch(`/ai-providers/${providerId}/models/${modelId}`, data),
 };
 
 export const adminApi = {
