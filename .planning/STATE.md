@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: verifying
-stopped_at: Phase 12.2 context gathered
-last_updated: "2026-04-03T02:47:01.887Z"
-last_activity: 2026-04-02
+status: executing
+stopped_at: Completed 12.2-01-PLAN.md
+last_updated: "2026-04-03T04:57:15.048Z"
+last_activity: 2026-04-03
 progress:
   total_phases: 7
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 12
+  completed_plans: 10
   percent: 16
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-02)
 
 **Core value:** A single, reliable Skill execution backbone for both canvas nodes and AI agents.
-**Current focus:** Phase 12.1 — agent-first-architecture-langchain-anthropic-skills
+**Current focus:** Phase 12.2 — provider-model-preset-management-inserted
 
 ## Current Position
 
-Phase: 13
-Plan: Not started
-Status: Phase complete — ready for verification
-Last activity: 2026-04-02
+Phase: 12.2 (provider-model-preset-management-inserted) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-04-03
 
 Progress: [██░░░░░░░░] 16%
 
@@ -56,6 +56,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12.1 P03 | 5min | 2 tasks | 6 files |
 | Phase 12.1 P04 | 1min | 2 tasks | 3 files |
 | Phase 12.1 P05 | 6min | 3 tasks | 27 files |
+| Phase 12.2 P01 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,7 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.1]: Streaming fallback: astream_events(v2) primary → ainvoke terminal; langchain_messages_json alongside pydantic_ai_messages_json for backward compat
 - [Phase 12.1]: AGENT_CHAT_FOR_CANVAS defaults to false — legacy invoke active until agent proven stable in chat-only mode
 - [Phase 12.1]: Explicit google-genai + openai deps kept (not transitive from langchain-*); SkillExecutor removed in favor of direct registry.invoke(); 14 files deleted (13 planned + context_tools.py)
+- [Phase 12.2]: ModelPricing replaces AIModelProviderMapping as provider-model association; seed_version gating prevents overwriting user-modified records
 
 ### Roadmap Evolution
 
@@ -98,6 +100,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-03T02:47:01.870Z
-Stopped at: Phase 12.2 context gathered
-Resume file: .planning/phases/12.2-provider-model-preset-management-inserted/12.2-CONTEXT.md
+Last session: 2026-04-03T04:57:15.045Z
+Stopped at: Completed 12.2-01-PLAN.md
+Resume file: None

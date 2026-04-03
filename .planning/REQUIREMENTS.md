@@ -70,9 +70,9 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 
 ### Provider & Model Preset Management
 
-- [ ] **PROV-01**: 系统启动时自动种子 Gemini/OpenAI/DeepSeek 预置 Provider（is_preset=True 不可删），每个含 icon/description/default_base_url
-- [ ] **PROV-02**: 预置常用模型（≥7 个 LLM + Image 模型）写入 AIModelConfig（is_preset=True），并通过 ModelPricing 关联到对应 Provider
-- [ ] **PROV-03**: ModelPricing 同时作为 Provider-Model 关联表和定价表，AIModelProviderMapping 删除
+- [x] **PROV-01**: 系统启动时自动种子 Gemini/OpenAI/DeepSeek 预置 Provider（is_preset=True 不可删），每个含 icon/description/default_base_url
+- [x] **PROV-02**: 预置常用模型（≥7 个 LLM + Image 模型）写入 AIModelConfig（is_preset=True），并通过 ModelPricing 关联到对应 Provider
+- [x] **PROV-03**: ModelPricing 同时作为 Provider-Model 关联表和定价表，AIModelProviderMapping 删除
 - [ ] **PROV-04**: Provider 配置弹窗简化为只需填 API Key + 可选 Base URL
 - [ ] **PROV-05**: Provider 卡片内可展开模型列表，显示名称/类型/context_size/定价/启用状态
 - [ ] **PROV-06**: 用户可手动添加自定义模型并关联到指定 Provider
@@ -136,9 +136,9 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | CONV-09 | Phase 12 | Complete |
 | CONV-10 | Phase 12 | Complete |
 | CONV-11 | Phase 12 | Complete |
-| PROV-01 | Phase 12.2 | Pending |
-| PROV-02 | Phase 12.2 | Pending |
-| PROV-03 | Phase 12.2 | Pending |
+| PROV-01 | Phase 12.2 | Complete |
+| PROV-02 | Phase 12.2 | Complete |
+| PROV-03 | Phase 12.2 | Complete |
 | PROV-04 | Phase 12.2 | Pending |
 | PROV-05 | Phase 12.2 | Pending |
 | PROV-06 | Phase 12.2 | Pending |
