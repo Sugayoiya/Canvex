@@ -467,6 +467,11 @@ async def seed_providers_from_env():
     """Read env vars and create system-level AIProviderConfig + AIProviderKey rows if they don't exist."""
     from app.core.database import AsyncSessionLocal
     from app.models.ai_provider_config import AIProviderConfig, AIProviderKey
+    from app.services.ai.preset_seed import get_all_provider_metadata
+
+    meta_lookup: dict[str, dict] = {}
+    for m in get_all_provider_metadata():
+        meta_lookup[m["provider_name"]] = m
 
     env_map = {
         "gemini": ("Gemini", settings.GEMINI_API_KEY),
@@ -485,9 +490,16 @@ async def seed_providers_from_env():
             )).scalar_one_or_none()
             if existing:
                 continue
+
+            pm = meta_lookup.get(provider_name, {})
             config = AIProviderConfig(
                 provider_name=provider_name,
-                display_name=display_name,
+                display_name=pm.get("display_name", display_name),
+                description=pm.get("description"),
+                icon=pm.get("icon"),
+                sdk_type=pm.get("sdk_type", "native"),
+                default_base_url=pm.get("default_base_url"),
+                is_preset=True,
                 owner_type="system",
                 priority=idx,
             )

@@ -109,6 +109,12 @@ async def init_db():
     from app.services.ai.provider_manager import seed_providers_from_env
     await seed_providers_from_env()
 
+    from app.services.ai.preset_seed import seed_preset_providers, seed_preset_models_and_pricing
+    async with AsyncSessionLocal() as session:
+        await seed_preset_providers(session)
+        await seed_preset_models_and_pricing(session)
+        await session.commit()
+
     if settings.SEED_TEST_DATA:
         await _seed_test_data()
 
