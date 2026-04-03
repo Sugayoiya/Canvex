@@ -43,6 +43,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ v3.0 Phase 12 AI call convergence — 3 stacks unified to ProviderManager async path, Redis key health, credential cache, SQLite dropped
 - ✓ v3.0 Phase 12.1 Agent-First Architecture — LangChain 替代 PydanticAI，17 @tool 纯函数工具集，10 Anthropic SKILL.md 三级加载，多供应商 LLM 切换（Gemini/OpenAI/DeepSeek），LangGraph SSE 流式
 - ✓ v3.0 Phase 12.2 Provider & Model Preset Management — 系统预置 Provider/Model + 用户填 Key/BaseURL，ModelPricing 兼任关联表+定价表，Dify 风格模型列表嵌入 Provider 卡片
+- ✓ v3.0 Phase 12.3 Model Selection Feature — Available Models API, resolve_provider_for_model, 4 层 fallback 链, ModelSelector Pill+Popover 组件, Chat/Canvas 集成, 项目/个人/团队/系统默认模型配置
 
 ### Active
 - [ ] QueryEngine——Token 预算、轮次限制、递减检测、"先计划再执行"模式
@@ -116,4 +117,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after Phase 12.2 Provider & Model Preset Management complete*
+*Last updated: 2026-04-03 after Phase 12.3 Model Selection Feature complete*
