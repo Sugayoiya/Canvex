@@ -24,40 +24,56 @@ PROVIDER_META = {
 _KNOWN_MODELS: dict[str, dict] = {
     "gpt-4o": {
         "display_name": "GPT-4o",
-        "capabilities": ["text", "code", "vision"],
-        "input_token_limit": 128000,
-        "output_token_limit": 16384,
-        "default_temperature": 1.0,
-        "max_temperature": 2.0,
-        "top_p": 1.0,
+        "features": ["vision", "tool-call", "multi-tool-call", "stream-tool-call"],
         "input_types": ["text", "image", "audio"],
         "output_types": ["text"],
-        "thinking": False,
+        "model_properties": {"mode": "chat", "context_size": 128000},
+        "parameter_rules": [
+            {"name": "temperature", "use_template": "temperature", "default": 1.0, "max": 2.0},
+            {"name": "top_p", "use_template": "top_p"},
+            {"name": "max_tokens", "use_template": "max_tokens", "default": 16384, "max": 16384},
+            {"name": "frequency_penalty", "use_template": "frequency_penalty"},
+            {"name": "presence_penalty", "use_template": "presence_penalty"},
+        ],
+        "deprecated": False,
+        "input_token_limit": 128000,
+        "output_token_limit": 16384,
         "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.0025", "output_price_per_1k": "0.01"},
     },
     "gpt-4o-mini": {
         "display_name": "GPT-4o Mini",
-        "capabilities": ["text", "code", "vision"],
-        "input_token_limit": 128000,
-        "output_token_limit": 16384,
-        "default_temperature": 1.0,
-        "max_temperature": 2.0,
-        "top_p": 1.0,
+        "features": ["vision", "tool-call", "multi-tool-call", "stream-tool-call"],
         "input_types": ["text", "image"],
         "output_types": ["text"],
-        "thinking": False,
+        "model_properties": {"mode": "chat", "context_size": 128000},
+        "parameter_rules": [
+            {"name": "temperature", "use_template": "temperature", "default": 1.0, "max": 2.0},
+            {"name": "top_p", "use_template": "top_p"},
+            {"name": "max_tokens", "use_template": "max_tokens", "default": 16384, "max": 16384},
+            {"name": "frequency_penalty", "use_template": "frequency_penalty"},
+            {"name": "presence_penalty", "use_template": "presence_penalty"},
+        ],
+        "deprecated": False,
+        "input_token_limit": 128000,
+        "output_token_limit": 16384,
         "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00015", "output_price_per_1k": "0.0006"},
     },
     "gpt-4.1-mini": {
         "display_name": "GPT-4.1 Mini",
-        "capabilities": ["text", "code", "vision"],
-        "input_token_limit": 1047576,
-        "output_token_limit": 32768,
-        "default_temperature": 1.0,
-        "max_temperature": 2.0,
+        "features": ["vision", "tool-call", "multi-tool-call", "stream-tool-call"],
         "input_types": ["text", "image"],
         "output_types": ["text"],
-        "thinking": False,
+        "model_properties": {"mode": "chat", "context_size": 1047576},
+        "parameter_rules": [
+            {"name": "temperature", "use_template": "temperature", "default": 1.0, "max": 2.0},
+            {"name": "top_p", "use_template": "top_p"},
+            {"name": "max_tokens", "use_template": "max_tokens", "default": 32768, "max": 32768},
+            {"name": "frequency_penalty", "use_template": "frequency_penalty"},
+            {"name": "presence_penalty", "use_template": "presence_penalty"},
+        ],
+        "deprecated": False,
+        "input_token_limit": 1047576,
+        "output_token_limit": 32768,
         "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.0004", "output_price_per_1k": "0.0016"},
     },
 }
@@ -135,21 +151,19 @@ class OpenAIProvider(LLMProviderBase):
 
     @staticmethod
     def _build_entity(name: str, meta: dict) -> AIModelEntity:
-        output_types = meta.get("output_types")
-        capabilities = meta.get("capabilities", [])
-        model_type = infer_model_type(output_types=output_types, capabilities=capabilities, model_name=name)
+        output_types = meta.get("output_types", [])
+        features = meta.get("features", [])
+        model_type = infer_model_type(output_types=output_types, features=features, model_name=name)
         return AIModelEntity(
             name=name,
             display_name=meta.get("display_name", name),
             model_type=model_type,
-            capabilities=capabilities,
+            features=features,
+            input_types=meta.get("input_types", []),
+            output_types=output_types,
+            model_properties=meta.get("model_properties"),
+            parameter_rules=meta.get("parameter_rules", []),
             input_token_limit=meta.get("input_token_limit"),
             output_token_limit=meta.get("output_token_limit"),
-            default_temperature=meta.get("default_temperature"),
-            max_temperature=meta.get("max_temperature"),
-            top_p=meta.get("top_p"),
-            input_types=meta.get("input_types"),
-            output_types=output_types,
-            thinking=meta.get("thinking"),
-            extra_params=meta.get("extra_params"),
+            deprecated=meta.get("deprecated", False),
         )

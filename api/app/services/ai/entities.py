@@ -21,31 +21,24 @@ class AIModelEntity(BaseModel):
     display_name: str
     description: str | None = None
     model_type: ModelType = ModelType.LLM
-    capabilities: list[str] = []
-
+    features: list[str] = []
+    input_types: list[str] = []
+    output_types: list[str] = []
+    model_properties: dict | None = None
+    parameter_rules: list[dict] = []
     input_token_limit: int | None = None
     output_token_limit: int | None = None
-    default_temperature: float | None = None
-    max_temperature: float | None = None
-    top_p: float | None = None
-    top_k: int | None = None
-    supported_actions: list[str] | None = None
-
-    input_types: list[str] | None = None
-    output_types: list[str] | None = None
-    thinking: bool | None = None
-
-    extra_params: dict | None = None
+    deprecated: bool = False
 
 
 def infer_model_type(
     output_types: list[str] | None = None,
-    capabilities: list[str] | None = None,
+    features: list[str] | None = None,
     model_name: str = "",
 ) -> ModelType:
-    """Infer ModelType from output_types / capabilities / model name."""
+    """Infer ModelType from output_types / features / model name."""
     outs = set(output_types or [])
-    caps = set(capabilities or [])
+    feats = set(features or [])
     name_lower = model_name.lower()
 
     if outs:
@@ -56,7 +49,7 @@ def infer_model_type(
         if "audio" in outs and "text" not in outs:
             return ModelType.TEXT_TO_SPEECH
 
-    if "embedding" in caps:
+    if "embedding" in feats:
         return ModelType.TEXT_EMBEDDING
 
     if "imagen" in name_lower:

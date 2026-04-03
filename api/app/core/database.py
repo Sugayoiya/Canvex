@@ -73,6 +73,12 @@ def _auto_migrate_columns(connection):
         ("ai_model_configs", "seed_version", "INTEGER DEFAULT 0"),
         ("model_pricing", "provider_config_id", "VARCHAR(36)"),
         ("model_pricing", "model_config_id", "VARCHAR(36)"),
+        ("ai_model_configs", "features", "TEXT"),
+        ("ai_model_configs", "model_properties", "TEXT"),
+        ("ai_model_configs", "parameter_rules", "TEXT"),
+        ("ai_model_configs", "input_types", "TEXT"),
+        ("ai_model_configs", "output_types", "TEXT"),
+        ("ai_model_configs", "deprecated", "BOOLEAN DEFAULT FALSE"),
     ]
     for table, column, col_type in migrations:
         if table not in table_names:

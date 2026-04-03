@@ -36,34 +36,48 @@ PROVIDER_META = {
 _KNOWN_MODELS: dict[str, dict] = {
     "gemini-2.5-flash": {
         "display_name": "Gemini 2.5 Flash",
-        "capabilities": ["text", "code", "vision", "audio", "video"],
+        "features": ["vision", "tool-call", "stream-tool-call", "agent-thought"],
         "input_types": ["text", "image", "video", "audio", "pdf"],
         "output_types": ["text"],
-        "thinking": True,
+        "model_properties": {"mode": "chat", "context_size": 1048576},
+        "parameter_rules": [
+            {"name": "temperature", "use_template": "temperature"},
+            {"name": "top_p", "use_template": "top_p"},
+            {"name": "max_tokens", "use_template": "max_tokens", "default": 65536, "max": 65536},
+        ],
+        "deprecated": False,
         "input_token_limit": 1048576,
         "output_token_limit": 65536,
         "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00015", "output_price_per_1k": "0.0006"},
     },
     "gemini-2.5-pro": {
         "display_name": "Gemini 2.5 Pro",
-        "capabilities": ["text", "code", "vision", "audio", "video"],
+        "features": ["vision", "tool-call", "stream-tool-call", "agent-thought"],
         "input_types": ["text", "image", "video", "audio", "pdf"],
         "output_types": ["text"],
-        "thinking": True,
+        "model_properties": {"mode": "chat", "context_size": 1048576},
+        "parameter_rules": [
+            {"name": "temperature", "use_template": "temperature"},
+            {"name": "top_p", "use_template": "top_p"},
+            {"name": "max_tokens", "use_template": "max_tokens", "default": 65536, "max": 65536},
+        ],
+        "deprecated": False,
         "input_token_limit": 1048576,
         "output_token_limit": 65536,
         "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00125", "output_price_per_1k": "0.005"},
     },
     "gemini-2.5-flash-image": {
         "display_name": "Gemini 2.5 Flash Image",
-        "capabilities": ["text", "code", "vision", "image"],
+        "features": ["vision"],
         "input_types": ["text", "image"],
         "output_types": ["text", "image"],
-        "thinking": False,
-        "extra_params": {
+        "model_properties": {
+            "mode": "chat",
             "aspect_ratios": ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"],
             "image_sizes": ["1K"],
         },
+        "parameter_rules": [],
+        "deprecated": False,
         "default_pricing": {"pricing_model": "per_image", "price_per_image": "0.039"},
     },
 }
@@ -314,14 +328,13 @@ class GeminiProvider(LLMProviderBase):
 
     @classmethod
     def _build_entity(cls, name: str, meta: dict, api_model: Any = None) -> AIModelEntity:
-        capabilities = meta.get("capabilities", [])
-        output_types = meta.get("output_types")
-        model_type = infer_model_type(output_types=output_types, capabilities=capabilities, model_name=name)
+        features = meta.get("features", [])
+        output_types = meta.get("output_types", [])
+        model_type = infer_model_type(output_types=output_types, features=features, model_name=name)
 
         api_input_token_limit: int | None = None
         api_output_token_limit: int | None = None
         api_description: str | None = None
-        thinking = meta.get("thinking")
 
         if api_model is not None:
             api_description = getattr(api_model, "description", None)
@@ -333,13 +346,14 @@ class GeminiProvider(LLMProviderBase):
             display_name=meta.get("display_name", name),
             description=api_description,
             model_type=model_type,
-            capabilities=capabilities,
+            features=features,
+            input_types=meta.get("input_types", []),
+            output_types=output_types,
+            model_properties=meta.get("model_properties"),
+            parameter_rules=meta.get("parameter_rules", []),
             input_token_limit=api_input_token_limit,
             output_token_limit=api_output_token_limit,
-            input_types=meta.get("input_types"),
-            output_types=output_types,
-            thinking=thinking,
-            extra_params=meta.get("extra_params"),
+            deprecated=meta.get("deprecated", False),
         )
 
     @classmethod

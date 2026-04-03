@@ -1,5 +1,7 @@
+import json
 import logging
 from datetime import datetime
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
@@ -15,6 +17,10 @@ from app.models.ai_provider_config import (
 from app.services.ai.provider_manager import encrypt_api_key
 from app.services.admin_audit import AuditContext
 from app.models.model_pricing import ModelPricing
+from app.services.ai.parameter_templates import (
+    PARAMETER_RULE_TEMPLATES,
+    resolve_parameter_rules,
+)
 from app.schemas.ai_provider import (
     ProviderConfigCreate,
     ProviderConfigUpdate,
@@ -445,6 +451,50 @@ async def list_models(
     return responses
 
 
+def _parse_json_field(value: str | None) -> list | dict | None:
+    if not value:
+        return None
+    try:
+        return json.loads(value) if isinstance(value, str) else value
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+
+def _model_to_response(mc: AIModelConfig, pricing: ModelPricing | None = None) -> ProviderModelResponse:
+    raw_rules = _parse_json_field(mc.parameter_rules) or []
+    return ProviderModelResponse(
+        id=mc.id,
+        display_name=mc.display_name,
+        model_name=mc.model_name,
+        model_type=mc.model_type,
+        features=_parse_json_field(mc.features) or [],
+        is_enabled=mc.is_enabled,
+        is_preset=mc.is_preset,
+        input_token_limit=mc.input_token_limit,
+        output_token_limit=mc.output_token_limit,
+        input_types=_parse_json_field(mc.input_types) or [],
+        output_types=_parse_json_field(mc.output_types) or [],
+        model_properties=_parse_json_field(mc.model_properties),
+        parameter_rules=resolve_parameter_rules(raw_rules),
+        deprecated=mc.deprecated if mc.deprecated is not None else False,
+        pricing=ModelPricingBrief(
+            id=pricing.id,
+            pricing_model=pricing.pricing_model,
+            input_price_per_1k=pricing.input_price_per_1k,
+            output_price_per_1k=pricing.output_price_per_1k,
+            price_per_image=pricing.price_per_image,
+            price_per_second=pricing.price_per_second,
+            is_active=pricing.is_active,
+        ) if pricing else None,
+    )
+
+
+@router.get("/parameter-templates")
+async def get_parameter_templates(user=Depends(get_current_user)):
+    """Return the preset ParameterRule templates for the frontend form."""
+    return PARAMETER_RULE_TEMPLATES
+
+
 @router.get("/{provider_id}/models", response_model=list[ProviderModelResponse])
 async def list_provider_models(
     provider_id: str,
@@ -467,36 +517,7 @@ async def list_provider_models(
     result = await db.execute(stmt)
     rows = result.all()
 
-    responses = []
-    for model_config, pricing in rows:
-        caps = []
-        if model_config.capabilities:
-            import json
-            try:
-                caps = json.loads(model_config.capabilities) if isinstance(model_config.capabilities, str) else model_config.capabilities
-            except (json.JSONDecodeError, TypeError):
-                caps = []
-        responses.append(ProviderModelResponse(
-            id=model_config.id,
-            display_name=model_config.display_name,
-            model_name=model_config.model_name,
-            model_type=model_config.model_type,
-            capabilities=caps,
-            is_enabled=model_config.is_enabled,
-            is_preset=getattr(model_config, "is_preset", False),
-            input_token_limit=getattr(model_config, "input_token_limit", None),
-            output_token_limit=getattr(model_config, "output_token_limit", None),
-            pricing=ModelPricingBrief(
-                id=pricing.id,
-                pricing_model=pricing.pricing_model,
-                input_price_per_1k=pricing.input_price_per_1k,
-                output_price_per_1k=pricing.output_price_per_1k,
-                price_per_image=pricing.price_per_image,
-                price_per_second=pricing.price_per_second,
-                is_active=pricing.is_active,
-            ) if pricing else None,
-        ))
-    return responses
+    return [_model_to_response(mc, pricing) for mc, pricing in rows]
 
 
 @router.post("/{provider_id}/models", response_model=ProviderModelResponse, status_code=status.HTTP_201_CREATED)
@@ -516,20 +537,34 @@ async def create_provider_model(
     if existing:
         raise HTTPException(status_code=409, detail=f"Model '{data.model_name}' already exists")
 
+    rules_raw = [r.model_dump(exclude_none=True) for r in data.parameter_rules] if data.parameter_rules else []
+
     model = AIModelConfig(
         display_name=data.display_name,
         model_name=data.model_name,
         model_type=data.model_type,
+        features=json.dumps(data.features) if data.features else None,
+        input_types=json.dumps(data.input_types) if data.input_types else None,
+        output_types=json.dumps(data.output_types) if data.output_types else None,
+        model_properties=json.dumps(data.model_properties) if data.model_properties else None,
+        parameter_rules=json.dumps(rules_raw) if rules_raw else None,
+        input_token_limit=data.input_token_limit,
+        output_token_limit=data.output_token_limit,
+        deprecated=data.deprecated,
         is_preset=False,
     )
     db.add(model)
     await db.flush()
 
+    pricing_model = data.pricing_model or "per_token"
     pricing = ModelPricing(
         provider=config.provider_name,
         model=data.model_name,
         model_type=data.model_type,
-        pricing_model="per_token",
+        pricing_model=pricing_model,
+        input_price_per_1k=Decimal(data.input_price_per_1k) if data.input_price_per_1k else None,
+        output_price_per_1k=Decimal(data.output_price_per_1k) if data.output_price_per_1k else None,
+        price_per_image=Decimal(data.price_per_image) if data.price_per_image else None,
         provider_config_id=provider_id,
         model_config_id=model.id,
     )
@@ -542,15 +577,7 @@ async def create_provider_model(
         target_id=model.id,
         changes={"model": {"old": None, "new": {"model_name": data.model_name, "display_name": data.display_name}}})
 
-    return ProviderModelResponse(
-        id=model.id,
-        display_name=model.display_name,
-        model_name=model.model_name,
-        model_type=model.model_type,
-        is_enabled=model.is_enabled,
-        is_preset=False,
-        pricing=None,
-    )
+    return _model_to_response(model, pricing)
 
 
 @router.patch("/{provider_id}/models/{model_id}", response_model=ProviderModelResponse)
@@ -561,7 +588,7 @@ async def update_provider_model(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Toggle model enabled/disabled or update display_name."""
+    """Update model configuration fields."""
     config = await _get_config_or_404(provider_id, user, db)
     require_admin(user)
 
@@ -572,12 +599,59 @@ async def update_provider_model(
         raise HTTPException(status_code=404, detail="Model not found")
 
     changes = {}
-    if data.is_enabled is not None and data.is_enabled != model.is_enabled:
-        changes["is_enabled"] = {"old": model.is_enabled, "new": data.is_enabled}
-        model.is_enabled = data.is_enabled
-    if data.display_name is not None and data.display_name != model.display_name:
-        changes["display_name"] = {"old": model.display_name, "new": data.display_name}
-        model.display_name = data.display_name
+    update_fields = data.model_dump(exclude_unset=True)
+
+    json_list_fields = {"features", "input_types", "output_types"}
+    json_dict_fields = {"model_properties"}
+    json_rules_field = "parameter_rules"
+    pricing_fields = {"pricing_model", "input_price_per_1k", "output_price_per_1k", "price_per_image"}
+
+    for field, value in update_fields.items():
+        if field in pricing_fields:
+            continue
+        if field in json_list_fields:
+            old = getattr(model, field)
+            new_val = json.dumps(value) if value is not None else None
+            if old != new_val:
+                changes[field] = {"old": old, "new": new_val}
+                setattr(model, field, new_val)
+        elif field in json_dict_fields:
+            old = getattr(model, field)
+            new_val = json.dumps(value) if value is not None else None
+            if old != new_val:
+                changes[field] = {"old": old, "new": new_val}
+                setattr(model, field, new_val)
+        elif field == json_rules_field:
+            rules_raw = [r.model_dump(exclude_none=True) if hasattr(r, 'model_dump') else r for r in value] if value is not None else None
+            new_val = json.dumps(rules_raw) if rules_raw is not None else None
+            old = getattr(model, field)
+            if old != new_val:
+                changes[field] = {"old": old, "new": new_val}
+                setattr(model, field, new_val)
+        else:
+            old = getattr(model, field, None)
+            if old != value:
+                changes[field] = {"old": old, "new": value}
+                setattr(model, field, value)
+
+    if any(f in update_fields for f in pricing_fields):
+        pricing_result = await db.execute(
+            select(ModelPricing).where(
+                ModelPricing.model_config_id == model_id,
+                ModelPricing.provider_config_id == provider_id,
+            )
+        )
+        pricing = pricing_result.scalar_one_or_none()
+        if pricing:
+            if "pricing_model" in update_fields and update_fields["pricing_model"]:
+                pricing.pricing_model = update_fields["pricing_model"]
+            if "input_price_per_1k" in update_fields:
+                pricing.input_price_per_1k = Decimal(update_fields["input_price_per_1k"]) if update_fields["input_price_per_1k"] else None
+            if "output_price_per_1k" in update_fields:
+                pricing.output_price_per_1k = Decimal(update_fields["output_price_per_1k"]) if update_fields["output_price_per_1k"] else None
+            if "price_per_image" in update_fields:
+                pricing.price_per_image = Decimal(update_fields["price_per_image"]) if update_fields["price_per_image"] else None
+
     await db.flush()
 
     if changes:
@@ -586,13 +660,12 @@ async def update_provider_model(
             action_type="provider.model.update", target_type="ai_model_config",
             target_id=model_id, changes=changes)
 
-    return ProviderModelResponse(
-        id=model.id,
-        display_name=model.display_name,
-        model_name=model.model_name,
-        model_type=model.model_type,
-        is_enabled=model.is_enabled,
-        is_preset=getattr(model, "is_preset", False),
-        input_token_limit=getattr(model, "input_token_limit", None),
-        output_token_limit=getattr(model, "output_token_limit", None),
-    )
+    pricing_obj = (await db.execute(
+        select(ModelPricing).where(
+            ModelPricing.model_config_id == model_id,
+            ModelPricing.provider_config_id == provider_id,
+            ModelPricing.is_active == True,  # noqa: E712
+        )
+    )).scalar_one_or_none()
+
+    return _model_to_response(model, pricing_obj)

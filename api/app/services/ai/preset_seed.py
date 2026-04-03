@@ -19,7 +19,7 @@ from app.models.model_pricing import ModelPricing
 
 logger = logging.getLogger(__name__)
 
-CURRENT_SEED_VERSION = 1
+CURRENT_SEED_VERSION = 2
 
 
 def get_all_provider_metadata() -> list[dict]:
@@ -111,6 +111,12 @@ async def seed_preset_models_and_pricing(session: AsyncSession) -> None:
                 existing_model.display_name = model_data.get("display_name", model_name)
                 existing_model.input_token_limit = model_data.get("input_token_limit")
                 existing_model.output_token_limit = model_data.get("output_token_limit")
+                existing_model.features = json.dumps(model_data.get("features", [])) if model_data.get("features") else None
+                existing_model.input_types = json.dumps(model_data.get("input_types", [])) if model_data.get("input_types") else None
+                existing_model.output_types = json.dumps(model_data.get("output_types", [])) if model_data.get("output_types") else None
+                existing_model.model_properties = json.dumps(model_data.get("model_properties")) if model_data.get("model_properties") else None
+                existing_model.parameter_rules = json.dumps(model_data.get("parameter_rules", [])) if model_data.get("parameter_rules") else None
+                existing_model.deprecated = model_data.get("deprecated", False)
                 existing_model.is_preset = True
                 existing_model.seed_version = CURRENT_SEED_VERSION
                 model_configs[model_name] = existing_model
@@ -118,13 +124,17 @@ async def seed_preset_models_and_pricing(session: AsyncSession) -> None:
             else:
                 output_types = model_data.get("output_types", [])
                 model_type = "image" if "image" in output_types else "llm"
-                capabilities = model_data.get("capabilities", [])
 
                 mc = AIModelConfig(
                     model_name=model_name,
                     display_name=model_data.get("display_name", model_name),
                     model_type=model_type,
-                    capabilities=json.dumps(capabilities) if capabilities else None,
+                    features=json.dumps(model_data.get("features", [])) if model_data.get("features") else None,
+                    input_types=json.dumps(model_data.get("input_types", [])) if model_data.get("input_types") else None,
+                    output_types=json.dumps(output_types) if output_types else None,
+                    model_properties=json.dumps(model_data.get("model_properties")) if model_data.get("model_properties") else None,
+                    parameter_rules=json.dumps(model_data.get("parameter_rules", [])) if model_data.get("parameter_rules") else None,
+                    deprecated=model_data.get("deprecated", False),
                     is_preset=True,
                     is_enabled=True,
                     input_token_limit=model_data.get("input_token_limit"),

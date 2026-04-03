@@ -3,6 +3,31 @@ import axios from "axios";
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "";
 
+export interface ParameterRule {
+  name: string;
+  use_template?: string;
+  label?: string;
+  type?: string;
+  help?: string;
+  required?: boolean;
+  default?: number | string | boolean;
+  min?: number;
+  max?: number;
+  precision?: number;
+  options?: string[];
+}
+
+export interface ParameterRuleTemplate {
+  label: string;
+  type: string;
+  help?: string;
+  required?: boolean;
+  default?: number | string | boolean;
+  min?: number;
+  max?: number;
+  precision?: number;
+}
+
 const api = axios.create({
   baseURL: `${API_BASE_URL}/api/v1`,
   headers: { "Content-Type": "application/json" },
@@ -348,10 +373,48 @@ export const aiProvidersApi = {
   ) => api.patch(`/ai-providers/${providerId}/keys/${keyId}`, data),
   listProviderModels: (providerId: string) =>
     api.get(`/ai-providers/${providerId}/models`),
-  createProviderModel: (providerId: string, data: { model_name: string; display_name: string; model_type: string }) =>
-    api.post(`/ai-providers/${providerId}/models`, data),
-  updateProviderModel: (providerId: string, modelId: string, data: { is_enabled?: boolean; display_name?: string }) =>
-    api.patch(`/ai-providers/${providerId}/models/${modelId}`, data),
+  createProviderModel: (
+    providerId: string,
+    data: {
+      model_name: string;
+      display_name: string;
+      model_type?: string;
+      features?: string[];
+      input_types?: string[];
+      output_types?: string[];
+      model_properties?: Record<string, unknown>;
+      parameter_rules?: ParameterRule[];
+      input_token_limit?: number;
+      output_token_limit?: number;
+      deprecated?: boolean;
+      pricing_model?: string;
+      input_price_per_1k?: string;
+      output_price_per_1k?: string;
+      price_per_image?: string;
+    },
+  ) => api.post(`/ai-providers/${providerId}/models`, data),
+  updateProviderModel: (
+    providerId: string,
+    modelId: string,
+    data: {
+      display_name?: string;
+      is_enabled?: boolean;
+      features?: string[];
+      input_types?: string[];
+      output_types?: string[];
+      model_properties?: Record<string, unknown>;
+      parameter_rules?: ParameterRule[];
+      input_token_limit?: number;
+      output_token_limit?: number;
+      deprecated?: boolean;
+      pricing_model?: string;
+      input_price_per_1k?: string;
+      output_price_per_1k?: string;
+      price_per_image?: string;
+    },
+  ) => api.patch(`/ai-providers/${providerId}/models/${modelId}`, data),
+  getParameterTemplates: () =>
+    api.get<Record<string, ParameterRuleTemplate>>("/ai-providers/parameter-templates"),
 };
 
 export const adminApi = {

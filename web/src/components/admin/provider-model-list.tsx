@@ -2,20 +2,27 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ChevronRight, ChevronDown, Loader2 } from "lucide-react";
+import { ChevronRight, ChevronDown, Loader2, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { aiProvidersApi } from "@/lib/api";
+import type { ParameterRule } from "@/lib/api";
+import { ModelFormModal, type ModelFormData } from "./model-form-modal";
 
-interface ProviderModel {
+export interface ProviderModel {
   id: string;
   display_name: string;
   model_name: string;
   model_type: string;
-  capabilities: string[];
+  features: string[];
   is_enabled: boolean;
   is_preset: boolean;
   input_token_limit: number | null;
   output_token_limit: number | null;
+  input_types: string[];
+  output_types: string[];
+  model_properties: Record<string, unknown> | null;
+  parameter_rules: ParameterRule[];
+  deprecated: boolean;
   pricing: {
     id: string;
     pricing_model: string;
@@ -34,9 +41,8 @@ interface ProviderModelListProps {
 export function ProviderModelList({ providerId }: ProviderModelListProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
-  const [newModelName, setNewModelName] = useState("");
-  const [newDisplayName, setNewDisplayName] = useState("");
-  const [newModelType, setNewModelType] = useState("llm");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editModel, setEditModel] = useState<ProviderModel | null>(null);
 
   const { data: models, isLoading } = useQuery({
     queryKey: ["admin", "provider-models", providerId],
@@ -62,14 +68,19 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: { model_name: string; display_name: string; model_type: string }) =>
-      aiProvidersApi.createProviderModel(providerId, data),
+    mutationFn: (data: ModelFormData) =>
+      aiProvidersApi.createProviderModel(providerId, {
+        ...data,
+        input_token_limit: data.input_token_limit ?? undefined,
+        output_token_limit: data.output_token_limit ?? undefined,
+        input_price_per_1k: data.input_price_per_1k || undefined,
+        output_price_per_1k: data.output_price_per_1k || undefined,
+        price_per_image: data.price_per_image || undefined,
+      }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "provider-models", providerId] });
       toast.success(`Model added: ${vars.display_name || vars.model_name}`);
-      setNewModelName("");
-      setNewDisplayName("");
-      setNewModelType("llm");
+      setModalOpen(false);
     },
     onError: (err: unknown) => {
       const msg =
@@ -79,17 +90,38 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ modelId, data }: { modelId: string; data: ModelFormData }) =>
+      aiProvidersApi.updateProviderModel(providerId, modelId, {
+        display_name: data.display_name,
+        features: data.features,
+        input_types: data.input_types,
+        output_types: data.output_types,
+        model_properties: data.model_properties,
+        parameter_rules: data.parameter_rules,
+        input_token_limit: data.input_token_limit ?? undefined,
+        output_token_limit: data.output_token_limit ?? undefined,
+        deprecated: data.deprecated,
+        pricing_model: data.pricing_model || undefined,
+        input_price_per_1k: data.input_price_per_1k || undefined,
+        output_price_per_1k: data.output_price_per_1k || undefined,
+        price_per_image: data.price_per_image || undefined,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "provider-models", providerId] });
+      toast.success("Model updated");
+      setEditModel(null);
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail ?? "Unknown error";
+      toast.error(`Failed to update model: ${msg}`);
+    },
+  });
+
   const modelList = models ?? [];
   const Chevron = isExpanded ? ChevronDown : ChevronRight;
-
-  const handleAddModel = () => {
-    if (!newModelName.trim()) return;
-    createMutation.mutate({
-      model_name: newModelName.trim(),
-      display_name: newDisplayName.trim() || newModelName.trim(),
-      model_type: newModelType,
-    });
-  };
 
   return (
     <div>
@@ -161,112 +193,77 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
                 onToggle={(enabled) =>
                   toggleMutation.mutate({ modelId: model.id, isEnabled: enabled })
                 }
+                onEdit={() => setEditModel(model)}
               />
             ))
           )}
 
-          {/* Add model form */}
-          <div
+          {/* Add model button */}
+          <button
+            type="button"
+            onClick={() => setModalOpen(true)}
             style={{
               display: "flex",
-              gap: 8,
-              padding: "8px 0",
               alignItems: "center",
-              flexWrap: "wrap",
+              gap: 6,
+              marginTop: 8,
+              padding: "6px 12px",
+              borderRadius: 8,
+              border: "1px dashed var(--cv4-border-default)",
+              background: "transparent",
+              color: "var(--cv4-text-secondary)",
+              fontFamily: "Manrope, sans-serif",
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: "pointer",
+              width: "100%",
+              justifyContent: "center",
             }}
           >
-            <input
-              type="text"
-              value={newModelName}
-              onChange={(e) => setNewModelName(e.target.value)}
-              placeholder="Model ID (e.g. gpt-4o-mini)"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddModel();
-              }}
-              style={{
-                flex: 1,
-                minWidth: 140,
-                height: 32,
-                padding: "0 8px",
-                fontFamily: "Space Grotesk, monospace",
-                fontSize: 12,
-                fontWeight: 400,
-                color: "var(--cv4-text-primary)",
-                background: "var(--cv4-canvas-bg)",
-                border: "1px solid var(--cv4-border-default)",
-                borderRadius: 8,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-            <input
-              type="text"
-              value={newDisplayName}
-              onChange={(e) => setNewDisplayName(e.target.value)}
-              placeholder="Display name (optional)"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddModel();
-              }}
-              style={{
-                flex: 1,
-                minWidth: 120,
-                height: 32,
-                padding: "0 8px",
-                fontFamily: "Manrope, sans-serif",
-                fontSize: 12,
-                fontWeight: 400,
-                color: "var(--cv4-text-primary)",
-                background: "var(--cv4-canvas-bg)",
-                border: "1px solid var(--cv4-border-default)",
-                borderRadius: 8,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-            <select
-              value={newModelType}
-              onChange={(e) => setNewModelType(e.target.value)}
-              style={{
-                width: 80,
-                height: 32,
-                padding: "0 8px",
-                fontFamily: "Manrope, sans-serif",
-                fontSize: 12,
-                fontWeight: 400,
-                color: "var(--cv4-text-primary)",
-                background: "var(--cv4-canvas-bg)",
-                border: "1px solid var(--cv4-border-default)",
-                borderRadius: 8,
-                outline: "none",
-              }}
-            >
-              <option value="llm">LLM</option>
-              <option value="image">Image</option>
-            </select>
-            <button
-              type="button"
-              onClick={handleAddModel}
-              disabled={!newModelName.trim() || createMutation.isPending}
-              style={{
-                height: 32,
-                padding: "0 12px",
-                borderRadius: 8,
-                border: "none",
-                background: "var(--cv4-btn-secondary)",
-                color: "var(--cv4-btn-secondary-text)",
-                fontFamily: "Manrope, sans-serif",
-                fontSize: 12,
-                fontWeight: 700,
-                cursor: createMutation.isPending ? "not-allowed" : "pointer",
-                opacity: !newModelName.trim() || createMutation.isPending ? 0.5 : 1,
-                whiteSpace: "nowrap",
-              }}
-            >
-              {createMutation.isPending ? "..." : "Add"}
-            </button>
-          </div>
+            <Plus size={14} /> Add Model
+          </button>
         </div>
       )}
+
+      {/* Create modal */}
+      <ModelFormModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        mode="create"
+        onSubmit={(data) => createMutation.mutate(data)}
+        isSubmitting={createMutation.isPending}
+      />
+
+      {/* Edit modal */}
+      <ModelFormModal
+        open={!!editModel}
+        onClose={() => setEditModel(null)}
+        mode="edit"
+        isPreset={editModel?.is_preset}
+        initialData={
+          editModel
+            ? {
+                model_name: editModel.model_name,
+                display_name: editModel.display_name,
+                model_type: editModel.model_type,
+                features: editModel.features,
+                input_types: editModel.input_types,
+                output_types: editModel.output_types,
+                model_properties: editModel.model_properties ?? { mode: "chat" },
+                parameter_rules: editModel.parameter_rules,
+                input_token_limit: editModel.input_token_limit,
+                output_token_limit: editModel.output_token_limit,
+                deprecated: editModel.deprecated,
+                pricing_model: editModel.pricing?.pricing_model ?? "per_token",
+                input_price_per_1k: editModel.pricing?.input_price_per_1k ?? "",
+                output_price_per_1k: editModel.pricing?.output_price_per_1k ?? "",
+                price_per_image: editModel.pricing?.price_per_image ?? "",
+              }
+            : undefined
+        }
+        onSubmit={(data) => editModel && updateMutation.mutate({ modelId: editModel.id, data })}
+        isSubmitting={updateMutation.isPending}
+      />
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -287,10 +284,12 @@ function ModelRow({
   model,
   isToggling,
   onToggle,
+  onEdit,
 }: {
   model: ProviderModel;
   isToggling: boolean;
   onToggle: (enabled: boolean) => void;
+  onEdit: () => void;
 }) {
   const [hover, setHover] = useState(false);
   const contextStr = model.input_token_limit
@@ -316,7 +315,7 @@ function ModelRow({
       onMouseLeave={() => setHover(false)}
       style={{
         display: "grid",
-        gridTemplateColumns: "3fr 1fr 1fr 2fr 44px",
+        gridTemplateColumns: "3fr 1fr 1fr 2fr 28px 44px",
         alignItems: "center",
         minHeight: 44,
         borderBottom: "1px solid var(--cv4-border-subtle)",
@@ -326,20 +325,53 @@ function ModelRow({
         gap: 12,
       }}
     >
-      {/* Name: display_name + model_name */}
+      {/* Name: display_name + model_name + feature badges */}
       <div style={{ minWidth: 0, overflow: "hidden" }}>
-        <div
-          style={{
-            fontSize: 12,
-            fontFamily: "Space Grotesk, sans-serif",
-            fontWeight: 700,
-            color: "var(--cv4-text-primary)",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {model.display_name || model.model_name}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span
+            style={{
+              fontSize: 12,
+              fontFamily: "Space Grotesk, sans-serif",
+              fontWeight: 700,
+              color: model.deprecated ? "var(--cv4-text-muted)" : "var(--cv4-text-primary)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              textDecoration: model.deprecated ? "line-through" : "none",
+            }}
+          >
+            {model.display_name || model.model_name}
+          </span>
+          {model.features.slice(0, 3).map((f) => (
+            <span
+              key={f}
+              style={{
+                fontSize: 9,
+                fontFamily: "Manrope, sans-serif",
+                fontWeight: 600,
+                padding: "1px 5px",
+                borderRadius: 4,
+                background: "var(--cv4-accent-bg, rgba(59,130,246,0.1))",
+                color: "var(--cv4-accent)",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {f}
+            </span>
+          ))}
+          {model.features.length > 3 && (
+            <span
+              style={{
+                fontSize: 9,
+                fontFamily: "Manrope, sans-serif",
+                fontWeight: 600,
+                color: "var(--cv4-text-muted)",
+              }}
+            >
+              +{model.features.length - 3}
+            </span>
+          )}
         </div>
         <div
           style={{
@@ -395,6 +427,33 @@ function ModelRow({
         title={pricingStr}
       >
         {pricingStr}
+      </span>
+      {/* Edit button */}
+      <span style={{ display: "flex", justifyContent: "center" }}>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 24,
+            height: 24,
+            borderRadius: 6,
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            color: "var(--cv4-text-muted)",
+            opacity: hover ? 1 : 0,
+            transition: "opacity 150ms",
+          }}
+          title="Edit model"
+        >
+          <Pencil size={13} />
+        </button>
       </span>
       {/* Toggle */}
       <span style={{ display: "flex", justifyContent: "center" }}>

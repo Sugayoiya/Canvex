@@ -24,27 +24,35 @@ PROVIDER_META = {
 _KNOWN_MODELS: dict[str, dict] = {
     "deepseek-chat": {
         "display_name": "DeepSeek Chat (V3)",
-        "capabilities": ["text", "code", "vision"],
-        "input_token_limit": 128000,
-        "output_token_limit": 8192,
-        "default_temperature": 1.0,
-        "max_temperature": 2.0,
-        "top_p": 1.0,
+        "features": ["vision", "tool-call", "stream-tool-call"],
         "input_types": ["text", "image"],
         "output_types": ["text"],
-        "thinking": False,
+        "model_properties": {"mode": "chat", "context_size": 128000},
+        "parameter_rules": [
+            {"name": "temperature", "use_template": "temperature", "default": 1.0, "max": 2.0},
+            {"name": "top_p", "use_template": "top_p"},
+            {"name": "max_tokens", "use_template": "max_tokens", "default": 8192, "max": 8192},
+            {"name": "frequency_penalty", "use_template": "frequency_penalty"},
+            {"name": "presence_penalty", "use_template": "presence_penalty"},
+        ],
+        "deprecated": False,
+        "input_token_limit": 128000,
+        "output_token_limit": 8192,
         "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00027", "output_price_per_1k": "0.0011"},
     },
     "deepseek-reasoner": {
         "display_name": "DeepSeek Reasoner (R1)",
-        "capabilities": ["text", "code"],
-        "input_token_limit": 128000,
-        "output_token_limit": 65536,
-        "default_temperature": 0.6,
-        "max_temperature": 1.5,
+        "features": ["agent-thought"],
         "input_types": ["text"],
         "output_types": ["text"],
-        "thinking": True,
+        "model_properties": {"mode": "chat", "context_size": 128000},
+        "parameter_rules": [
+            {"name": "temperature", "use_template": "temperature", "default": 0.6, "max": 1.5},
+            {"name": "max_tokens", "use_template": "max_tokens", "default": 65536, "max": 65536},
+        ],
+        "deprecated": False,
+        "input_token_limit": 128000,
+        "output_token_limit": 65536,
         "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00055", "output_price_per_1k": "0.0022"},
     },
 }
@@ -122,21 +130,19 @@ class DeepSeekProvider(LLMProviderBase):
 
     @staticmethod
     def _build_entity(name: str, meta: dict) -> AIModelEntity:
-        output_types = meta.get("output_types")
-        capabilities = meta.get("capabilities", [])
-        model_type = infer_model_type(output_types=output_types, capabilities=capabilities, model_name=name)
+        output_types = meta.get("output_types", [])
+        features = meta.get("features", [])
+        model_type = infer_model_type(output_types=output_types, features=features, model_name=name)
         return AIModelEntity(
             name=name,
             display_name=meta.get("display_name", name),
             model_type=model_type,
-            capabilities=capabilities,
+            features=features,
+            input_types=meta.get("input_types", []),
+            output_types=output_types,
+            model_properties=meta.get("model_properties"),
+            parameter_rules=meta.get("parameter_rules", []),
             input_token_limit=meta.get("input_token_limit"),
             output_token_limit=meta.get("output_token_limit"),
-            default_temperature=meta.get("default_temperature"),
-            max_temperature=meta.get("max_temperature"),
-            top_p=meta.get("top_p"),
-            input_types=meta.get("input_types"),
-            output_types=output_types,
-            thinking=meta.get("thinking"),
-            extra_params=meta.get("extra_params"),
+            deprecated=meta.get("deprecated", False),
         )

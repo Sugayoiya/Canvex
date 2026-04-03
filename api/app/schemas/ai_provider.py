@@ -91,16 +91,35 @@ class ModelPricingBrief(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ParameterRuleSchema(BaseModel):
+    name: str
+    use_template: str | None = None
+    label: str | None = None
+    type: str | None = None
+    help: str | None = None
+    required: bool | None = None
+    default: float | int | str | bool | None = None
+    min: float | int | None = None
+    max: float | int | None = None
+    precision: int | None = None
+    options: list[str] | None = None
+
+
 class ProviderModelResponse(BaseModel):
     id: str
     display_name: str
     model_name: str
     model_type: str
-    capabilities: list[str] = []
+    features: list[str] = []
     is_enabled: bool
     is_preset: bool = False
     input_token_limit: int | None = None
     output_token_limit: int | None = None
+    input_types: list[str] = []
+    output_types: list[str] = []
+    model_properties: dict | None = None
+    parameter_rules: list[dict] = []
+    deprecated: bool = False
     pricing: ModelPricingBrief | None = None
 
     model_config = {"from_attributes": True}
@@ -110,11 +129,35 @@ class ModelCreateRequest(BaseModel):
     model_name: str
     display_name: str
     model_type: str = "llm"
+    features: list[str] = []
+    input_types: list[str] = []
+    output_types: list[str] = ["text"]
+    model_properties: dict | None = None
+    parameter_rules: list[ParameterRuleSchema] = []
+    input_token_limit: int | None = None
+    output_token_limit: int | None = None
+    deprecated: bool = False
+    pricing_model: str | None = None
+    input_price_per_1k: str | None = None
+    output_price_per_1k: str | None = None
+    price_per_image: str | None = None
 
 
 class ModelUpdateRequest(BaseModel):
-    is_enabled: bool | None = None
     display_name: str | None = None
+    is_enabled: bool | None = None
+    features: list[str] | None = None
+    input_types: list[str] | None = None
+    output_types: list[str] | None = None
+    model_properties: dict | None = None
+    parameter_rules: list[ParameterRuleSchema] | None = None
+    input_token_limit: int | None = None
+    output_token_limit: int | None = None
+    deprecated: bool | None = None
+    pricing_model: str | None = None
+    input_price_per_1k: str | None = None
+    output_price_per_1k: str | None = None
+    price_per_image: str | None = None
 
 
 class ModelConfigResponse(BaseModel):
@@ -122,7 +165,7 @@ class ModelConfigResponse(BaseModel):
     display_name: str
     model_name: str
     model_type: str
-    capabilities: list[str] = []
+    features: list[str] = []
     is_enabled: bool
     providers: list[str] = []
 
@@ -130,18 +173,18 @@ class ModelConfigResponse(BaseModel):
 
     @classmethod
     def from_model_config(cls, mc, provider_names: list[str] | None = None):
-        caps = []
-        if mc.capabilities:
+        feats = []
+        if mc.features:
             try:
-                caps = json.loads(mc.capabilities) if isinstance(mc.capabilities, str) else mc.capabilities
+                feats = json.loads(mc.features) if isinstance(mc.features, str) else mc.features
             except (json.JSONDecodeError, TypeError):
-                caps = []
+                feats = []
         return cls(
             id=mc.id,
             display_name=mc.display_name,
             model_name=mc.model_name,
             model_type=mc.model_type,
-            capabilities=caps,
+            features=feats,
             is_enabled=mc.is_enabled,
             providers=provider_names or [],
         )
