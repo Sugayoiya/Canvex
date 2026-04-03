@@ -42,6 +42,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ v2.1 Phase 11 monitoring dashboard & polish — KPI cards, 4-tab logs, AdminErrorBoundary on all pages
 - ✓ v3.0 Phase 12 AI call convergence — 3 stacks unified to ProviderManager async path, Redis key health, credential cache, SQLite dropped
 - ✓ v3.0 Phase 12.1 Agent-First Architecture — LangChain 替代 PydanticAI，17 @tool 纯函数工具集，10 Anthropic SKILL.md 三级加载，多供应商 LLM 切换（Gemini/OpenAI/DeepSeek），LangGraph SSE 流式
+- ✓ v3.0 Phase 12.2 Provider & Model Preset Management — 系统预置 Provider/Model + 用户填 Key/BaseURL，ModelPricing 兼任关联表+定价表，Dify 风格模型列表嵌入 Provider 卡片
 
 ### Active
 - [ ] QueryEngine——Token 预算、轮次限制、递减检测、"先计划再执行"模式
@@ -69,7 +70,8 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - Admin console: 7 pages (Dashboard, Users, Teams, Quotas, Pricing, Providers, Monitoring).
 - Agent system: LangChain/LangGraph Agent (create_agent) + 17 @tool pure functions + SkillLoader 三级加载 (10 SKILL.md) + SSE streaming chat.
 - Skills: 4 registered SkillRegistry skills (VISUAL×1, VIDEO×1, CANVAS×1, ASSET×1) + 10 Agent SKILL.md skills.
-- AI call paths: Unified — all 13 call sites (10 LLM skills, Agent, Image, Video) use ProviderManager.get_provider() async DB chain (team→personal→system). Redis-backed KeyHealthManager + CredentialCache. No env fallback at runtime.
+- AI call paths: Unified — all 13 call sites (10 LLM skills, Agent, Image, Video) use ProviderManager.get_provider() async DB chain (team→personal→system). Redis-backed KeyHealthManager + CredentialCache. No env fallback at runtime. resolve_langchain_llm uses DB-backed sdk_type/base_url dispatch.
+- AI providers: System-preset (Gemini/OpenAI/DeepSeek) with seed_version gating. ModelPricing as provider-model FK association + pricing table. Admin UI: Dify-style "已配置"/"待配置" groups, embedded model list, simplified Key+BaseURL config modal.
 - 7-stage creation pipeline: Story Workshop → Import Episodes → Asset Extraction → Story-to-Script → Storyboard → Voice Analysis → Video Generation. Documented in `docs/framework/story-to-storyboard-dataflow.md`.
 - Pipeline bugs: pipeline_tools.py has field name mismatches with skill handlers; Celery async return not properly awaited in chain.
 
@@ -114,4 +116,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-03 after Phase 12.1 Agent-First Architecture complete*
+*Last updated: 2026-04-03 after Phase 12.2 Provider & Model Preset Management complete*
