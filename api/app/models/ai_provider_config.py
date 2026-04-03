@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import (
     String, Integer, Boolean, Text, ForeignKey,
-    Index, UniqueConstraint,
+    Index,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +23,13 @@ class AIProviderConfig(Base, TimestampMixin):
     priority: Mapped[int] = mapped_column(Integer, default=0)
     owner_type: Mapped[str] = mapped_column(String(20), nullable=False, default="system")
     owner_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    is_preset: Mapped[bool] = mapped_column(Boolean, default=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    icon: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    sdk_type: Mapped[str] = mapped_column(String(30), default="native")
+    default_base_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    base_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    seed_version: Mapped[int] = mapped_column(Integer, default=0)
 
     keys = relationship("AIProviderKey", back_populates="provider_config", cascade="all, delete-orphan")
 
@@ -54,26 +61,7 @@ class AIModelConfig(Base, TimestampMixin):
     model_type: Mapped[str] = mapped_column(String(20), nullable=False)
     capabilities: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
-
-    provider_mappings = relationship(
-        "AIModelProviderMapping", back_populates="model_config", cascade="all, delete-orphan",
-    )
-
-
-class AIModelProviderMapping(Base):
-    __tablename__ = "ai_model_provider_mappings"
-    __table_args__ = (
-        UniqueConstraint("model_config_id", "provider_config_id", name="uq_model_provider"),
-    )
-
-    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    model_config_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("ai_model_configs.id"), nullable=False, index=True,
-    )
-    provider_config_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("ai_provider_configs.id"), nullable=False, index=True,
-    )
-    priority: Mapped[int] = mapped_column(Integer, default=0)
-
-    model_config = relationship("AIModelConfig", back_populates="provider_mappings")
-    provider_config = relationship("AIProviderConfig")
+    is_preset: Mapped[bool] = mapped_column(Boolean, default=False)
+    input_token_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_token_limit: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    seed_version: Mapped[int] = mapped_column(Integer, default=0)

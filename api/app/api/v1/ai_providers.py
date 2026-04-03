@@ -11,7 +11,6 @@ from app.models.ai_provider_config import (
     AIProviderConfig,
     AIProviderKey,
     AIModelConfig,
-    AIModelProviderMapping,
 )
 from app.services.ai.provider_manager import encrypt_api_key
 from app.services.admin_audit import AuditContext
@@ -413,16 +412,10 @@ async def list_models(
     result = await db.execute(
         select(AIModelConfig)
         .where(AIModelConfig.is_enabled == True)  # noqa: E712
-        .options(selectinload(AIModelConfig.provider_mappings).selectinload(AIModelProviderMapping.provider_config))
     )
     models = result.scalars().all()
 
     responses = []
     for mc in models:
-        provider_names = [
-            m.provider_config.display_name
-            for m in (mc.provider_mappings or [])
-            if m.provider_config
-        ]
-        responses.append(ModelConfigResponse.from_model_config(mc, provider_names))
+        responses.append(ModelConfigResponse.from_model_config(mc, providers=[]))
     return responses

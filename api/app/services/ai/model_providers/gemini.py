@@ -24,6 +24,15 @@ _SAFETY_OFF = [
     types.SafetySetting(category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF"),
 ]
 
+PROVIDER_META = {
+    "provider_name": "gemini",
+    "display_name": "Google Gemini",
+    "description": "Google Gemini models — text, image, video, audio multimodal",
+    "icon": "gemini",
+    "sdk_type": "native",
+    "default_base_url": None,
+}
+
 _KNOWN_MODELS: dict[str, dict] = {
     "gemini-2.5-flash": {
         "display_name": "Gemini 2.5 Flash",
@@ -31,6 +40,9 @@ _KNOWN_MODELS: dict[str, dict] = {
         "input_types": ["text", "image", "video", "audio", "pdf"],
         "output_types": ["text"],
         "thinking": True,
+        "input_token_limit": 1048576,
+        "output_token_limit": 65536,
+        "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00015", "output_price_per_1k": "0.0006"},
     },
     "gemini-2.5-pro": {
         "display_name": "Gemini 2.5 Pro",
@@ -38,6 +50,9 @@ _KNOWN_MODELS: dict[str, dict] = {
         "input_types": ["text", "image", "video", "audio", "pdf"],
         "output_types": ["text"],
         "thinking": True,
+        "input_token_limit": 1048576,
+        "output_token_limit": 65536,
+        "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00125", "output_price_per_1k": "0.005"},
     },
     "gemini-2.5-flash-image": {
         "display_name": "Gemini 2.5 Flash Image",
@@ -49,6 +64,7 @@ _KNOWN_MODELS: dict[str, dict] = {
             "aspect_ratios": ["1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"],
             "image_sizes": ["1K"],
         },
+        "default_pricing": {"pricing_model": "per_image", "price_per_image": "0.039"},
     },
 }
 

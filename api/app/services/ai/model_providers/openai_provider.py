@@ -12,6 +12,15 @@ from app.services.ai.entities import AIModelEntity, ProviderEntity, ModelType, i
 
 logger = logging.getLogger(__name__)
 
+PROVIDER_META = {
+    "provider_name": "openai",
+    "display_name": "OpenAI",
+    "description": "OpenAI GPT series — text, code, vision",
+    "icon": "openai",
+    "sdk_type": "openai_compatible",
+    "default_base_url": None,
+}
+
 _KNOWN_MODELS: dict[str, dict] = {
     "gpt-4o": {
         "display_name": "GPT-4o",
@@ -24,6 +33,7 @@ _KNOWN_MODELS: dict[str, dict] = {
         "input_types": ["text", "image", "audio"],
         "output_types": ["text"],
         "thinking": False,
+        "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.0025", "output_price_per_1k": "0.01"},
     },
     "gpt-4o-mini": {
         "display_name": "GPT-4o Mini",
@@ -36,6 +46,7 @@ _KNOWN_MODELS: dict[str, dict] = {
         "input_types": ["text", "image"],
         "output_types": ["text"],
         "thinking": False,
+        "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00015", "output_price_per_1k": "0.0006"},
     },
     "gpt-4.1-mini": {
         "display_name": "GPT-4.1 Mini",
@@ -47,6 +58,7 @@ _KNOWN_MODELS: dict[str, dict] = {
         "input_types": ["text", "image"],
         "output_types": ["text"],
         "thinking": False,
+        "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.0004", "output_price_per_1k": "0.0016"},
     },
 }
 

@@ -2,8 +2,8 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import String, Text, Numeric, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Text, Numeric, Boolean, ForeignKey, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.models.mixins import TZDateTime, _utcnow
@@ -42,6 +42,16 @@ class ModelPricing(Base):
     effective_to: Mapped[datetime | None] = mapped_column(TZDateTime, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    provider_config_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("ai_provider_configs.id"), nullable=True, index=True
+    )
+    model_config_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("ai_model_configs.id"), nullable=True, index=True
+    )
+
+    provider_config = relationship("AIProviderConfig")
+    model_config = relationship("AIModelConfig")
 
     created_at: Mapped[datetime] = mapped_column(TZDateTime, default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(

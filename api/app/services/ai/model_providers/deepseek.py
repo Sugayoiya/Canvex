@@ -12,6 +12,15 @@ from app.services.ai.entities import AIModelEntity, ProviderEntity, ModelType, i
 
 logger = logging.getLogger(__name__)
 
+PROVIDER_META = {
+    "provider_name": "deepseek",
+    "display_name": "DeepSeek",
+    "description": "DeepSeek Chat / Reasoner with long-context and code",
+    "icon": "deepseek",
+    "sdk_type": "openai_compatible",
+    "default_base_url": "https://api.deepseek.com/v1",
+}
+
 _KNOWN_MODELS: dict[str, dict] = {
     "deepseek-chat": {
         "display_name": "DeepSeek Chat (V3)",
@@ -24,6 +33,7 @@ _KNOWN_MODELS: dict[str, dict] = {
         "input_types": ["text", "image"],
         "output_types": ["text"],
         "thinking": False,
+        "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00027", "output_price_per_1k": "0.0011"},
     },
     "deepseek-reasoner": {
         "display_name": "DeepSeek Reasoner (R1)",
@@ -35,6 +45,7 @@ _KNOWN_MODELS: dict[str, dict] = {
         "input_types": ["text"],
         "output_types": ["text"],
         "thinking": True,
+        "default_pricing": {"pricing_model": "per_token", "input_price_per_1k": "0.00055", "output_price_per_1k": "0.0022"},
     },
 }
 

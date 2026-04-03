@@ -60,6 +60,19 @@ def _auto_migrate_columns(connection):
     migrations = [
         ("ai_provider_keys", "key_hint", "VARCHAR(8)"),
         ("agent_messages", "langchain_messages_json", "TEXT"),
+        ("ai_provider_configs", "is_preset", "BOOLEAN DEFAULT FALSE"),
+        ("ai_provider_configs", "description", "TEXT"),
+        ("ai_provider_configs", "icon", "VARCHAR(50)"),
+        ("ai_provider_configs", "sdk_type", "VARCHAR(30) DEFAULT 'native'"),
+        ("ai_provider_configs", "default_base_url", "VARCHAR(500)"),
+        ("ai_provider_configs", "base_url", "VARCHAR(500)"),
+        ("ai_provider_configs", "seed_version", "INTEGER DEFAULT 0"),
+        ("ai_model_configs", "is_preset", "BOOLEAN DEFAULT FALSE"),
+        ("ai_model_configs", "input_token_limit", "INTEGER"),
+        ("ai_model_configs", "output_token_limit", "INTEGER"),
+        ("ai_model_configs", "seed_version", "INTEGER DEFAULT 0"),
+        ("model_pricing", "provider_config_id", "VARCHAR(36)"),
+        ("model_pricing", "model_config_id", "VARCHAR(36)"),
     ]
     for table, column, col_type in migrations:
         if table not in table_names:
@@ -82,7 +95,7 @@ async def init_db():
     from app.models.agent_session import AgentSession, AgentMessage  # noqa
     from app.models.quota import UserQuota, TeamQuota, QuotaUsageLog  # noqa
     from app.models.oauth_account import OAuthAccount  # noqa
-    from app.models.ai_provider_config import AIProviderConfig, AIProviderKey, AIModelConfig, AIModelProviderMapping  # noqa
+    from app.models.ai_provider_config import AIProviderConfig, AIProviderKey, AIModelConfig  # noqa
     from app.models.admin_audit_log import AdminAuditLog  # noqa
 
     async with engine.begin() as conn:
