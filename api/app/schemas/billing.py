@@ -15,6 +15,8 @@ class PricingCreate(BaseModel):
     price_per_request: Decimal | None = None
     price_per_second: Decimal | None = None
     notes: str | None = None
+    provider_config_id: str | None = None
+    model_config_id: str | None = None
 
 
 class PricingUpdate(BaseModel):
@@ -43,6 +45,8 @@ class PricingResponse(BaseModel):
     effective_from: datetime
     created_at: datetime
     updated_at: datetime
+    provider_config_id: str | None = None
+    model_config_id: str | None = None
 
     model_config = {"from_attributes": True}
 

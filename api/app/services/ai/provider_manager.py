@@ -352,12 +352,14 @@ class ProviderManager:
         *,
         team_id: str | None = None,
         user_id: str | None = None,
+        db: AsyncSession | None = None,
         **kwargs,
     ) -> "BaseChatModel":
         """Resolve a LangChain BaseChatModel via DB-backed credential chain.
 
-        Mapping: gemini → ChatGoogleGenerativeAI, openai → ChatOpenAI,
-        deepseek → ChatOpenAI(base_url=https://api.deepseek.com/v1).
+        Uses sdk_type from AIProviderConfig to determine LangChain class:
+        - "native" (Gemini) → ChatGoogleGenerativeAI
+        - "openai_compatible" (OpenAI, DeepSeek, etc.) → ChatOpenAI with base_url
         Always sets streaming=True for SSE support.
         """
         _ensure_registry()
@@ -365,24 +367,53 @@ class ProviderManager:
             raise ValueError(f"Unknown provider: {provider_name}")
 
         api_key, _owner, key_id = await self._resolve_key(
-            provider_name, team_id, user_id, None,
+            provider_name, team_id, user_id, db,
         )
         _current_key_id_var.set(key_id)
 
-        if provider_name == "gemini":
+        config = await self._get_provider_config(provider_name, db)
+        effective_base_url = (config.base_url or config.default_base_url) if config else None
+        sdk_type = config.sdk_type if config else "native"
+
+        if sdk_type == "native":
             from langchain_google_genai import ChatGoogleGenerativeAI
             return ChatGoogleGenerativeAI(
                 model=model_name, api_key=api_key, streaming=True, **kwargs,
             )
-        elif provider_name in ("openai", "deepseek"):
+        else:
             from langchain_openai import ChatOpenAI
             extra: dict = {}
-            if provider_name == "deepseek":
-                extra["base_url"] = "https://api.deepseek.com/v1"
+            if effective_base_url:
+                extra["base_url"] = effective_base_url
             return ChatOpenAI(
                 model=model_name, api_key=api_key, streaming=True, **extra, **kwargs,
             )
-        raise ValueError(f"Unsupported provider for LangChain: {provider_name}")
+
+    async def _get_provider_config(
+        self,
+        provider_name: str,
+        db: AsyncSession | None = None,
+    ) -> "AIProviderConfig | None":
+        """Fetch the system-level AIProviderConfig for a provider_name."""
+        from app.models.ai_provider_config import AIProviderConfig
+
+        own_session = False
+        if db is None:
+            from app.core.database import AsyncSessionLocal
+            db = AsyncSessionLocal()
+            own_session = True
+
+        try:
+            result = await db.execute(
+                select(AIProviderConfig).where(
+                    AIProviderConfig.provider_name == provider_name,
+                    AIProviderConfig.owner_type == "system",
+                )
+            )
+            return result.scalar_one_or_none()
+        finally:
+            if own_session:
+                await db.close()
 
     def get_configured_providers(self) -> list[str]:
         _ensure_registry()

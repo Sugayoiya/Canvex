@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import BaseModel
 
@@ -47,6 +48,12 @@ class ProviderConfigResponse(BaseModel):
     active_key_count: int = 0
     keys: list[ProviderKeyResponse] = []
     created_at: datetime
+    description: str | None = None
+    icon: str | None = None
+    sdk_type: str = "native"
+    default_base_url: str | None = None
+    base_url: str | None = None
+    is_preset: bool = False
 
     model_config = {"from_attributes": True}
 
@@ -70,6 +77,44 @@ class ProviderHealthResponse(BaseModel):
     """Batch health response for all keys of a provider."""
     provider_id: str
     keys: list[KeyHealthResponse] = []
+
+
+class ModelPricingBrief(BaseModel):
+    id: str
+    pricing_model: str
+    input_price_per_1k: Decimal | None = None
+    output_price_per_1k: Decimal | None = None
+    price_per_image: Decimal | None = None
+    price_per_second: Decimal | None = None
+    is_active: bool = True
+
+    model_config = {"from_attributes": True}
+
+
+class ProviderModelResponse(BaseModel):
+    id: str
+    display_name: str
+    model_name: str
+    model_type: str
+    capabilities: list[str] = []
+    is_enabled: bool
+    is_preset: bool = False
+    input_token_limit: int | None = None
+    output_token_limit: int | None = None
+    pricing: ModelPricingBrief | None = None
+
+    model_config = {"from_attributes": True}
+
+
+class ModelCreateRequest(BaseModel):
+    model_name: str
+    display_name: str
+    model_type: str = "llm"
+
+
+class ModelUpdateRequest(BaseModel):
+    is_enabled: bool | None = None
+    display_name: str | None = None
 
 
 class ModelConfigResponse(BaseModel):

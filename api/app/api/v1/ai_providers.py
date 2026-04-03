@@ -74,6 +74,12 @@ def _config_to_response(config: AIProviderConfig) -> ProviderConfigResponse:
             last_used_at=k.last_used_at, created_at=k.created_at,
         ) for k in keys],
         created_at=config.created_at,
+        description=getattr(config, "description", None),
+        icon=getattr(config, "icon", None),
+        sdk_type=getattr(config, "sdk_type", "native"),
+        default_base_url=getattr(config, "default_base_url", None),
+        base_url=getattr(config, "base_url", None),
+        is_preset=getattr(config, "is_preset", False),
     )
 
 
