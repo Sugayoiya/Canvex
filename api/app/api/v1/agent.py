@@ -239,8 +239,15 @@ async def chat(
                     if kind == "on_chat_model_stream":
                         chunk = event["data"]["chunk"]
                         if hasattr(chunk, "content") and chunk.content:
-                            collected_text += chunk.content
-                            yield sse_token(chunk.content, request_id=request_id)
+                            raw = chunk.content
+                            if isinstance(raw, list):
+                                raw = "".join(
+                                    part.get("text", "") if isinstance(part, dict) else str(part)
+                                    for part in raw
+                                )
+                            if raw:
+                                collected_text += raw
+                                yield sse_token(raw, request_id=request_id)
                     elif kind == "on_tool_start":
                         tool_name = event["name"]
                         tool_input = event["data"].get("input", {})
