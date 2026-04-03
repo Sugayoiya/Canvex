@@ -146,7 +146,7 @@ Plans:
 - [x] 12.3-02-PLAN.md — SkillContext model_name injection + Agent chat auto-resolve provider
 - [x] 12.3-03-PLAN.md — Frontend ModelSelector component (Pill+Popover) + ProviderIcon relocation + store extensions
 - [ ] 12.3-04-PLAN.md — Chat ModelSelector integration + Canvas AI Generate Panel + LLM Node cleanup
-- [ ] 12.3-05-PLAN.md — Project/Personal/Team default model settings pages
+- [x] 12.3-05-PLAN.md — Project/Personal/Team default model settings pages
 
 Canonical refs:
 - `api/app/services/ai/provider_manager.py` — ProviderManager + resolve_langchain_llm

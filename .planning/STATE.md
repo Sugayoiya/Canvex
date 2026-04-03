@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
 status: executing
-stopped_at: Completed 12.3-03-PLAN.md
-last_updated: "2026-04-03T10:17:08.342Z"
+stopped_at: Completed 12.3-05-PLAN.md
+last_updated: "2026-04-03T10:22:56.050Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 8
   completed_phases: 3
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
   percent: 16
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 ## Current Position
 
 Phase: 12.3 (model-selection-feature-inserted) — EXECUTING
-Plan: 4 of 5
+Plan: 5 of 5
 Status: Ready to execute
 Last activity: 2026-04-03
 
@@ -62,6 +62,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12.3 P01 | 3min | 3 tasks | 10 files |
 | Phase 12.3 P02 | 2min | 2 tasks | 8 files |
 | Phase 12.3 P03 | 3min | 2 tasks | 6 files |
+| Phase 12.3 P05 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,7 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.3]: Skills fall back to gemini when model_name absent or resolution fails
 - [Phase 12.3]: SessionCreateRequest.provider deprecated — backend auto-resolves from model_name
 - [Phase 12.3]: ProviderIcon relocated to common/ with admin re-export for backward compat; ModelSelector uses combobox+listbox ARIA pattern
+- [Phase 12.3]: ProjectUpdate.settings merge semantics for partial settings updates
 
 ### Roadmap Evolution
 
@@ -112,6 +114,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-03T10:17:08.339Z
-Stopped at: Completed 12.3-03-PLAN.md
+Last session: 2026-04-03T10:22:56.047Z
+Stopped at: Completed 12.3-05-PLAN.md
 Resume file: None
