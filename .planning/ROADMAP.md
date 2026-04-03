@@ -142,7 +142,7 @@ Canonical refs:
 **Plans**: 5 plans
 
 Plans:
-- [ ] 12.3-01-PLAN.md — Backend data model (SystemSetting, User/Team settings) + Available Models API + resolve functions + settings endpoints
+- [x] 12.3-01-PLAN.md — Backend data model (SystemSetting, User/Team settings) + Available Models API + resolve functions + settings endpoints
 - [ ] 12.3-02-PLAN.md — SkillContext model_name injection + Agent chat auto-resolve provider
 - [ ] 12.3-03-PLAN.md — Frontend ModelSelector component (Pill+Popover) + ProviderIcon relocation + store extensions
 - [ ] 12.3-04-PLAN.md — Chat ModelSelector integration + Canvas AI Generate Panel + LLM Node cleanup
