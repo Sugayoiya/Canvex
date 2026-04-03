@@ -75,3 +75,26 @@ def test_meta_tools_are_read_only() -> None:
     assert meta_tools
     for name in meta_tools:
         assert TOOL_METADATA[name]["is_read_only"] is True
+
+
+def test_system_prompt_contains_safety_annotations() -> None:
+    from app.agent.skill_loader import SkillLoader
+
+    loader = SkillLoader()
+    loader.load_metadata()
+    prompt = loader.build_system_prompt_fragment()
+
+    assert prompt, "build_system_prompt_fragment() returned empty string"
+    assert "extract-characters" in prompt, "Sanity: skills not loaded"
+    assert "[只读]" in prompt, "No [只读] label found in system prompt"
+    assert "[⚠️ 破坏性操作]" in prompt, "No [⚠️ 破坏性操作] label found in system prompt"
+
+
+def test_read_only_and_destructive_skill_counts() -> None:
+    metadata = _skill_metadata()
+
+    read_only = {name for name, fm in metadata.items() if fm.get("is_read_only") is True}
+    destructive = {name for name, fm in metadata.items() if fm.get("is_destructive") is True}
+
+    assert read_only == {"extract-characters", "extract-scenes", "refine-text", "split-clips"}
+    assert destructive == {"episode-pipeline"}

@@ -9,7 +9,7 @@ require_prior_kind: []
 default_require_prior_kind: []
 supports_skip: false
 is_read_only: false
-is_destructive: false
+is_destructive: true
 timeout: 300
 max_result_size_chars: 50000
 ---
