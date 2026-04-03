@@ -134,9 +134,11 @@ async def update_project(
     project, _role = await resolve_project_access(project_id, user, db, min_role="editor")
     update_data = data.model_dump(exclude_unset=True)
     if "settings" in update_data and update_data["settings"] is not None:
-        current = project.settings or {}
+        current = dict(project.settings or {})
         current.update(update_data.pop("settings"))
         project.settings = current
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(project, "settings")
     for key, value in update_data.items():
         setattr(project, key, value)
     await db.flush()

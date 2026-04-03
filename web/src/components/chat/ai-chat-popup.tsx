@@ -421,8 +421,7 @@ export function AIChatPopup({ projectId, canvasId }: AIChatPopupProps) {
                 <ModelSelector
                   value={selectedModelName}
                   onChange={setSelectedModel}
-                  modelType="all"
-                  requiredFeatures={["llm", "image"]}
+                  modelType="llm"
                   size="sm"
                   disabled={isStreaming}
                 />

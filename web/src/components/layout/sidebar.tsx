@@ -7,6 +7,7 @@ import {
   FolderOpen,
   Users,
   Bot,
+  Settings,
   ListTodo,
   BarChart3,
   ChevronDown,
@@ -25,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Projects", href: "/projects", icon: FolderOpen },
   { label: "Team & Roles", href: "/teams", icon: Users },
   { label: "AI Console", href: "/settings/ai", icon: Bot },
+  { label: "Settings", href: "/settings", icon: Settings },
 ];
 
 const BOTTOM_ITEMS: NavItem[] = [
@@ -56,7 +58,10 @@ export function Sidebar() {
   };
 
   const renderNavLink = (item: NavItem) => {
-    const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+    const isActive =
+      item.href === "/settings"
+        ? pathname === "/settings"
+        : pathname === item.href || pathname?.startsWith(item.href + "/");
     return (
       <Link
         key={item.href}
