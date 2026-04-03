@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: executing
-stopped_at: Completed 13-01-PLAN.md
-last_updated: "2026-04-03T15:35:52.198Z"
+status: verifying
+stopped_at: Completed 13-02-PLAN.md
+last_updated: "2026-04-03T15:44:02.064Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 19
-  completed_plans: 18
+  completed_plans: 19
   percent: 16
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 Phase: 13 (skilldescriptor-enhancement-pipeline-fix) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-03
 
 Progress: [██░░░░░░░░] 16%
@@ -65,6 +65,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12.3 P05 | 3min | 2 tasks | 6 files |
 | Phase 12.3 P04 | 4min | 2 tasks | 4 files |
 | Phase 13 P01 | 3 min | 2 tasks | 15 files |
+| Phase 13 P02 | 7 min | 2 tasks | 17 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,8 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.3]: Chat ModelSelector uses requiredFeatures=['llm','image'] to show only full-capability models; LLM Node stripped to display-only — execution centralized through AIGeneratePanel
 - [Phase 13]: SkillMeta upgraded to a dataclass mirroring SkillDescriptor defaults for extensible metadata parsing
 - [Phase 13]: Deprecated SkillRegistry handlers were deleted while keeping an empty integrity-checked registry shell for later phases
+- [Phase 13]: Use explicit context_group tool metadata to preserve the 10/11/13/14 exposure profile without hardcoded name sets.
+- [Phase 13]: Keep deprecated provider request fields as a fallback when model-to-provider mappings are unavailable for agent session or chat resolution.
 
 ### Roadmap Evolution
 
@@ -119,6 +122,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-03T15:35:52.196Z
-Stopped at: Completed 13-01-PLAN.md
+Last session: 2026-04-03T15:44:02.061Z
+Stopped at: Completed 13-02-PLAN.md
 Resume file: None

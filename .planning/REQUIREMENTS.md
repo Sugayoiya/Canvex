@@ -58,8 +58,8 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 - [x] **DESC-04**: SkillDescriptor supports `supports_skip` boolean (whether skill can be skipped by user)
 - [x] **DESC-05**: SkillDescriptor supports Claude Code-style metadata: `is_read_only`, `is_destructive`, `timeout`, `max_result_size_chars`
 - [x] **DESC-06**: SkillDescriptor supports `skill_tier` field with 3-tier classification: workflow / capability / meta
-- [ ] **DESC-07**: Existing 14 skills annotated with new descriptor fields (backward-compatible defaults for missing fields)
-- [ ] **DESC-08**: SkillToolset dynamically filters skills exposed to Agent based on session context (max ~10 tools per context)
+- [x] **DESC-07**: Existing 14 skills annotated with new descriptor fields (backward-compatible defaults for missing fields)
+- [x] **DESC-08**: SkillToolset dynamically filters skills exposed to Agent based on session context (max ~10 tools per context)
 
 ### Pipeline Fix
 
@@ -149,8 +149,8 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | DESC-04 | Phase 13 | Complete |
 | DESC-05 | Phase 13 | Complete |
 | DESC-06 | Phase 13 | Complete |
-| DESC-07 | Phase 13 | Pending |
-| DESC-08 | Phase 13 | Pending |
+| DESC-07 | Phase 13 | Complete |
+| DESC-08 | Phase 13 | Complete |
 | PIPE-01 | Phase 13 | Pending |
 | PIPE-02 | Phase 13 | Pending |
 | PIPE-04 | Phase 13 | Pending |
