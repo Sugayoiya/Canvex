@@ -13,6 +13,7 @@ from app.api.v1.skills import router as skills_router
 from app.api.v1.teams import router as teams_router
 from app.api.v1.admin_observability import router as admin_observability_router
 from app.api.v1.admin_users import router as admin_users_router
+from app.api.v1.models import router as models_router
 from app.api.v1.users import router as users_router
 
 api_router = APIRouter()
@@ -28,5 +29,6 @@ api_router.include_router(canvas_router)
 api_router.include_router(billing_router)
 api_router.include_router(agent_router)
 api_router.include_router(quota_router)
+api_router.include_router(models_router)
 api_router.include_router(admin_users_router)
 api_router.include_router(admin_observability_router)

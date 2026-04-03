@@ -444,6 +444,113 @@ def get_provider_manager() -> ProviderManager:
 
 
 # ---------------------------------------------------------------------------
+# Model resolution helpers
+# ---------------------------------------------------------------------------
+
+async def resolve_provider_for_model(
+    model_name: str,
+    *,
+    db: AsyncSession | None = None,
+) -> tuple[str, str | None]:
+    """Return (provider_name, effective_base_url) for a model_name via ModelPricing JOIN.
+
+    Raises ValueError if no active pricing association found.
+    """
+    from app.models.ai_provider_config import AIProviderConfig, AIModelConfig
+    from app.models.model_pricing import ModelPricing
+
+    own_session = False
+    if db is None:
+        from app.core.database import AsyncSessionLocal
+        db = AsyncSessionLocal()
+        own_session = True
+    try:
+        stmt = (
+            select(
+                AIProviderConfig.provider_name,
+                AIProviderConfig.base_url,
+                AIProviderConfig.default_base_url,
+            )
+            .join(ModelPricing, ModelPricing.provider_config_id == AIProviderConfig.id)
+            .join(AIModelConfig, ModelPricing.model_config_id == AIModelConfig.id)
+            .where(
+                AIModelConfig.model_name == model_name,
+                ModelPricing.is_active == True,  # noqa: E712
+                AIProviderConfig.is_enabled == True,  # noqa: E712
+            )
+            .limit(1)
+        )
+        row = (await db.execute(stmt)).first()
+        if not row:
+            raise ValueError(f"No active provider found for model '{model_name}'")
+        return row[0], row[1] or row[2]
+    finally:
+        if own_session:
+            await db.close()
+
+
+async def resolve_model_for_task(
+    model_name: str | None,
+    model_type: str = "llm",
+    *,
+    project_id: str | None = None,
+    user_id: str | None = None,
+    team_id: str | None = None,
+    db: AsyncSession,
+) -> str:
+    """4-layer fallback: manual selection > project default > personal/team default > system default.
+
+    Returns the resolved model_name. Raises ValueError if no model found.
+    """
+    # Layer 1: explicit selection
+    if model_name:
+        return model_name
+
+    settings_key = f"default_{model_type}_model"
+
+    # Layer 2: project default
+    if project_id:
+        from app.models.project import Project
+        project = await db.get(Project, project_id)
+        if project and project.settings and project.settings.get(settings_key):
+            return project.settings[settings_key]
+
+        # Layer 3: personal or team default (based on project owner_type)
+        if project and project.owner_type == "team":
+            if project.owner_id:
+                from app.models.team import Team
+                team = await db.get(Team, project.owner_id)
+                if team and team.settings and team.settings.get(settings_key):
+                    return team.settings[settings_key]
+        else:
+            if user_id:
+                from app.models.user import User
+                user = await db.get(User, user_id)
+                if user and user.settings and user.settings.get(settings_key):
+                    return user.settings[settings_key]
+    else:
+        # No project context — try user/team defaults directly
+        if user_id:
+            from app.models.user import User
+            user = await db.get(User, user_id)
+            if user and user.settings and user.settings.get(settings_key):
+                return user.settings[settings_key]
+        if team_id:
+            from app.models.team import Team
+            team = await db.get(Team, team_id)
+            if team and team.settings and team.settings.get(settings_key):
+                return team.settings[settings_key]
+
+    # Layer 4: system default
+    from app.models.system_setting import SystemSetting
+    setting = await db.get(SystemSetting, settings_key)
+    if setting and setting.value:
+        return setting.value
+
+    raise ValueError(f"No default {model_type} model configured. Contact admin to set up API keys.")
+
+
+# ---------------------------------------------------------------------------
 # Lifecycle — startup/shutdown hooks
 # ---------------------------------------------------------------------------
 

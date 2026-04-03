@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.core.deps import get_db, get_current_user, require_team_member, require_group_member
+from app.schemas.models import DefaultModelSettings
 from app.models.team import Team, TeamMember, TeamInvitation, Group, GroupMember
 from app.models.user import User
 from app.schemas.team import (
@@ -151,6 +152,45 @@ async def update_team(
         member_count=count_result.scalar() or 0,
         my_role=member.role,
     )
+
+
+@router.get("/{team_id}/settings")
+async def get_team_settings(
+    team_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_team_member(team_id, user, db, min_role="member")
+    result = await db.execute(select(Team).where(Team.id == team_id, Team.is_deleted == False))  # noqa: E712
+    team = result.scalar_one_or_none()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+    return {"settings": team.settings or {}}
+
+
+@router.patch("/{team_id}/settings")
+async def update_team_settings(
+    team_id: str,
+    data: DefaultModelSettings,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await require_team_member(team_id, user, db, min_role="team_admin")
+    result = await db.execute(select(Team).where(Team.id == team_id, Team.is_deleted == False))  # noqa: E712
+    team = result.scalar_one_or_none()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found")
+
+    current = team.settings or {}
+    if data.default_llm_model is not None:
+        current["default_llm_model"] = data.default_llm_model
+    if data.default_image_model is not None:
+        current["default_image_model"] = data.default_image_model
+    team.settings = current
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(team, "settings")
+    await db.flush()
+    return {"settings": team.settings}
 
 
 @router.delete("/{team_id}", status_code=status.HTTP_204_NO_CONTENT)

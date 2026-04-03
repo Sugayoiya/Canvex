@@ -9,6 +9,7 @@ from app.core.deps import get_db, get_current_user
 from app.models.user import User
 from app.models.team import TeamMember, Team
 from app.schemas.user import UserSearchResult, UserProfileResponse, UserProfileUpdate
+from app.schemas.models import DefaultModelSettings
 
 logger = logging.getLogger(__name__)
 
@@ -104,3 +105,26 @@ async def update_my_profile(
         created_at=user.created_at,
         teams=teams,
     )
+
+
+@router.get("/me/settings")
+async def get_my_settings(user=Depends(get_current_user)):
+    return {"settings": user.settings or {}}
+
+
+@router.patch("/me/settings")
+async def update_my_settings(
+    data: DefaultModelSettings,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    current = user.settings or {}
+    if data.default_llm_model is not None:
+        current["default_llm_model"] = data.default_llm_model
+    if data.default_image_model is not None:
+        current["default_image_model"] = data.default_image_model
+    user.settings = current
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(user, "settings")
+    await db.flush()
+    return {"settings": user.settings}
