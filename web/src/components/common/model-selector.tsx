@@ -90,8 +90,9 @@ export function ModelSelector({
     if (disabled) return;
     setIsOpen(true);
     setSearch("");
-    setFocusIndex(-1);
-  }, [disabled]);
+    const selectedIdx = filteredModels.findIndex((m) => m.model_name === value);
+    setFocusIndex(selectedIdx >= 0 ? selectedIdx : 0);
+  }, [disabled, filteredModels, value]);
 
   const closePopover = useCallback(() => {
     setIsOpen(false);
@@ -390,7 +391,14 @@ function ModelItem({
   onSelect: () => void;
 }) {
   const [hover, setHover] = useState(false);
-  const active = hover || isFocused;
+
+  const bg = isFocused
+    ? "rgba(0, 209, 255, 0.10)"
+    : isSelected
+      ? "var(--cv4-active-highlight)"
+      : hover
+        ? "var(--cv4-hover-highlight)"
+        : "transparent";
 
   return (
     <div
@@ -406,14 +414,11 @@ function ModelItem({
         alignItems: "center",
         gap: 8,
         cursor: "pointer",
-        background: isSelected
-          ? "var(--cv4-active-highlight)"
-          : active
-            ? "var(--cv4-hover-highlight)"
-            : "transparent",
+        background: bg,
+        borderLeft: isFocused ? "2px solid var(--ob-primary, #00D1FF)" : "2px solid transparent",
         borderRadius: 6,
         margin: "0 4px",
-        transition: "background 80ms",
+        transition: "background 80ms, border-color 80ms",
       }}
     >
       {/* Selected indicator */}
