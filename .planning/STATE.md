@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
 status: verifying
-stopped_at: Phase 12.3 context gathered
-last_updated: "2026-04-03T08:44:45.931Z"
+stopped_at: Phase 12.3 UI-SPEC approved
+last_updated: "2026-04-03T08:57:09.337Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 8
@@ -104,6 +104,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-03T08:44:45.898Z
-Stopped at: Phase 12.3 context gathered
-Resume file: .planning/phases/12.3-model-selection-feature-inserted/12.3-CONTEXT.md
+Last session: 2026-04-03T08:57:09.325Z
+Stopped at: Phase 12.3 UI-SPEC approved
+Resume file: .planning/phases/12.3-model-selection-feature-inserted/12.3-UI-SPEC.md
