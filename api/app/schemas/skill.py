@@ -19,6 +19,7 @@ class SkillInvokeRequest(BaseModel):
     project_id: str | None = None
     canvas_id: str | None = None
     node_id: str | None = None
+    model_name: str | None = None
 
 
 class SkillResultResponse(BaseModel):

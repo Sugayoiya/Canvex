@@ -61,9 +61,11 @@ async def invoke_skill(
 
     ctx = SkillContext(
         user_id=user.id,
+        team_id=getattr(user, "current_team_id", None),
         project_id=req.project_id,
         canvas_id=req.canvas_id,
         node_id=req.node_id,
+        model_name=req.model_name,
         trigger_source="user_ui",
     )
 

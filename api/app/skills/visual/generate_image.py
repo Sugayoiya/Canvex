@@ -61,7 +61,7 @@ async def handle_generate_image(params: dict[str, Any], ctx: SkillContext) -> Sk
 
     from app.services.ai.ai_call_logger import set_ai_call_context, log_ai_call
     from app.services.ai.errors import ContentBlockedError
-    from app.services.ai.provider_manager import get_provider_manager
+    from app.services.ai.provider_manager import get_provider_manager, resolve_provider_for_model
     from app.services.ai.key_health import get_key_health_manager
 
     set_ai_call_context(
@@ -69,13 +69,21 @@ async def handle_generate_image(params: dict[str, Any], ctx: SkillContext) -> Sk
         team_id=ctx.team_id, project_id=ctx.project_id,
     )
 
+    image_model = model or "imagen-4.0-generate-001"
+    provider_name = "gemini"
+    if ctx.model_name:
+        try:
+            provider_name, _base_url = await resolve_provider_for_model(ctx.model_name)
+        except ValueError:
+            provider_name = "gemini"
+
     try:
         pm = get_provider_manager()
         provider, _owner, key_id = await pm.get_provider(
-            "gemini", team_id=ctx.team_id, user_id=ctx.user_id,
+            provider_name, team_id=ctx.team_id, user_id=ctx.user_id,
         )
     except ValueError as e:
-        return SkillResult.failed(f"Gemini 未配置: {e}")
+        return SkillResult.failed(f"Provider '{provider_name}' 未配置: {e}")
 
     start = time.monotonic()
     try:
@@ -84,7 +92,7 @@ async def handle_generate_image(params: dict[str, Any], ctx: SkillContext) -> Sk
 
         await get_key_health_manager().report_success(key_id)
         await log_ai_call(
-            provider="gemini", model=model, model_type="image",
+            provider=provider_name, model=model, model_type="image",
             status="success", duration_ms=duration_ms,
         )
 
@@ -98,7 +106,7 @@ async def handle_generate_image(params: dict[str, Any], ctx: SkillContext) -> Sk
         duration_ms = int((time.monotonic() - start) * 1000)
         await get_key_health_manager().report_error(key_id, type(e).__name__, str(e)[:200])
         await log_ai_call(
-            provider="gemini", model=model, model_type="image",
+            provider=provider_name, model=model, model_type="image",
             status="blocked", error_message=str(e)[:200], duration_ms=duration_ms,
         )
         return SkillResult.failed(f"内容安全策略拦截: {str(e)[:200]}")
@@ -107,7 +115,7 @@ async def handle_generate_image(params: dict[str, Any], ctx: SkillContext) -> Sk
         logger.exception("visual.generate_image failed")
         await get_key_health_manager().report_error(key_id, type(e).__name__, str(e)[:200])
         await log_ai_call(
-            provider="gemini", model=model, model_type="image",
+            provider=provider_name, model=model, model_type="image",
             status="error", error_message=str(e)[:200], duration_ms=duration_ms,
         )
         return SkillResult.failed(f"图片生成失败: {str(e)[:200]}")

@@ -20,6 +20,7 @@ class SkillContext:
     trigger_source: str = "user_ui"   # "user_ui" | "agent" | "pipeline" | "celery_beat"
     ip_address: str | None = None
     request_id: str | None = None
+    model_name: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -34,6 +35,7 @@ class SkillContext:
             "trigger_source": self.trigger_source,
             "ip_address": self.ip_address,
             "request_id": self.request_id,
+            "model_name": self.model_name,
         }
 
     @classmethod
@@ -50,4 +52,5 @@ class SkillContext:
             trigger_source=d.get("trigger_source", "user_ui"),
             ip_address=d.get("ip_address"),
             request_id=d.get("request_id"),
+            model_name=d.get("model_name"),
         )
