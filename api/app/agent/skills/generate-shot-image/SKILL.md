@@ -3,6 +3,16 @@ name: generate-shot-image
 description: >
   根据分镜描述和角色/场景信息，合成图片生成提示词并调用生图工具。
   当用户要求"生成分镜图片"、"画分镜"或"generate shot image"时使用。
+skill_kind: generate_shot_image
+skill_tier: capability
+require_prior_kind:
+  - create_storyboard
+default_require_prior_kind: []
+supports_skip: true
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 5000
 ---
 
 # 分镜生图 Generate Shot Image

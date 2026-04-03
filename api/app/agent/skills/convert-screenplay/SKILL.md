@@ -3,6 +3,16 @@ name: convert-screenplay
 description: >
   将叙事片段转换为标准剧本格式，包含场景标题、角色对话、动作描述和镜头指示。
   当用户要求"转换剧本"、"生成剧本"或"convert screenplay"时使用。
+skill_kind: convert_screenplay
+skill_tier: capability
+require_prior_kind:
+  - split_clips
+default_require_prior_kind: []
+supports_skip: false
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 50000
 ---
 
 # 剧本转换 Convert Screenplay

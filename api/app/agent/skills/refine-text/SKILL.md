@@ -3,6 +3,15 @@ name: refine-text
 description: >
   对输入文本进行润色、优化表达，保持原意的同时提升文采和可读性。
   当用户要求"润色"、"优化文本"或"refine text"时使用。
+skill_kind: refine_text
+skill_tier: capability
+require_prior_kind: []
+default_require_prior_kind: []
+supports_skip: false
+is_read_only: false
+is_destructive: false
+timeout: 60
+max_result_size_chars: 50000
 ---
 
 # 文本润色 Refine Text

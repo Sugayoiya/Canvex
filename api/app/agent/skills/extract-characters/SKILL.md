@@ -3,6 +3,15 @@ name: extract-characters
 description: >
   从剧本或故事文本中提取角色列表，返回结构化角色数据（名称、描述、性别、年龄、性格）。
   当用户要求"提取角色"、"分析人物"或"extract characters"时使用。
+skill_kind: extract_characters
+skill_tier: capability
+require_prior_kind: []
+default_require_prior_kind: []
+supports_skip: true
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 50000
 ---
 
 # 角色提取 Extract Characters

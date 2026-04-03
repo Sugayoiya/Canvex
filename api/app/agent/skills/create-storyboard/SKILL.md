@@ -3,6 +3,16 @@ name: create-storyboard
 description: >
   根据剧本内容规划分镜序列，生成每个镜头的画面描述、出场角色、场景和台词。
   当用户要求"分镜规划"、"规划镜头"或"storyboard plan"时使用。
+skill_kind: create_storyboard
+skill_tier: capability
+require_prior_kind:
+  - convert_screenplay
+default_require_prior_kind: []
+supports_skip: false
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 50000
 ---
 
 # 分镜规划 Create Storyboard

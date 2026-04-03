@@ -3,6 +3,15 @@ name: extract-scenes
 description: >
   从剧本或故事文本中提取场景列表，返回结构化场景数据（名称、描述、地点、时间、氛围）。
   当用户要求"提取场景"、"分析场景"或"extract scenes"时使用。
+skill_kind: extract_scenes
+skill_tier: capability
+require_prior_kind: []
+default_require_prior_kind: []
+supports_skip: true
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 50000
 ---
 
 # 场景提取 Extract Scenes

@@ -3,6 +3,16 @@ name: generate-shot-video
 description: >
   根据分镜描述和已有图片，合成视频生成提示词并调用生视频工具。
   当用户要求"生成分镜视频"、"镜头动起来"或"generate shot video"时使用。
+skill_kind: generate_shot_video
+skill_tier: capability
+require_prior_kind:
+  - generate_shot_image
+default_require_prior_kind: []
+supports_skip: true
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 5000
 ---
 
 # 分镜生视频 Generate Shot Video

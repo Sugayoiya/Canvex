@@ -3,6 +3,15 @@ name: episode-pipeline
 description: >
   剧集创作全流程编排：依次执行分段→剧本转换→分镜规划→（可选）分镜细化。
   当用户要求"完整创作流程"、"从故事到分镜"或"episode pipeline"时使用。
+skill_kind: episode_pipeline
+skill_tier: workflow
+require_prior_kind: []
+default_require_prior_kind: []
+supports_skip: false
+is_read_only: false
+is_destructive: false
+timeout: 300
+max_result_size_chars: 50000
 ---
 
 # 剧集流水线 Episode Pipeline

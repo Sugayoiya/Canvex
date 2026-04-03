@@ -3,6 +3,15 @@ name: split-clips
 description: >
   将故事文本按情节转折点拆分为若干编号片段（Clip），每段包含标题、内容和摘要。
   当用户要求"分段"、"拆分故事"或"split clips"时使用。
+skill_kind: split_clips
+skill_tier: capability
+require_prior_kind: []
+default_require_prior_kind: []
+supports_skip: false
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 50000
 ---
 
 # 剧本分段 Split Clips

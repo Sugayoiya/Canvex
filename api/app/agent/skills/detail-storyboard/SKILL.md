@@ -3,6 +3,16 @@ name: detail-storyboard
 description: >
   为已有的分镜规划添加摄影细节：景别、运镜、构图、光线和视觉提示词。
   当用户要求"细化分镜"、"添加镜头细节"或"storyboard detail"时使用。
+skill_kind: detail_storyboard
+skill_tier: capability
+require_prior_kind:
+  - create_storyboard
+default_require_prior_kind: []
+supports_skip: true
+is_read_only: false
+is_destructive: false
+timeout: 120
+max_result_size_chars: 50000
 ---
 
 # 分镜细化 Detail Storyboard
