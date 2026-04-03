@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: executing
-stopped_at: Completed 12.2-02-PLAN.md
-last_updated: "2026-04-03T05:01:58.241Z"
+status: verifying
+stopped_at: Completed 12.2-03-PLAN.md
+last_updated: "2026-04-03T05:09:04.178Z"
 last_activity: 2026-04-03
 progress:
   total_phases: 7
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 11
+  completed_plans: 12
   percent: 16
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 Phase: 12.2 (provider-model-preset-management-inserted) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-03
 
 Progress: [██░░░░░░░░] 16%
@@ -58,6 +58,7 @@ Progress: [██░░░░░░░░] 16%
 | Phase 12.1 P05 | 6min | 3 tasks | 27 files |
 | Phase 12.2 P01 | 4min | 2 tasks | 9 files |
 | Phase 12.2 P02 | 3min | 2 tasks | 4 files |
+| Phase 12.2 P03 | 5min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,7 @@ Progress: [██░░░░░░░░] 16%
 - [Phase 12.1]: Explicit google-genai + openai deps kept (not transitive from langchain-*); SkillExecutor removed in favor of direct registry.invoke(); 14 files deleted (13 planned + context_tools.py)
 - [Phase 12.2]: ModelPricing replaces AIModelProviderMapping as provider-model association; seed_version gating prevents overwriting user-modified records
 - [Phase 12.2]: resolve_langchain_llm dispatches on sdk_type (native/openai_compatible) from DB instead of provider_name string matching
+- [Phase 12.2]: ProviderFormModal owns its own addKey mutation — cleaner than passing callbacks from page
 
 ### Roadmap Evolution
 
@@ -102,6 +104,6 @@ Progress: [██░░░░░░░░] 16%
 
 ## Session Continuity
 
-Last session: 2026-04-03T05:01:58.238Z
-Stopped at: Completed 12.2-02-PLAN.md
+Last session: 2026-04-03T05:09:04.175Z
+Stopped at: Completed 12.2-03-PLAN.md
 Resume file: None

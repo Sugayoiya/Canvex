@@ -42,7 +42,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 
 - [x] **Phase 12: AI Call Convergence** — 收敛 3 条割裂 AI 调用栈为统一 ProviderManager 路径，激活 DB 级异步密钥链 + KeyRotator (completed 2026-04-02)
 - [x] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪 (completed 2026-04-02)
-- [ ] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格）
+- [x] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格） (completed 2026-04-03)
 - [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），修复 Pipeline 参数对齐和 Celery 异步衔接
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
@@ -110,7 +110,7 @@ Plans:
 Plans:
 - [x] 12.2-01-PLAN.md — Backend data model extensions + PROVIDER_META + preset seed logic
 - [x] 12.2-02-PLAN.md — resolve_langchain_llm DB-backed base_url + model CRUD endpoints + preset protection
-- [ ] 12.2-03-PLAN.md — Frontend restructure: ProviderIcon, group separation, simplified modal, model list
+- [x] 12.2-03-PLAN.md — Frontend restructure: ProviderIcon, group separation, simplified modal, model list
 
 **UI hint**: yes
 
