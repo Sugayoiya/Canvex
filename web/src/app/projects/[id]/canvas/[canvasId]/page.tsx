@@ -1,12 +1,14 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { canvasApi } from "@/lib/api";
 import { CanvasWorkspace } from "@/components/canvas/canvas-workspace";
 import { AIChatPopup } from "@/components/chat/ai-chat-popup";
 
 export default function ProjectCanvasPage() {
+  const router = useRouter();
   const { id: projectId, canvasId } = useParams<{
     id: string;
     canvasId: string;
@@ -47,7 +49,52 @@ export default function ProjectCanvasPage() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden">
+    <div className="relative h-screen w-screen overflow-hidden">
+      <button
+        type="button"
+        onClick={() => router.push(`/projects/${projectId || canvas?.project_id}`)}
+        style={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          zIndex: 40,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "10px 14px",
+          borderRadius: 14,
+          border: "1px solid var(--cv4-border-default)",
+          background: "color-mix(in srgb, var(--cv4-surface-popup) 86%, transparent)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          boxShadow: "var(--cv4-shadow-lg)",
+          color: "var(--cv4-text-primary)",
+          cursor: "pointer",
+          transition: "transform 120ms ease, border-color 120ms ease",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "translateY(-1px)";
+          e.currentTarget.style.borderColor = "rgba(0,209,255,0.28)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "translateY(0)";
+          e.currentTarget.style.borderColor = "var(--cv4-border-default)";
+        }}
+        aria-label="返回项目详情"
+      >
+        <ArrowLeft size={16} style={{ color: "var(--cv4-text-secondary)" }} />
+        <span
+          style={{
+            fontFamily: "Space Grotesk, sans-serif",
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          返回上一层
+        </span>
+      </button>
       <CanvasWorkspace canvasId={canvasId} initialData={canvas} />
       <AIChatPopup
         projectId={projectId || canvas?.project_id}
