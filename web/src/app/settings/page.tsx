@@ -4,8 +4,12 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/app-shell";
-import { usersApi } from "@/lib/api";
+import { modelsApi, usersApi } from "@/lib/api";
 import { ModelSelector } from "@/components/common/model-selector";
+import {
+  getEffectiveModelSelection,
+  type DefaultModelSettings,
+} from "@/lib/model-defaults";
 import { Info } from "lucide-react";
 
 export default function SettingsPage() {
@@ -15,6 +19,11 @@ export default function SettingsPage() {
   const { data: userSettings } = useQuery({
     queryKey: ["user-settings"],
     queryFn: () => usersApi.getSettings().then((r) => r.data?.settings ?? {}),
+  });
+
+  const { data: systemDefaults } = useQuery<DefaultModelSettings>({
+    queryKey: ["system-default-models"],
+    queryFn: () => modelsApi.getSystemDefaults().then((r) => r.data?.settings ?? {}),
   });
 
   const updatePersonalMutation = useMutation({
@@ -31,6 +40,20 @@ export default function SettingsPage() {
     },
     [updatePersonalMutation],
   );
+
+  const effectiveLlmModel = getEffectiveModelSelection({
+    modelType: "llm",
+    directValue: userSettings?.default_llm_model ?? null,
+    userSettings,
+    systemSettings: systemDefaults,
+  });
+
+  const effectiveImageModel = getEffectiveModelSelection({
+    modelType: "image",
+    directValue: userSettings?.default_image_model ?? null,
+    userSettings,
+    systemSettings: systemDefaults,
+  });
 
   return (
     <AppShell>
@@ -98,6 +121,8 @@ export default function SettingsPage() {
               value={userSettings?.default_llm_model ?? null}
               onChange={(name) => updatePersonalDefault("default_llm_model", name)}
               modelType="llm"
+              inheritedValue={effectiveLlmModel.modelName}
+              inheritedSourceLabel={effectiveLlmModel.sourceLabel}
               size="md"
             />
           </div>
@@ -116,6 +141,8 @@ export default function SettingsPage() {
               value={userSettings?.default_image_model ?? null}
               onChange={(name) => updatePersonalDefault("default_image_model", name)}
               modelType="image"
+              inheritedValue={effectiveImageModel.modelName}
+              inheritedSourceLabel={effectiveImageModel.sourceLabel}
               size="md"
             />
           </div>

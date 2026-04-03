@@ -61,8 +61,6 @@ async def get_system_defaults(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if not user.is_admin:
-        raise HTTPException(status_code=403, detail="Admin access required")
     from app.models.system_setting import SystemSetting
     llm = await db.get(SystemSetting, "default_llm_model")
     image = await db.get(SystemSetting, "default_image_model")

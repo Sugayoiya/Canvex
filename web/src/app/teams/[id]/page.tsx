@@ -4,9 +4,13 @@ import { useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/app-shell";
-import { teamsApi, usersApi } from "@/lib/api";
+import { modelsApi, teamsApi, usersApi } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { ModelSelector } from "@/components/common/model-selector";
+import {
+  getEffectiveModelSelection,
+  type DefaultModelSettings,
+} from "@/lib/model-defaults";
 import { Plus, Copy, Check, Search, Info } from "lucide-react";
 
 interface TeamMember {
@@ -85,6 +89,12 @@ export default function TeamDetailPage() {
     enabled: !!id && !!canManageDefaults,
   });
 
+  const { data: systemDefaults } = useQuery<DefaultModelSettings>({
+    queryKey: ["system-default-models"],
+    queryFn: () => modelsApi.getSystemDefaults().then((r) => r.data?.settings ?? {}),
+    enabled: !!canManageDefaults,
+  });
+
   const updateTeamSettingsMutation = useMutation({
     mutationFn: (data: { default_llm_model?: string; default_image_model?: string }) =>
       teamsApi.updateSettings(id, data),
@@ -99,6 +109,20 @@ export default function TeamDetailPage() {
     },
     [updateTeamSettingsMutation],
   );
+
+  const effectiveTeamLlmModel = getEffectiveModelSelection({
+    modelType: "llm",
+    directValue: teamSettings?.default_llm_model ?? null,
+    teamSettings,
+    systemSettings: systemDefaults,
+  });
+
+  const effectiveTeamImageModel = getEffectiveModelSelection({
+    modelType: "image",
+    directValue: teamSettings?.default_image_model ?? null,
+    teamSettings,
+    systemSettings: systemDefaults,
+  });
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -403,6 +427,8 @@ export default function TeamDetailPage() {
                 value={teamSettings?.default_llm_model ?? null}
                 onChange={(name) => handleTeamModelUpdate("default_llm_model", name)}
                 modelType="llm"
+                inheritedValue={effectiveTeamLlmModel.modelName}
+                inheritedSourceLabel={effectiveTeamLlmModel.sourceLabel}
                 size="md"
               />
             </div>
@@ -421,6 +447,8 @@ export default function TeamDetailPage() {
                 value={teamSettings?.default_image_model ?? null}
                 onChange={(name) => handleTeamModelUpdate("default_image_model", name)}
                 modelType="image"
+                inheritedValue={effectiveTeamImageModel.modelName}
+                inheritedSourceLabel={effectiveTeamImageModel.sourceLabel}
                 size="md"
               />
             </div>

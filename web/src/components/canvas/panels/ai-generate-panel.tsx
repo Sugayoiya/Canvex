@@ -1,5 +1,6 @@
 "use client";
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Palette,
   MapPin,
@@ -16,6 +17,11 @@ import { usePromptBuilder } from "../hooks/use-prompt-builder";
 import { useNodeExecution } from "../hooks/use-node-execution";
 import { useCanvasStore } from "@/stores/canvas-store";
 import { ModelSelector } from "@/components/common/model-selector";
+import { modelsApi, projectsApi, teamsApi, usersApi } from "@/lib/api";
+import {
+  getEffectiveModelSelection,
+  type DefaultModelSettings,
+} from "@/lib/model-defaults";
 
 interface AIGeneratePanelProps {
   nodeId: string;
@@ -38,6 +44,37 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
   const { canvasId, focusedNodeType, nodeModelSelections, setNodeModel } = useCanvasStore();
   const { status: execStatus, message: execMessage, execute } = useNodeExecution(nodeId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const projectId = useCanvasStore((s) => s.projectId);
+
+  const { data: project } = useQuery<{
+    owner_type: string;
+    owner_id: string;
+    settings?: DefaultModelSettings | null;
+  }>({
+    queryKey: ["project", projectId],
+    queryFn: () => projectsApi.get(projectId!).then((r) => r.data),
+    enabled: !!projectId,
+  });
+
+  const { data: userSettings } = useQuery<DefaultModelSettings>({
+    queryKey: ["user-settings"],
+    queryFn: () => usersApi.getSettings().then((r) => r.data?.settings ?? {}),
+    enabled: !!project && project.owner_type !== "team",
+  });
+
+  const { data: teamSettings } = useQuery<DefaultModelSettings>({
+    queryKey: ["team-settings", project?.owner_id],
+    queryFn: () =>
+      teamsApi.getSettings(project!.owner_id).then((r) => r.data?.settings ?? {}),
+    enabled: !!project && project.owner_type === "team" && !!project.owner_id,
+  });
+
+  const { data: systemDefaults } = useQuery<DefaultModelSettings>({
+    queryKey: ["system-default-models"],
+    queryFn: () => modelsApi.getSystemDefaults().then((r) => r.data?.settings ?? {}),
+    enabled: !!project,
+  });
 
   useEffect(() => {
     if (nodeId !== prevNodeIdRef.current) {
@@ -62,6 +99,19 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
     focusedNodeType === "text" ? "llm"
     : focusedNodeType === "image" ? "image"
     : "all";
+
+  const effectivePanelModel =
+    modelType === "all"
+      ? null
+      : getEffectiveModelSelection({
+          modelType,
+          directValue: nodeModelSelections[nodeId] ?? null,
+          projectSettings: project?.settings,
+          ownerType: project?.owner_type,
+          userSettings,
+          teamSettings,
+          systemSettings: systemDefaults,
+        });
 
   const skillForNodeType = (type: string | null) => {
     switch (type) {
@@ -90,7 +140,16 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
     await execute(skillName, params);
     setPrompt("");
     nodePromptCache.delete(nodeId);
-  }, [prompt, finalPrompt, upstreamImages, isDisabled, nodeId, focusedNodeType, execute]);
+  }, [
+    prompt,
+    finalPrompt,
+    upstreamImages,
+    isDisabled,
+    nodeId,
+    focusedNodeType,
+    execute,
+    nodeModelSelections,
+  ]);
 
   const handleFileUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -199,6 +258,8 @@ export function AIGeneratePanel({ nodeId, quotaExceeded = false }: AIGeneratePan
           value={nodeModelSelections[nodeId] ?? null}
           onChange={(name) => setNodeModel(nodeId, name)}
           modelType={modelType}
+          inheritedValue={effectivePanelModel?.modelName ?? null}
+          inheritedSourceLabel={effectivePanelModel?.sourceLabel ?? null}
           size="sm"
           disabled={isExecuting}
         />

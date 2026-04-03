@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Bot, Minus, X, Paperclip, Mic, ArrowUp, Square, Zap, MessageSquare } from "lucide-react";
 import { useChatStore, type AgentMessage } from "@/stores/chat-store";
 import { useAgentChat } from "@/hooks/use-agent-chat";
@@ -8,6 +9,11 @@ import { ChatSessionList } from "./chat-session-list";
 import { ToolCallDisplay } from "./tool-call-display";
 import { ThinkingIndicator } from "./thinking-indicator";
 import { ModelSelector } from "@/components/common/model-selector";
+import { modelsApi, projectsApi, teamsApi, usersApi } from "@/lib/api";
+import {
+  getEffectiveModelSelection,
+  type DefaultModelSettings,
+} from "@/lib/model-defaults";
 
 interface AIChatPopupProps {
   projectId: string;
@@ -66,6 +72,35 @@ export function AIChatPopup({ projectId, canvasId }: AIChatPopupProps) {
   const selectedModelName = useChatStore((s) => s.selectedModelName);
   const setSelectedModel = useChatStore((s) => s.setSelectedModel);
   const { sendMessage, abort } = useAgentChat();
+
+  const { data: project } = useQuery<{
+    owner_type: string;
+    owner_id: string;
+    settings?: DefaultModelSettings | null;
+  }>({
+    queryKey: ["project", projectId],
+    queryFn: () => projectsApi.get(projectId).then((r) => r.data),
+    enabled: !!projectId,
+  });
+
+  const { data: userSettings } = useQuery<DefaultModelSettings>({
+    queryKey: ["user-settings"],
+    queryFn: () => usersApi.getSettings().then((r) => r.data?.settings ?? {}),
+    enabled: !!project && project.owner_type !== "team",
+  });
+
+  const { data: teamSettings } = useQuery<DefaultModelSettings>({
+    queryKey: ["team-settings", project?.owner_id],
+    queryFn: () =>
+      teamsApi.getSettings(project!.owner_id).then((r) => r.data?.settings ?? {}),
+    enabled: !!project && project.owner_type === "team" && !!project.owner_id,
+  });
+
+  const { data: systemDefaults } = useQuery<DefaultModelSettings>({
+    queryKey: ["system-default-models"],
+    queryFn: () => modelsApi.getSystemDefaults().then((r) => r.data?.settings ?? {}),
+    enabled: !!project,
+  });
 
   const [minimized, setMinimized] = useState(false);
   const [showSessions, setShowSessions] = useState(false);
@@ -151,6 +186,15 @@ export function AIChatPopup({ projectId, canvasId }: AIChatPopupProps) {
   }
 
   const isEmpty = messages.length === 0 && !isStreaming && !thinkingText;
+  const effectiveChatModel = getEffectiveModelSelection({
+    modelType: "llm",
+    directValue: selectedModelName,
+    projectSettings: project?.settings,
+    ownerType: project?.owner_type,
+    userSettings,
+    teamSettings,
+    systemSettings: systemDefaults,
+  });
 
   return (
     <div
@@ -422,6 +466,8 @@ export function AIChatPopup({ projectId, canvasId }: AIChatPopupProps) {
                   value={selectedModelName}
                   onChange={setSelectedModel}
                   modelType="llm"
+                  inheritedValue={effectiveChatModel.modelName}
+                  inheritedSourceLabel={effectiveChatModel.sourceLabel}
                   size="sm"
                   disabled={isStreaming}
                   popoverPosition="above"

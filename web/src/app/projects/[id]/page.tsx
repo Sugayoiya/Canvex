@@ -4,8 +4,12 @@ import { useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/app-shell";
-import { projectsApi, canvasApi } from "@/lib/api";
+import { canvasApi, modelsApi, projectsApi, teamsApi, usersApi } from "@/lib/api";
 import { ModelSelector } from "@/components/common/model-selector";
+import {
+  getEffectiveModelSelection,
+  type DefaultModelSettings,
+} from "@/lib/model-defaults";
 import { Plus, Layers, ArrowLeft, Info } from "lucide-react";
 
 interface Canvas {
@@ -47,6 +51,25 @@ export default function ProjectDetailPage() {
     enabled: !!id,
   });
 
+  const { data: userSettings } = useQuery<DefaultModelSettings>({
+    queryKey: ["user-settings"],
+    queryFn: () => usersApi.getSettings().then((r) => r.data?.settings ?? {}),
+    enabled: !!project && project.owner_type !== "team",
+  });
+
+  const { data: teamSettings } = useQuery<DefaultModelSettings>({
+    queryKey: ["team-settings", project?.owner_id],
+    queryFn: () =>
+      teamsApi.getSettings(project!.owner_id).then((r) => r.data?.settings ?? {}),
+    enabled: !!project && project.owner_type === "team" && !!project.owner_id,
+  });
+
+  const { data: systemDefaults } = useQuery<DefaultModelSettings>({
+    queryKey: ["system-default-models"],
+    queryFn: () => modelsApi.getSystemDefaults().then((r) => r.data?.settings ?? {}),
+    enabled: !!project,
+  });
+
   const createCanvas = useMutation({
     mutationFn: () =>
       canvasApi.create({
@@ -74,6 +97,26 @@ export default function ProjectDetailPage() {
     },
     [updateSettingsMutation],
   );
+
+  const effectiveProjectLlmModel = getEffectiveModelSelection({
+    modelType: "llm",
+    directValue: project?.settings?.default_llm_model ?? null,
+    projectSettings: project?.settings,
+    ownerType: project?.owner_type,
+    userSettings,
+    teamSettings,
+    systemSettings: systemDefaults,
+  });
+
+  const effectiveProjectImageModel = getEffectiveModelSelection({
+    modelType: "image",
+    directValue: project?.settings?.default_image_model ?? null,
+    projectSettings: project?.settings,
+    ownerType: project?.owner_type,
+    userSettings,
+    teamSettings,
+    systemSettings: systemDefaults,
+  });
 
   if (projectLoading) {
     return (
@@ -212,6 +255,8 @@ export default function ProjectDetailPage() {
               value={project?.settings?.default_llm_model ?? null}
               onChange={(name) => handleModelUpdate("default_llm_model", name)}
               modelType="llm"
+              inheritedValue={effectiveProjectLlmModel.modelName}
+              inheritedSourceLabel={effectiveProjectLlmModel.sourceLabel}
               size="md"
             />
           </div>
@@ -230,6 +275,8 @@ export default function ProjectDetailPage() {
               value={project?.settings?.default_image_model ?? null}
               onChange={(name) => handleModelUpdate("default_image_model", name)}
               modelType="image"
+              inheritedValue={effectiveProjectImageModel.modelName}
+              inheritedSourceLabel={effectiveProjectImageModel.sourceLabel}
               size="md"
             />
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, useId } from "react";
 import { ChevronDown, Sparkles, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { modelsApi, type AvailableModel } from "@/lib/api";
@@ -11,6 +11,8 @@ interface ModelSelectorProps {
   onChange: (modelName: string) => void;
   modelType?: "llm" | "image" | "all";
   requiredFeatures?: string[];
+  inheritedValue?: string | null;
+  inheritedSourceLabel?: string | null;
   size?: "sm" | "md";
   disabled?: boolean;
   placeholder?: string;
@@ -35,11 +37,14 @@ export function ModelSelector({
   onChange,
   modelType = "all",
   requiredFeatures,
+  inheritedValue = null,
+  inheritedSourceLabel = null,
   size = "sm",
   disabled = false,
   placeholder = "自动选择",
   popoverPosition = "below",
 }: ModelSelectorProps) {
+  const listboxId = useId();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [focusIndex, setFocusIndex] = useState(-1);
@@ -85,6 +90,11 @@ export function ModelSelector({
     () => filteredModels.find((m) => m.model_name === value) ?? null,
     [filteredModels, value],
   );
+
+  const inheritedModel = useMemo(() => {
+    if (value || !inheritedValue) return null;
+    return filteredModels.find((m) => m.model_name === inheritedValue) ?? null;
+  }, [filteredModels, inheritedValue, value]);
 
   const openPopover = useCallback(() => {
     if (disabled) return;
@@ -187,6 +197,7 @@ export function ModelSelector({
         role="combobox"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        aria-controls={listboxId}
         aria-label="Select model"
         disabled={disabled}
         onClick={() => (isOpen ? closePopover() : openPopover())}
@@ -232,6 +243,19 @@ export function ModelSelector({
           <>
             <ProviderIcon name={selectedModel.provider_name} size={iconSize} />
             <span>{selectedModel.display_name}</span>
+          </>
+        ) : inheritedModel ? (
+          <>
+            <ProviderIcon name={inheritedModel.provider_name} size={iconSize} />
+            <span>{inheritedModel.display_name}</span>
+            <span
+              style={{
+                color: "var(--cv4-text-disabled)",
+                fontSize: Math.max(fontSize - 1, 11),
+              }}
+            >
+              {inheritedSourceLabel ?? "默认"}
+            </span>
           </>
         ) : (
           <>
@@ -316,6 +340,7 @@ export function ModelSelector({
           {/* Model list */}
           <div
             ref={listRef}
+            id={listboxId}
             role="listbox"
             aria-label="Available models"
             style={{
