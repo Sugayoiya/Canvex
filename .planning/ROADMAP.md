@@ -169,11 +169,12 @@ Canonical refs:
   4. get_tools_for_context() uses metadata-driven filtering instead of hardcoded name sets, producing ≤14 tools per context
   5. System prompt includes safety annotations ([只读] / [⚠️ 破坏性操作]) for each skill
   6. 4 deprecated SkillRegistry handlers (visual.generate_image, video.generate_video, canvas.get_state, asset.get_project_info) removed
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
 - [x] 13-01-PLAN.md — SkillDescriptor extension (9 new fields) + SkillMeta upgrade + SkillLoader enhanced parsing + 4 handler deprecation + tests
 - [x] 13-02-PLAN.md — 10 SKILL.md annotation + TOOL_METADATA for 17 @tools + metadata-driven tool filtering refactor + tests
+- [ ] 13-03-PLAN.md — Gap closure: safety metadata correction (4 read-only + 1 destructive SKILL.md) + runtime prompt assertion test
 
 ### Phase 14: ArtifactStore + ToolInterceptor
 **Goal**: Session-scoped artifact persistence with automatic injection/persistence hooks replaces inline data passing between tool calls
