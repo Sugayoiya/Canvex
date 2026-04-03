@@ -4,7 +4,7 @@
 
 - ✅ **v2.0 Skill + Celery Refactor** — Phases 01-06 (shipped 2026-03-30)
 - ✅ **v2.1 Admin Console** — Phases 07-11 (shipped 2026-04-02)
-- 🚧 **v3.0 Agent System Upgrade** — Phases 12-16 + 12.1 inserted (in progress)
+- 🚧 **v3.0 Agent System Upgrade** — Phases 12-16 + 12.1, 12.2 inserted (in progress)
 
 ## Phases
 
@@ -42,6 +42,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 
 - [x] **Phase 12: AI Call Convergence** — 收敛 3 条割裂 AI 调用栈为统一 ProviderManager 路径，激活 DB 级异步密钥链 + KeyRotator (completed 2026-04-02)
 - [x] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪 (completed 2026-04-02)
+- [ ] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格）
 - [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），修复 Pipeline 参数对齐和 Celery 异步衔接
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
@@ -90,6 +91,32 @@ Plans:
 - [x] 12.1-03-PLAN.md — LangChain Agent: create_agent (非已废弃 create_react_agent) + resolve_langchain_llm + SSE 流式回退矩阵 + LangSmith
 - [x] 12.1-04-PLAN.md — 前端适配: 废弃 skillsApi.invoke, agentApi.listSkills, feature-flag adapter 渐进式 canvas 迁移 + 遥测
 - [x] 12.1-05-PLAN.md — 清理: 删除 13 文件 + E2E 验证门控 + 保留显式 provider deps + 迁移兼容性测试矩阵
+
+### Phase 12.2: Provider & Model Preset Management (INSERTED)
+
+**Goal:** 将 Provider 管理从"用户手动创建"改为"系统预置 + 用户填写 Key/BaseURL"模式，预置常用 Model，用 ModelPricing 作为 Provider-Model 关联兼定价表，模型列表嵌入 Provider 卡片内展示（Dify 风格）
+**Depends on:** Phase 12.1 (resolve_langchain_llm + base_url 传递依赖 Provider 预置数据)
+**Requirements**: PROV-01, PROV-02, PROV-03, PROV-04, PROV-05, PROV-06, PROV-07
+**Success Criteria** (what must be TRUE):
+  1. 系统启动时自动种子 Gemini/OpenAI/DeepSeek 预置 Provider（is_preset=True 不可删），每个含 icon/description/default_base_url
+  2. 预置常用模型（≥7 个 LLM + Image 模型）写入 AIModelConfig（is_preset=True），并通过 ModelPricing 关联到对应 Provider
+  3. ModelPricing 同时作为 Provider-Model 关联表和定价表，AIModelProviderMapping 删除
+  4. Provider 配置弹窗简化为只需填 API Key + 可选 Base URL
+  5. Provider 卡片内可展开模型列表，显示名称/类型/context_size/定价/启用状态
+  6. 用户可手动添加自定义模型并关联到指定 Provider
+  7. base_url 字段正确传递到 resolve_langchain_llm，支持 OpenAI 兼容类 Provider 自定义端点
+**Plans**: TBD
+**UI hint**: yes
+
+Canonical refs:
+- `api/app/models/ai_provider_config.py` — AIProviderConfig + AIProviderKey + AIModelProviderMapping 模型
+- `api/app/models/model_pricing.py` — ModelPricing 模型
+- `api/app/schemas/ai_provider.py` — Provider schemas
+- `api/app/api/v1/ai_providers.py` — Provider API 端点
+- `api/app/services/ai/provider_manager.py` — ProviderManager + resolve_langchain_llm
+- `web/src/app/admin/providers/page.tsx` — Admin Provider 页面
+- `web/src/components/admin/provider-card.tsx` — Provider 卡片组件
+- `web/src/components/admin/provider-form-modal.tsx` — Provider 配置弹窗
 
 ### Phase 13: SkillDescriptor Enhancement + Pipeline Fix
 **Goal**: Skill metadata system supports dependency declarations, tiered classification, and safety metadata; pipeline parameter mismatches fixed and Celery async chain repaired
@@ -142,7 +169,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 12 → **12.1 (INSERTED)** → 13 → 14 → 15 → 16
+Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED)** → 13 → 14 → 15 → 16
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
@@ -159,7 +186,8 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → 13 → 14 → 15
 | 10. Quota/Pricing/Provider | v2.1 | 4/4 | Complete | 2026-04-01 |
 | 11. Dashboard/Polish | v2.1 | 4/4 | Complete | 2026-04-01 |
 | 12. AI Call Convergence | v3.0 | 4/4 | Complete | 2026-04-02 |
-| **12.1. Agent-First (INSERTED)** | **v3.0** | **0/5** | **Not started** | **-** |
+| **12.1. Agent-First (INSERTED)** | **v3.0** | **5/5** | **Complete** | **2026-04-02** |
+| **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 0/TBD | Not started | - |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
