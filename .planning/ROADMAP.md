@@ -139,7 +139,14 @@ Canonical refs:
   6. Canvas AI Generate Panel 的 "Lib Nano Pro" 替换为真正的 ModelSelector，按节点类型切换模型列表
   7. SkillContext.model_name 注入，所有 skill handler 消除硬编码 provider
   8. 项目详情页、个人设置、Team 设置页均可配置默认模型
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 12.3-01-PLAN.md — Backend data model (SystemSetting, User/Team settings) + Available Models API + resolve functions + settings endpoints
+- [ ] 12.3-02-PLAN.md — SkillContext model_name injection + Agent chat auto-resolve provider
+- [ ] 12.3-03-PLAN.md — Frontend ModelSelector component (Pill+Popover) + ProviderIcon relocation + store extensions
+- [ ] 12.3-04-PLAN.md — Chat ModelSelector integration + Canvas AI Generate Panel + LLM Node cleanup
+- [ ] 12.3-05-PLAN.md — Project/Personal/Team default model settings pages
 
 Canonical refs:
 - `api/app/services/ai/provider_manager.py` — ProviderManager + resolve_langchain_llm
