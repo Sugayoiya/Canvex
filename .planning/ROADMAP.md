@@ -4,7 +4,7 @@
 
 - ✅ **v2.0 Skill + Celery Refactor** — Phases 01-06 (shipped 2026-03-30)
 - ✅ **v2.1 Admin Console** — Phases 07-11 (shipped 2026-04-02)
-- 🚧 **v3.0 Agent System Upgrade** — Phases 12-16 + 12.1, 12.2 inserted (in progress)
+- 🚧 **v3.0 Agent System Upgrade** — Phases 12-16 + 12.1, 12.2, 12.3 inserted (in progress)
 
 ## Phases
 
@@ -43,6 +43,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 - [x] **Phase 12: AI Call Convergence** — 收敛 3 条割裂 AI 调用栈为统一 ProviderManager 路径，激活 DB 级异步密钥链 + KeyRotator (completed 2026-04-02)
 - [x] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪 (completed 2026-04-02)
 - [x] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格） (completed 2026-04-03)
+- [ ] **Phase 12.3: Model Selection Feature** — (INSERTED) 可用模型 API + 四层 fallback 链 + ModelSelector 组件 + Chat/Canvas 集成 + 项目/个人/Team 默认模型设置
 - [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），修复 Pipeline 参数对齐和 Celery 异步衔接
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
@@ -124,6 +125,32 @@ Canonical refs:
 - `web/src/components/admin/provider-card.tsx` — Provider 卡片组件
 - `web/src/components/admin/provider-form-modal.tsx` — Provider 配置弹窗
 
+### Phase 12.3: Model Selection Feature (INSERTED)
+
+**Goal:** 为用户添加完整的模型选择能力——可用模型 API、四层 fallback 链（手动选择 > 项目默认 > 个人/Team 默认 > 系统默认）、可复用 ModelSelector 组件、Agent Chat 和 Canvas 浮动面板集成、默认模型设置入口
+**Depends on:** Phase 12.2 (preset models + ModelPricing provider-model association)
+**Requirements**: MSEL-01 (Available Models API), MSEL-02 (resolve_provider_for_model), MSEL-03 (四层 fallback 链), MSEL-04 (ModelSelector 组件), MSEL-05 (Chat 集成), MSEL-06 (Canvas 集成), MSEL-07 (项目/个人/Team 默认模型), MSEL-08 (SkillContext model_name 注入), MSEL-09 (系统默认模型 Admin 配置)
+**Success Criteria** (what must be TRUE):
+  1. `GET /api/v1/models/available` 返回按 llm/image 分类的可用模型列表（有 active key + enabled），普通用户可访问
+  2. `resolve_provider_for_model(model_name)` 通过 ModelPricing JOIN 自动推导 provider_name
+  3. `resolve_model_for_task()` 实现四层 fallback：手动选择 > 项目默认 > 个人/Team 默认 > 系统默认
+  4. ModelSelector 组件（Pill + Popover）可复用于 Chat / Canvas / 设置页三个场景
+  5. Agent Chat 支持消息级模型切换，前端只传 model_name，后端自动推导 provider
+  6. Canvas AI Generate Panel 的 "Lib Nano Pro" 替换为真正的 ModelSelector，按节点类型切换模型列表
+  7. SkillContext.model_name 注入，所有 skill handler 消除硬编码 provider
+  8. 项目详情页、个人设置、Team 设置页均可配置默认模型
+**Plans**: TBD
+
+Canonical refs:
+- `api/app/services/ai/provider_manager.py` — ProviderManager + resolve_langchain_llm
+- `api/app/models/ai_provider_config.py` — AIProviderConfig + AIModelConfig
+- `api/app/models/model_pricing.py` — ModelPricing（provider-model FK 关联）
+- `api/app/skills/context.py` — SkillContext dataclass
+- `web/src/components/canvas/panels/ai-generate-panel.tsx` — Canvas 浮动面板
+- `web/src/components/chat/ai-chat-popup.tsx` — Chat 弹窗
+
+**UI hint**: yes
+
 ### Phase 13: SkillDescriptor Enhancement + Pipeline Fix
 **Goal**: Skill metadata system supports dependency declarations, tiered classification, and safety metadata; pipeline parameter mismatches fixed and Celery async chain repaired
 **Depends on**: Phase 12 (unified credential path must be stable before expanding skill metadata)
@@ -175,7 +202,7 @@ Canonical refs:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED)** → 13 → 14 → 15 → 16
+Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED)** → **12.3 (INSERTED)** → 13 → 14 → 15 → 16
 
 | Phase | Milestone | Plans | Status | Completed |
 |-------|-----------|-------|--------|-----------|
@@ -194,6 +221,7 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | 12. AI Call Convergence | v3.0 | 4/4 | Complete | 2026-04-02 |
 | **12.1. Agent-First (INSERTED)** | **v3.0** | **5/5** | **Complete** | **2026-04-02** |
 | **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
+| **12.3. Model Selection (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 0/TBD | Not started | - |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
