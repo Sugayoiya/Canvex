@@ -14,6 +14,7 @@ from app.models.ai_provider_config import (
 )
 from app.services.ai.provider_manager import encrypt_api_key
 from app.services.admin_audit import AuditContext
+from app.models.model_pricing import ModelPricing
 from app.schemas.ai_provider import (
     ProviderConfigCreate,
     ProviderConfigUpdate,
@@ -24,6 +25,10 @@ from app.schemas.ai_provider import (
     KeyUpdateRequest,
     ProviderHealthResponse,
     ModelConfigResponse,
+    ProviderModelResponse,
+    ModelPricingBrief,
+    ModelCreateRequest,
+    ModelUpdateRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -188,6 +193,9 @@ async def delete_provider(
     db: AsyncSession = Depends(get_db),
 ):
     config = await _get_config_or_404(provider_id, user, db)
+
+    if getattr(config, "is_preset", False):
+        raise HTTPException(status_code=403, detail="Cannot delete preset provider")
 
     audit = AuditContext(db, user.id)
     await audit.log_if(config.owner_type == "system",
@@ -423,5 +431,168 @@ async def list_models(
 
     responses = []
     for mc in models:
-        responses.append(ModelConfigResponse.from_model_config(mc, providers=[]))
+        pricing_result = await db.execute(
+            select(ModelPricing)
+            .where(ModelPricing.model_config_id == mc.id, ModelPricing.is_active == True)  # noqa: E712
+            .options(selectinload(ModelPricing.provider_config))
+        )
+        pricings = pricing_result.scalars().all()
+        provider_names = [
+            p.provider_config.display_name
+            for p in pricings if p.provider_config
+        ]
+        responses.append(ModelConfigResponse.from_model_config(mc, provider_names))
     return responses
+
+
+@router.get("/{provider_id}/models", response_model=list[ProviderModelResponse])
+async def list_provider_models(
+    provider_id: str,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List models associated with a provider via ModelPricing join."""
+    await _get_config_or_404(provider_id, user, db)
+
+    stmt = (
+        select(AIModelConfig, ModelPricing)
+        .outerjoin(
+            ModelPricing,
+            (ModelPricing.model_config_id == AIModelConfig.id)
+            & (ModelPricing.provider_config_id == provider_id)
+            & (ModelPricing.is_active == True)  # noqa: E712
+        )
+        .where(ModelPricing.provider_config_id == provider_id)
+    )
+    result = await db.execute(stmt)
+    rows = result.all()
+
+    responses = []
+    for model_config, pricing in rows:
+        caps = []
+        if model_config.capabilities:
+            import json
+            try:
+                caps = json.loads(model_config.capabilities) if isinstance(model_config.capabilities, str) else model_config.capabilities
+            except (json.JSONDecodeError, TypeError):
+                caps = []
+        responses.append(ProviderModelResponse(
+            id=model_config.id,
+            display_name=model_config.display_name,
+            model_name=model_config.model_name,
+            model_type=model_config.model_type,
+            capabilities=caps,
+            is_enabled=model_config.is_enabled,
+            is_preset=getattr(model_config, "is_preset", False),
+            input_token_limit=getattr(model_config, "input_token_limit", None),
+            output_token_limit=getattr(model_config, "output_token_limit", None),
+            pricing=ModelPricingBrief(
+                id=pricing.id,
+                pricing_model=pricing.pricing_model,
+                input_price_per_1k=pricing.input_price_per_1k,
+                output_price_per_1k=pricing.output_price_per_1k,
+                price_per_image=pricing.price_per_image,
+                price_per_second=pricing.price_per_second,
+                is_active=pricing.is_active,
+            ) if pricing else None,
+        ))
+    return responses
+
+
+@router.post("/{provider_id}/models", response_model=ProviderModelResponse, status_code=status.HTTP_201_CREATED)
+async def create_provider_model(
+    provider_id: str,
+    data: ModelCreateRequest,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a custom model and associate it with a provider via ModelPricing."""
+    config = await _get_config_or_404(provider_id, user, db)
+    require_admin(user)
+
+    existing = (await db.execute(
+        select(AIModelConfig).where(AIModelConfig.model_name == data.model_name)
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Model '{data.model_name}' already exists")
+
+    model = AIModelConfig(
+        display_name=data.display_name,
+        model_name=data.model_name,
+        model_type=data.model_type,
+        is_preset=False,
+    )
+    db.add(model)
+    await db.flush()
+
+    pricing = ModelPricing(
+        provider=config.provider_name,
+        model=data.model_name,
+        model_type=data.model_type,
+        pricing_model="per_token",
+        provider_config_id=provider_id,
+        model_config_id=model.id,
+    )
+    db.add(pricing)
+    await db.flush()
+
+    audit = AuditContext(db, user.id)
+    await audit.log_if(config.owner_type == "system",
+        action_type="provider.model.create", target_type="ai_model_config",
+        target_id=model.id,
+        changes={"model": {"old": None, "new": {"model_name": data.model_name, "display_name": data.display_name}}})
+
+    return ProviderModelResponse(
+        id=model.id,
+        display_name=model.display_name,
+        model_name=model.model_name,
+        model_type=model.model_type,
+        is_enabled=model.is_enabled,
+        is_preset=False,
+        pricing=None,
+    )
+
+
+@router.patch("/{provider_id}/models/{model_id}", response_model=ProviderModelResponse)
+async def update_provider_model(
+    provider_id: str,
+    model_id: str,
+    data: ModelUpdateRequest,
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Toggle model enabled/disabled or update display_name."""
+    config = await _get_config_or_404(provider_id, user, db)
+    require_admin(user)
+
+    model = (await db.execute(
+        select(AIModelConfig).where(AIModelConfig.id == model_id)
+    )).scalar_one_or_none()
+    if not model:
+        raise HTTPException(status_code=404, detail="Model not found")
+
+    changes = {}
+    if data.is_enabled is not None and data.is_enabled != model.is_enabled:
+        changes["is_enabled"] = {"old": model.is_enabled, "new": data.is_enabled}
+        model.is_enabled = data.is_enabled
+    if data.display_name is not None and data.display_name != model.display_name:
+        changes["display_name"] = {"old": model.display_name, "new": data.display_name}
+        model.display_name = data.display_name
+    await db.flush()
+
+    if changes:
+        audit = AuditContext(db, user.id)
+        await audit.log_if(config.owner_type == "system",
+            action_type="provider.model.update", target_type="ai_model_config",
+            target_id=model_id, changes=changes)
+
+    return ProviderModelResponse(
+        id=model.id,
+        display_name=model.display_name,
+        model_name=model.model_name,
+        model_type=model.model_type,
+        is_enabled=model.is_enabled,
+        is_preset=getattr(model, "is_preset", False),
+        input_token_limit=getattr(model, "input_token_limit", None),
+        output_token_limit=getattr(model, "output_token_limit", None),
+    )
