@@ -14,8 +14,8 @@ class SessionCreateRequest(BaseModel):
     project_id: str
     canvas_id: str | None = None
     title: str | None = None
-    model_name: str = "gemini-2.5-flash"
-    provider: str = "gemini"
+    model_name: str | None = None
+    provider: str | None = None  # deprecated — backend auto-resolves from model_name
 
 
 class SessionResponse(BaseModel):

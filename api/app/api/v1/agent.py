@@ -63,15 +63,27 @@ async def create_session(
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    from app.services.ai.provider_manager import resolve_model_for_task, resolve_provider_for_model
+
     await resolve_project_access(body.project_id, user, db)
+
+    resolved_model = await resolve_model_for_task(
+        body.model_name, "llm",
+        project_id=body.project_id,
+        user_id=user.id,
+        team_id=getattr(user, "current_team_id", None),
+        db=db,
+    )
+    resolved_provider, _ = await resolve_provider_for_model(resolved_model, db=db)
+
     session = await agent_service.create_session(
         db,
         user.id,
         body.project_id,
         body.canvas_id,
         body.title,
-        body.model_name,
-        body.provider,
+        resolved_model,
+        resolved_provider,
     )
     return session
 
@@ -186,10 +198,20 @@ async def chat(
             except Exception:
                 logger.warning("Failed to load context for session %s", session_id)
 
-            provider = body.provider or session.provider
-            model_name = body.model_name or session.model_name
+            from app.services.ai.provider_manager import resolve_model_for_task, resolve_provider_for_model
+
+            requested_model = body.model_name or session.model_name
+            resolved_model = await resolve_model_for_task(
+                requested_model, "llm",
+                project_id=session.project_id,
+                user_id=user.id,
+                team_id=getattr(user, "current_team_id", None),
+                db=db,
+            )
+            resolved_provider, _ = await resolve_provider_for_model(resolved_model, db=db)
+
             agent = await agent_service.create_agent(
-                provider, model_name,
+                resolved_provider, resolved_model,
                 project_name=project_name,
                 canvas_name=canvas_name,
                 canvas_summary=canvas_summary,
@@ -244,7 +266,7 @@ async def chat(
                     logger.warning("Streaming error mid-stream: %s", stream_err)
 
             usage = {"input_tokens": 0, "output_tokens": 0}
-            yield sse_done(collected_text, usage, request_id=request_id)
+            yield sse_done(collected_text, usage, request_id=request_id, extra={"used_model": resolved_model})
 
             final_messages = [*input_messages, AIMessage(content=collected_text)]
             await agent_service.save_messages(

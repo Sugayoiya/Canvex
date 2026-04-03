@@ -65,13 +65,15 @@ def sse_token(text: str, request_id: str | None = None) -> dict:
 
 
 def sse_done(
-    output: str, usage: dict | None = None, request_id: str | None = None
+    output: str,
+    usage: dict | None = None,
+    request_id: str | None = None,
+    extra: dict | None = None,
 ) -> dict:
-    return sse_event(
-        SSEEventType.DONE,
-        {"output": output, "usage": usage or {}},
-        request_id=request_id,
-    )
+    data = {"output": output, "usage": usage or {}}
+    if extra:
+        data.update(extra)
+    return sse_event(SSEEventType.DONE, data, request_id=request_id)
 
 
 def sse_error(
