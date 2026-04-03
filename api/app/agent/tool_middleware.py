@@ -18,24 +18,6 @@ TOOL_TIMEOUT_AI = 120
 
 _AI_TOOL_NAMES = {"generate_image", "generate_video"}
 
-_ALWAYS_TOOLS = {
-    "get_project_info", "get_episodes", "get_script",
-    "get_characters", "get_scenes",
-    "read_skill", "read_resource",
-}
-
-_CANVAS_TOOLS = {"get_canvas_state"}
-
-_STORYBOARD_TOOLS = {
-    "save_shot_plan", "save_shot_details", "update_shot",
-    "generate_image", "generate_video",
-    "get_style_templates",
-}
-
-_SCRIPT_TOOLS = {
-    "save_characters", "save_scenes", "save_screenplay",
-}
-
 
 def get_tools_for_context(
     all_tools: list,
@@ -43,27 +25,33 @@ def get_tools_for_context(
     has_canvas: bool = False,
     has_episode: bool = False,
 ) -> list:
-    """Return ≤14 tools based on session context.
+    """Return at most 14 tools based on session context, using tool metadata.
 
-    Default set: 7 core + 3 script tools (10).
-    With canvas: +1 (11).
-    With episode/storyboard: replace script tools with 6 storyboard tools (13).
-    With both: 14 max.
+    Filtering rules (metadata-driven replacement of hardcoded name sets):
+    - context_group == "always": always included
+    - context_group == "canvas": included when has_canvas
+    - context_group == "episode": included when has_episode
+    - context_group == "script": included when NOT has_episode
     """
-    allowed_names = set(_ALWAYS_TOOLS)
+    selected = []
+    for tool in all_tools:
+        meta = getattr(tool, "metadata", None) or {}
+        group = meta.get("context_group", "always")
 
-    if has_episode:
-        allowed_names |= _STORYBOARD_TOOLS
-    else:
-        allowed_names |= _SCRIPT_TOOLS
-
-    if has_canvas:
-        allowed_names |= _CANVAS_TOOLS
-
-    selected = [t for t in all_tools if t.name in allowed_names]
+        if group == "always":
+            selected.append(tool)
+        elif group == "canvas" and has_canvas:
+            selected.append(tool)
+        elif group == "episode" and has_episode:
+            selected.append(tool)
+        elif group == "script" and not has_episode:
+            selected.append(tool)
 
     if len(selected) > 14:
-        logger.warning("Tool count %d exceeds target 14; consider refining gating rules", len(selected))
+        logger.warning(
+            "Tool count %d exceeds target 14; consider refining metadata context_group values",
+            len(selected),
+        )
 
     return selected
 
