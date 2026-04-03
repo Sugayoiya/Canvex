@@ -14,6 +14,7 @@ class ProjectUpdate(BaseModel):
     description: str | None = None
     global_style: str | None = None
     aspect_ratio: str | None = None
+    settings: dict | None = None
 
 class ProjectResponse(BaseModel):
     id: str
@@ -23,6 +24,7 @@ class ProjectResponse(BaseModel):
     owner_id: str
     created_by: str | None = None
     aspect_ratio: str | None = None
+    settings: dict | None = None
     created_at: datetime
     updated_at: datetime
     canvas_count: int = 0

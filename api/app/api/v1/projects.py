@@ -30,6 +30,7 @@ def _project_to_response(project: Project, canvas_count: int = 0) -> ProjectResp
         owner_id=project.owner_id,
         created_by=project.created_by,
         aspect_ratio=project.aspect_ratio,
+        settings=project.settings,
         created_at=project.created_at,
         updated_at=project.updated_at,
         canvas_count=canvas_count,
@@ -132,6 +133,10 @@ async def update_project(
 ):
     project, _role = await resolve_project_access(project_id, user, db, min_role="editor")
     update_data = data.model_dump(exclude_unset=True)
+    if "settings" in update_data and update_data["settings"] is not None:
+        current = project.settings or {}
+        current.update(update_data.pop("settings"))
+        project.settings = current
     for key, value in update_data.items():
         setattr(project, key, value)
     await db.flush()

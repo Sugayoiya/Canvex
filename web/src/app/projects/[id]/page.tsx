@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/layout/app-shell";
 import { projectsApi, canvasApi } from "@/lib/api";
-import { Plus, Layers, ArrowLeft } from "lucide-react";
+import { ModelSelector } from "@/components/common/model-selector";
+import { Plus, Layers, ArrowLeft, Info } from "lucide-react";
 
 interface Canvas {
   id: string;
@@ -20,6 +21,7 @@ interface Project {
   description?: string;
   owner_type: string;
   owner_id: string;
+  settings?: Record<string, string>;
   created_at: string;
   updated_at: string;
 }
@@ -57,6 +59,21 @@ export default function ProjectDetailPage() {
       setNewCanvasName("");
     },
   });
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: ({ key, value }: { key: string; value: string }) =>
+      projectsApi.update(id, { settings: { [key]: value } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project", id] });
+    },
+  });
+
+  const handleModelUpdate = useCallback(
+    (key: string, value: string) => {
+      updateSettingsMutation.mutate({ key, value });
+    },
+    [updateSettingsMutation],
+  );
 
   if (projectLoading) {
     return (
@@ -154,6 +171,84 @@ export default function ProjectDetailPage() {
           <Plus size={12} />
           New Canvas
         </button>
+      </div>
+
+      {/* Default models section */}
+      <div
+        style={{
+          background: "var(--ob-glass-bg)",
+          border: "1px solid var(--ob-glass-border)",
+          borderRadius: 12,
+          padding: "16px 20px",
+          marginBottom: 20,
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "var(--font-headline)",
+            fontSize: 10,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.15em",
+            color: "var(--ob-text-muted)",
+            marginBottom: 12,
+          }}
+        >
+          DEFAULT MODELS
+        </div>
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 200px" }}>
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 12,
+                color: "var(--ob-text-muted)",
+                marginBottom: 8,
+              }}
+            >
+              LLM 模型
+            </div>
+            <ModelSelector
+              value={project?.settings?.default_llm_model ?? null}
+              onChange={(name) => handleModelUpdate("default_llm_model", name)}
+              modelType="llm"
+              size="md"
+            />
+          </div>
+          <div style={{ flex: "1 1 200px" }}>
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 12,
+                color: "var(--ob-text-muted)",
+                marginBottom: 8,
+              }}
+            >
+              图像模型
+            </div>
+            <ModelSelector
+              value={project?.settings?.default_image_model ?? null}
+              onChange={(name) => handleModelUpdate("default_image_model", name)}
+              modelType="image"
+              size="md"
+            />
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            marginTop: 12,
+            fontFamily: "var(--font-body)",
+            fontSize: 12,
+            color: "var(--ob-text-muted)",
+            opacity: 0.7,
+          }}
+        >
+          <Info size={12} />
+          未设置时将使用个人/团队默认模型
+        </div>
       </div>
 
       {/* Inline new canvas form */}

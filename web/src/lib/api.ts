@@ -326,7 +326,7 @@ export const projectsApi = {
   get: (projectId: string) => api.get(`/projects/${projectId}`),
   create: (data: { name: string; description?: string; owner_type: string; owner_id: string }) =>
     api.post("/projects/", data),
-  update: (projectId: string, data: { name?: string; description?: string }) =>
+  update: (projectId: string, data: { name?: string; description?: string; settings?: Record<string, string> }) =>
     api.patch(`/projects/${projectId}`, data),
   delete: (projectId: string) => api.delete(`/projects/${projectId}`),
   clone: (projectId: string, data: { target_owner_type: string; target_owner_id: string }) =>
