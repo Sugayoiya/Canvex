@@ -44,7 +44,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 - [x] **Phase 12.1: Agent-First Architecture: LangChain + Anthropic Skills** — (INSERTED) LangChain 替代 PydanticAI，Anthropic SKILL.md 三级加载，多供应商 LLM 切换，LangSmith 追踪 (completed 2026-04-02)
 - [x] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格） (completed 2026-04-03)
 - [x] **Phase 12.3: Model Selection Feature** — (INSERTED) 可用模型 API + 四层 fallback 链 + ModelSelector 组件 + Chat/Canvas 集成 + 项目/个人/Team 默认模型设置 (completed 2026-04-03)
-- [x] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），废弃冗余 handler，元数据驱动动态工具筛选（PIPE-01/02/04 延迟至 Phase 14） (completed 2026-04-03)
+- [ ] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），废弃冗余 handler，元数据驱动动态工具筛选（PIPE-01/02/04 延迟至 Phase 14；verification gap: safety annotations）
 - [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
 - [ ] **Phase 16: Admin Skill Management** — Admin 技能管理页面（列表/统计/启停控制）
@@ -235,7 +235,7 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | **12.1. Agent-First (INSERTED)** | **v3.0** | **5/5** | **Complete** | **2026-04-02** |
 | **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
 | **12.3. Model Selection (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
-| 13. Descriptor + Pipeline | v3.0 | 2/2 | Complete   | 2026-04-03 |
+| 13. Descriptor + Pipeline | v3.0 | 2/2 | In Progress | - |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
 | 16. Admin Skills | v3.0 | 0/TBD | Not started | - |
