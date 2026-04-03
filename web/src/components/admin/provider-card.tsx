@@ -334,7 +334,7 @@ export function ProviderCard({
   const isConfigured = provider.active_key_count > 0 && provider.is_enabled;
   const statusText = isConfigured
     ? `Active • ${provider.key_count} key${provider.key_count !== 1 ? "s" : ""}`
-    : "未配置";
+    : "Not configured";
   const Chevron = isExpanded ? ChevronDown : ChevronRight;
 
   const TABLE_HEADERS = [
@@ -412,7 +412,7 @@ export function ProviderCard({
         <span style={{ flex: 1 }} />
         <button
           type="button"
-          aria-label={`配置 ${provider.provider_name}`}
+          aria-label={`Configure ${provider.provider_name}`}
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
@@ -564,45 +564,30 @@ export function ProviderCard({
             </span>
           </div>
 
-          {/* Add key form */}
-          <div
+          {/* Add key form — single row */}
+          <form
+            autoComplete="off"
+            onSubmit={(e) => { e.preventDefault(); handleAddKey(); }}
             style={{
               display: "flex",
-              flexDirection: "column",
-              gap: 12,
+              gap: 8,
               marginTop: 16,
+              alignItems: "center",
             }}
           >
             <input
               type="text"
-              placeholder="Key Label (optional)"
-              value={keyLabel}
-              onChange={(e) => setKeyLabel(e.target.value)}
-              aria-label="Key label"
-              style={{
-                height: 36,
-                width: "100%",
-                padding: "0 12px",
-                fontFamily: "Manrope, sans-serif",
-                fontSize: 12,
-                fontWeight: 400,
-                color: "var(--cv4-text-primary)",
-                background: "var(--cv4-canvas-bg)",
-                border: "1px solid var(--cv4-border-default)",
-                borderRadius: 8,
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-            <input
-              type="password"
-              placeholder="Paste API key"
+              autoComplete="one-time-code"
+              data-1p-ignore
+              data-lpignore="true"
+              data-form-type="other"
+              placeholder="Paste API Key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               aria-label="API key"
               style={{
+                flex: 1,
                 height: 36,
-                width: "100%",
                 padding: "0 12px",
                 fontFamily: "Manrope, sans-serif",
                 fontSize: 12,
@@ -613,34 +598,57 @@ export function ProviderCard({
                 borderRadius: 8,
                 outline: "none",
                 boxSizing: "border-box",
+                WebkitTextSecurity: "disc" as unknown as string,
               }}
             />
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="button"
-                onClick={handleAddKey}
-                disabled={!apiKey.trim() || isAddingKey || disabled}
-                style={{
-                  height: 36,
-                  padding: "0 16px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: "var(--cv4-btn-primary)",
-                  color: "var(--cv4-btn-primary-text)",
-                  fontFamily: "Manrope, sans-serif",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor:
-                    isAddingKey || disabled ? "not-allowed" : "pointer",
-                  opacity: isAddingKey ? 0.7 : 1,
-                  pointerEvents:
-                    isAddingKey || disabled ? "none" : "auto",
-                }}
-              >
-                {isAddingKey ? "..." : "Authorize Key"}
-              </button>
-            </div>
-          </div>
+            <input
+              type="text"
+              autoComplete="off"
+              placeholder="Label (optional)"
+              value={keyLabel}
+              onChange={(e) => setKeyLabel(e.target.value)}
+              aria-label="Key label"
+              style={{
+                width: 140,
+                height: 36,
+                padding: "0 12px",
+                fontFamily: "Manrope, sans-serif",
+                fontSize: 12,
+                fontWeight: 400,
+                color: "var(--cv4-text-primary)",
+                background: "var(--cv4-canvas-bg)",
+                border: "1px solid var(--cv4-border-default)",
+                borderRadius: 8,
+                outline: "none",
+                boxSizing: "border-box",
+                flexShrink: 0,
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!apiKey.trim() || isAddingKey || disabled}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                borderRadius: 8,
+                border: "none",
+                background: "var(--cv4-btn-primary)",
+                color: "var(--cv4-btn-primary-text)",
+                fontFamily: "Manrope, sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor:
+                  isAddingKey || disabled ? "not-allowed" : "pointer",
+                opacity: !apiKey.trim() || isAddingKey ? 0.5 : 1,
+                pointerEvents:
+                  isAddingKey || disabled ? "none" : "auto",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {isAddingKey ? "..." : "Add Key"}
+            </button>
+          </form>
 
           {/* Model list section */}
           <div

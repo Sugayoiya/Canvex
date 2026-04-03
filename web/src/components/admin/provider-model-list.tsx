@@ -35,6 +35,7 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
   const queryClient = useQueryClient();
   const [isExpanded, setIsExpanded] = useState(false);
   const [newModelName, setNewModelName] = useState("");
+  const [newDisplayName, setNewDisplayName] = useState("");
   const [newModelType, setNewModelType] = useState("llm");
 
   const { data: models, isLoading } = useQuery({
@@ -50,13 +51,13 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
       queryClient.invalidateQueries({ queryKey: ["admin", "provider-models", providerId] });
       const model = models?.find((m) => m.id === vars.modelId);
       const name = model?.display_name || model?.model_name || "model";
-      toast.success(vars.isEnabled ? `已启用模型: ${name}` : `已禁用模型: ${name}`);
+      toast.success(vars.isEnabled ? `Model enabled: ${name}` : `Model disabled: ${name}`);
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`切换模型状态失败: ${msg}`);
+      toast.error(`Failed to toggle model: ${msg}`);
     },
   });
 
@@ -65,15 +66,16 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
       aiProvidersApi.createProviderModel(providerId, data),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "provider-models", providerId] });
-      toast.success(`已添加模型: ${vars.model_name}`);
+      toast.success(`Model added: ${vars.display_name || vars.model_name}`);
       setNewModelName("");
+      setNewDisplayName("");
       setNewModelType("llm");
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`添加模型失败: ${msg}`);
+      toast.error(`Failed to add model: ${msg}`);
     },
   });
 
@@ -84,7 +86,7 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
     if (!newModelName.trim()) return;
     createMutation.mutate({
       model_name: newModelName.trim(),
-      display_name: newModelName.trim(),
+      display_name: newDisplayName.trim() || newModelName.trim(),
       model_type: newModelType,
     });
   };
@@ -119,7 +121,7 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
             color: "var(--cv4-text-secondary)",
           }}
         >
-          模型列表 ({modelList.length})
+          Models ({modelList.length})
         </span>
         {isLoading && (
           <Loader2
@@ -145,7 +147,7 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
                 color: "var(--cv4-text-muted)",
               }}
             >
-              暂无模型
+              No models
             </div>
           ) : (
             modelList.map((model) => (
@@ -170,18 +172,44 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
               gap: 8,
               padding: "8px 0",
               alignItems: "center",
+              flexWrap: "wrap",
             }}
           >
             <input
               type="text"
               value={newModelName}
               onChange={(e) => setNewModelName(e.target.value)}
-              placeholder="Model name"
+              placeholder="Model ID (e.g. gpt-4o-mini)"
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleAddModel();
               }}
               style={{
                 flex: 1,
+                minWidth: 140,
+                height: 32,
+                padding: "0 8px",
+                fontFamily: "Space Grotesk, monospace",
+                fontSize: 12,
+                fontWeight: 400,
+                color: "var(--cv4-text-primary)",
+                background: "var(--cv4-canvas-bg)",
+                border: "1px solid var(--cv4-border-default)",
+                borderRadius: 8,
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            <input
+              type="text"
+              value={newDisplayName}
+              onChange={(e) => setNewDisplayName(e.target.value)}
+              placeholder="Display name (optional)"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddModel();
+              }}
+              style={{
+                flex: 1,
+                minWidth: 120,
                 height: 32,
                 padding: "0 8px",
                 fontFamily: "Manrope, sans-serif",
@@ -199,7 +227,7 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
               value={newModelType}
               onChange={(e) => setNewModelType(e.target.value)}
               style={{
-                width: 100,
+                width: 80,
                 height: 32,
                 padding: "0 8px",
                 fontFamily: "Manrope, sans-serif",
@@ -230,11 +258,11 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
                 fontSize: 12,
                 fontWeight: 700,
                 cursor: createMutation.isPending ? "not-allowed" : "pointer",
-                opacity: createMutation.isPending ? 0.7 : 1,
+                opacity: !newModelName.trim() || createMutation.isPending ? 0.5 : 1,
                 whiteSpace: "nowrap",
               }}
             >
-              {createMutation.isPending ? "..." : "添加模型"}
+              {createMutation.isPending ? "..." : "Add"}
             </button>
           </div>
         </div>
@@ -243,6 +271,16 @@ export function ProviderModelList({ providerId }: ProviderModelListProps) {
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
+}
+
+function formatPrice(raw: string | null | undefined): string {
+  if (!raw) return "—";
+  const n = parseFloat(raw);
+  if (Number.isNaN(n)) return raw;
+  if (n === 0) return "$0";
+  if (n >= 0.01) return `$${n.toFixed(2)}`;
+  if (n >= 0.001) return `$${n.toFixed(3)}`;
+  return `$${n.toFixed(4)}`;
 }
 
 function ModelRow({
@@ -262,10 +300,13 @@ function ModelRow({
   let pricingStr: string;
   let pricingColor: string;
   if (model.pricing?.input_price_per_1k) {
-    pricingStr = `$${model.pricing.input_price_per_1k}/$${model.pricing.output_price_per_1k ?? "—"}`;
+    pricingStr = `${formatPrice(model.pricing.input_price_per_1k)} / ${formatPrice(model.pricing.output_price_per_1k)}`;
+    pricingColor = "var(--cv4-text-secondary)";
+  } else if (model.pricing?.price_per_image) {
+    pricingStr = `${formatPrice(model.pricing.price_per_image)}/img`;
     pricingColor = "var(--cv4-text-secondary)";
   } else {
-    pricingStr = "未定价";
+    pricingStr = "Unpriced";
     pricingColor = "var(--cv4-text-muted)";
   }
 
@@ -274,74 +315,94 @@ function ModelRow({
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "3fr 1fr 1fr 2fr 44px",
         alignItems: "center",
-        height: 40,
+        minHeight: 44,
         borderBottom: "1px solid var(--cv4-border-subtle)",
         background: hover ? "var(--cv4-hover-highlight)" : "transparent",
         transition: "background 100ms",
-        padding: "0 4px",
+        padding: "4px 4px",
+        gap: 12,
       }}
     >
+      {/* Name: display_name + model_name */}
+      <div style={{ minWidth: 0, overflow: "hidden" }}>
+        <div
+          style={{
+            fontSize: 12,
+            fontFamily: "Space Grotesk, sans-serif",
+            fontWeight: 700,
+            color: "var(--cv4-text-primary)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {model.display_name || model.model_name}
+        </div>
+        <div
+          style={{
+            fontSize: 11,
+            fontFamily: "Space Grotesk, monospace",
+            fontWeight: 400,
+            color: "var(--cv4-text-muted)",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            marginTop: 1,
+          }}
+        >
+          {model.model_name}
+        </div>
+      </div>
+      {/* Type */}
       <span
         style={{
-          flex: 1,
-          fontSize: 12,
-          fontFamily: "Space Grotesk, sans-serif",
-          fontWeight: 700,
-          color: "var(--cv4-text-primary)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {model.display_name || model.model_name}
-      </span>
-      <span
-        style={{
-          width: 64,
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: "Manrope, sans-serif",
           fontWeight: 400,
           color: "var(--cv4-text-muted)",
           textAlign: "center",
-          flexShrink: 0,
         }}
       >
         {model.model_type === "llm" ? "LLM" : model.model_type === "image" ? "Image" : model.model_type}
       </span>
+      {/* Context */}
       <span
         style={{
-          width: 80,
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: "Space Grotesk, sans-serif",
           fontWeight: 400,
           color: "var(--cv4-text-muted)",
           textAlign: "center",
-          flexShrink: 0,
         }}
       >
         {contextStr}
       </span>
+      {/* Pricing */}
       <span
         style={{
-          width: 100,
-          fontSize: 12,
+          fontSize: 11,
           fontFamily: "Space Grotesk, sans-serif",
           fontWeight: 400,
           color: pricingColor,
-          textAlign: "center",
-          flexShrink: 0,
+          textAlign: "right",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
         }}
+        title={pricingStr}
       >
         {pricingStr}
       </span>
-      <span style={{ width: 48, display: "flex", justifyContent: "center", flexShrink: 0 }}>
+      {/* Toggle */}
+      <span style={{ display: "flex", justifyContent: "center" }}>
         <button
           type="button"
           role="switch"
           aria-checked={model.is_enabled}
-          aria-label={`切换模型 ${model.display_name || model.model_name}`}
+          aria-label={`Toggle model ${model.display_name || model.model_name}`}
           onClick={(e) => {
             e.stopPropagation();
             if (!isToggling) onToggle(!model.is_enabled);

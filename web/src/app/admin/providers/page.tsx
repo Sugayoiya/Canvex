@@ -54,14 +54,14 @@ export default function AdminProvidersPage() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "providers"] });
       toast.success(
-        `已更新 Provider: ${(variables as Record<string, unknown>).display_name ?? ""}`
+        `Provider updated: ${(variables as Record<string, unknown>).display_name ?? ""}`
       );
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`更新 Provider 失败: ${msg}`);
+      toast.error(`Failed to update provider: ${msg}`);
     },
   });
 
@@ -74,14 +74,14 @@ export default function AdminProvidersPage() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin", "providers"] });
       toast.success(
-        `已添加 API Key: ${variables.label || "new key"}`
+        `API Key added: ${variables.label || "new key"}`
       );
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`添加 API Key 失败: ${msg}`);
+      toast.error(`Failed to add API Key: ${msg}`);
     },
   });
 
@@ -91,7 +91,7 @@ export default function AdminProvidersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "providers"] });
       toast.success(
-        `已撤销 API Key: ${revokeModal.keyLabel || "key"}`
+        `API Key revoked: ${revokeModal.keyLabel || "key"}`
       );
       setRevokeModal({
         isOpen: false,
@@ -105,7 +105,7 @@ export default function AdminProvidersPage() {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`撤销 API Key 失败: ${msg}`);
+      toast.error(`Failed to revoke API Key: ${msg}`);
     },
   });
 
@@ -126,15 +126,15 @@ export default function AdminProvidersPage() {
       });
       toast.success(
         vars.isActive
-          ? `已启用 API Key: ${vars.keyLabel || "key"}`
-          : `已禁用 API Key: ${vars.keyLabel || "key"}`,
+          ? `API Key enabled: ${vars.keyLabel || "key"}`
+          : `API Key disabled: ${vars.keyLabel || "key"}`,
       );
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`切换 Key 状态失败: ${msg}`);
+      toast.error(`Failed to toggle key: ${msg}`);
     },
   });
 
@@ -152,13 +152,13 @@ export default function AdminProvidersPage() {
       queryClient.invalidateQueries({
         queryKey: ["admin", "provider-health", vars.providerId],
       });
-      toast.success(`已重置 Key 错误计数: ${vars.keyLabel || "key"}`);
+      toast.success(`Key errors reset: ${vars.keyLabel || "key"}`);
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`重置错误计数失败: ${msg}`);
+      toast.error(`Failed to reset errors: ${msg}`);
     },
   });
 
@@ -295,7 +295,7 @@ export default function AdminProvidersPage() {
               margin: 0,
             }}
           >
-            加载 Provider 列表失败
+            Failed to load providers
           </p>
           <p
             style={{
@@ -306,7 +306,7 @@ export default function AdminProvidersPage() {
               margin: "8px 0 16px",
             }}
           >
-            请刷新页面重试
+            Please refresh and try again
           </p>
           <button
             type="button"
@@ -324,7 +324,7 @@ export default function AdminProvidersPage() {
               cursor: "pointer",
             }}
           >
-            重新加载
+            Reload
           </button>
         </div>
       ) : providerList.length === 0 ? (
@@ -368,15 +368,15 @@ export default function AdminProvidersPage() {
               margin: "8px 0 0",
             }}
           >
-            系统尚未预设任何 Provider。
+            No preset providers found.
           </p>
         </div>
       ) : (
         <div>
-          <GroupHeader label="已配置" count={configuredProviders.length} first />
+          <GroupHeader label="Configured" count={configuredProviders.length} first />
           {configuredProviders.map(renderProviderCard)}
 
-          <GroupHeader label="待配置" count={pendingProviders.length} />
+          <GroupHeader label="Unconfigured" count={pendingProviders.length} />
           {pendingProviders.map(renderProviderCard)}
         </div>
       )}
@@ -407,15 +407,15 @@ export default function AdminProvidersPage() {
             keyId: revokeModal.keyId,
           })
         }
-        title="撤销密钥"
+        title="Revoke Key"
         body={
           <>
-            撤销 API Key{" "}
+            Revoke API Key{" "}
             <strong>{revokeModal.keyLabel || "Untitled"}</strong> (sk-••••
-            {revokeModal.keyHint || "????"})？密钥将被永久删除。
+            {revokeModal.keyHint || "????"})? This key will be permanently deleted.
           </>
         }
-        confirmLabel="撤销密钥"
+        confirmLabel="Revoke"
         confirmVariant="destructive"
         icon={<Key size={20} />}
         isLoading={revokeKeyMutation.isPending}
@@ -457,7 +457,7 @@ function PageHeader() {
             margin: "4px 0 0",
           }}
         >
-          系统级 Provider 配置和模型管理
+          System-level provider configuration & model management
         </p>
       </div>
     </div>

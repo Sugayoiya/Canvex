@@ -81,14 +81,14 @@ export function ProviderFormModal({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "providers"] });
-      toast.success("已添加 API Key");
+      toast.success("API Key added");
       onClose();
     },
     onError: (err: unknown) => {
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data
           ?.detail ?? "Unknown error";
-      toast.error(`保存配置失败: ${msg}`);
+      toast.error(`Failed to save config: ${msg}`);
     },
   });
 
@@ -96,11 +96,11 @@ export function ProviderFormModal({
 
   const handleSubmit = () => {
     if (!apiKey.trim()) {
-      setValidationError("API Key 不能为空");
+      setValidationError("API Key is required");
       return;
     }
     if (showBaseUrl && baseUrl.trim() && !baseUrl.trim().startsWith("https://")) {
-      setValidationError("Base URL 必须以 https:// 开头");
+      setValidationError("Base URL must start with https://");
       return;
     }
     setValidationError(null);
@@ -175,24 +175,31 @@ export function ProviderFormModal({
             lineHeight: 1.3,
           }}
         >
-          配置 {provider.display_name}
+          Configure {provider.display_name}
         </h2>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}>
+        <form autoComplete="off" onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} style={{ display: "flex", flexDirection: "column", gap: 16, marginTop: 20 }}>
           <div>
             <label style={labelStyle}>API Key</label>
             <input
-              type="password"
+              type="text"
+              autoComplete="one-time-code"
+              data-1p-ignore
+              data-lpignore="true"
+              data-form-type="other"
               value={apiKey}
               onChange={(e) => { setApiKey(e.target.value); setValidationError(null); }}
               placeholder="Enter API Key"
-              style={inputStyle}
+              style={{
+                ...inputStyle,
+                WebkitTextSecurity: "disc" as unknown as string,
+              }}
             />
           </div>
 
           {showBaseUrl && (
             <div>
-              <label style={labelStyle}>Base URL (可选)</label>
+              <label style={labelStyle}>Base URL (optional)</label>
               <input
                 type="text"
                 value={baseUrl}
@@ -209,7 +216,7 @@ export function ProviderFormModal({
                   marginTop: 4,
                   display: "block",
                 }}>
-                  默认: {provider.default_base_url}
+                  Default: {provider.default_base_url}
                 </span>
               )}
             </div>
@@ -225,51 +232,50 @@ export function ProviderFormModal({
               {validationError}
             </div>
           )}
-        </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 24 }}>
-          <button
-            ref={cancelRef}
-            type="button"
-            onClick={onClose}
-            style={{
-              height: 36,
-              padding: "0 16px",
-              borderRadius: 8,
-              border: "1px solid var(--cv4-btn-secondary-border)",
-              background: "var(--cv4-btn-secondary)",
-              color: "var(--cv4-btn-secondary-text)",
-              fontFamily: "Manrope, sans-serif",
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            取消
-          </button>
-          <button
-            ref={confirmRef}
-            type="button"
-            onClick={handleSubmit}
-            disabled={isLoading || !apiKey.trim()}
-            style={{
-              height: 36,
-              padding: "0 16px",
-              borderRadius: 8,
-              border: "none",
-              background: "var(--cv4-btn-primary)",
-              color: "var(--cv4-btn-primary-text)",
-              fontFamily: "Manrope, sans-serif",
-              fontSize: 12,
-              fontWeight: 700,
-              cursor: isLoading ? "not-allowed" : "pointer",
-              opacity: isLoading ? 0.7 : 1,
-              pointerEvents: isLoading ? "none" : "auto",
-            }}
-          >
-            {isLoading ? "..." : "保存配置"}
-          </button>
-        </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 8 }}>
+            <button
+              ref={cancelRef}
+              type="button"
+              onClick={onClose}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                borderRadius: 8,
+                border: "1px solid var(--cv4-btn-secondary-border)",
+                background: "var(--cv4-btn-secondary)",
+                color: "var(--cv4-btn-secondary-text)",
+                fontFamily: "Manrope, sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              ref={confirmRef}
+              type="submit"
+              disabled={isLoading || !apiKey.trim()}
+              style={{
+                height: 36,
+                padding: "0 16px",
+                borderRadius: 8,
+                border: "none",
+                background: "var(--cv4-btn-primary)",
+                color: "var(--cv4-btn-primary-text)",
+                fontFamily: "Manrope, sans-serif",
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: isLoading ? "not-allowed" : "pointer",
+                opacity: isLoading ? 0.7 : 1,
+                pointerEvents: isLoading ? "none" : "auto",
+              }}
+            >
+              {isLoading ? "..." : "Save"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>,
     document.body
