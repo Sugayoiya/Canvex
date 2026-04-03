@@ -314,6 +314,10 @@ export const teamsApi = {
     api.patch(`/teams/${teamId}/groups/${groupId}/members/${memberId}`, data),
   removeGroupMember: (teamId: string, groupId: string, memberId: string) =>
     api.delete(`/teams/${teamId}/groups/${groupId}/members/${memberId}`),
+  getSettings: (teamId: string) =>
+    api.get<{ settings: Record<string, string> }>(`/teams/${teamId}/settings`),
+  updateSettings: (teamId: string, data: { default_llm_model?: string; default_image_model?: string }) =>
+    api.patch(`/teams/${teamId}/settings`, data),
 };
 
 export const projectsApi = {
@@ -334,6 +338,10 @@ export const usersApi = {
   profile: () => api.get("/users/me"),
   updateProfile: (data: { nickname?: string; avatar?: string }) =>
     api.patch("/users/me", data),
+  getSettings: () =>
+    api.get<{ settings: Record<string, string> }>("/users/me/settings"),
+  updateSettings: (data: { default_llm_model?: string; default_image_model?: string }) =>
+    api.patch("/users/me/settings", data),
 };
 
 export const aiProvidersApi = {
@@ -478,6 +486,31 @@ export const quotaApi = {
     teamId: string,
     data: { monthly_credit_limit?: number | null; daily_call_limit?: number | null },
   ) => api.put(`/quota/team/${teamId}`, data),
+};
+
+export interface AvailableModel {
+  model_name: string;
+  display_name: string;
+  model_type: "llm" | "image";
+  provider_name: string;
+  features: string[];
+  input_price_per_1k: string | null;
+  output_price_per_1k: string | null;
+  price_per_image: string | null;
+}
+
+export interface AvailableModelsResponse {
+  llm: AvailableModel[];
+  image: AvailableModel[];
+}
+
+export const modelsApi = {
+  getAvailable: () =>
+    api.get<AvailableModelsResponse>("/models/available"),
+  getSystemDefaults: () =>
+    api.get<{ settings: { default_llm_model?: string; default_image_model?: string } }>("/models/system-defaults"),
+  updateSystemDefaults: (data: { default_llm_model?: string; default_image_model?: string }) =>
+    api.patch("/models/system-defaults", data),
 };
 
 export default api;

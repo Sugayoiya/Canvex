@@ -8,10 +8,13 @@ interface CanvasAppState {
   focusedNodeId: string | null;
   focusedNodeType: string | null;
   focusedNodeHasContent: boolean;
+  nodeModelSelections: Record<string, string>;
   setCanvas: (canvasId: string, projectId: string) => void;
   setSaving: (saving: boolean) => void;
   setFocusedNode: (nodeId: string | null, nodeType?: string | null, hasContent?: boolean) => void;
   clearFocus: () => void;
+  setNodeModel: (nodeId: string, modelName: string) => void;
+  clearNodeModels: () => void;
   reset: () => void;
 }
 
@@ -23,6 +26,7 @@ export const useCanvasStore = create<CanvasAppState>((set) => ({
   focusedNodeId: null,
   focusedNodeType: null,
   focusedNodeHasContent: false,
+  nodeModelSelections: {},
   setCanvas: (canvasId, projectId) => set({ canvasId, projectId }),
   setSaving: (saving) =>
     set({ isSaving: saving, ...(saving ? {} : { lastSaved: new Date() }) }),
@@ -30,9 +34,13 @@ export const useCanvasStore = create<CanvasAppState>((set) => ({
     set({ focusedNodeId: nodeId, focusedNodeType: nodeType, focusedNodeHasContent: hasContent }),
   clearFocus: () =>
     set({ focusedNodeId: null, focusedNodeType: null, focusedNodeHasContent: false }),
+  setNodeModel: (nodeId, modelName) =>
+    set((s) => ({ nodeModelSelections: { ...s.nodeModelSelections, [nodeId]: modelName } })),
+  clearNodeModels: () => set({ nodeModelSelections: {} }),
   reset: () =>
     set({
       canvasId: null, projectId: null, isSaving: false, lastSaved: null,
       focusedNodeId: null, focusedNodeType: null, focusedNodeHasContent: false,
+      nodeModelSelections: {},
     }),
 }));
