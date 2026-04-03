@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import {
   useQuery,
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Settings, Key } from "lucide-react";
-import { aiProvidersApi } from "@/lib/api";
+import { Settings, Key, Info } from "lucide-react";
+import { aiProvidersApi, modelsApi } from "@/lib/api";
+import { ModelSelector } from "@/components/common/model-selector";
 import { ProviderCard } from "@/components/admin/provider-card";
 import type { Provider } from "@/components/admin/provider-card";
 import { ProviderFormModal } from "@/components/admin/provider-form-modal";
@@ -169,6 +170,27 @@ export default function AdminProvidersPage() {
     toggleKeyMutation.isPending ||
     resetErrorsMutation.isPending;
 
+  const { data: systemDefaults } = useQuery({
+    queryKey: ["system-defaults"],
+    queryFn: () => modelsApi.getSystemDefaults().then((r) => r.data?.settings ?? {}),
+  });
+
+  const updateSystemMutation = useMutation({
+    mutationFn: (data: { default_llm_model?: string; default_image_model?: string }) =>
+      modelsApi.updateSystemDefaults(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["system-defaults"] });
+      toast.success("System defaults updated");
+    },
+  });
+
+  const updateSystemDefault = useCallback(
+    (key: string, value: string) => {
+      updateSystemMutation.mutate({ [key]: value });
+    },
+    [updateSystemMutation],
+  );
+
   const providerList = providers ?? [];
   const configuredProviders = providerList.filter(
     (p: Provider) => p.active_key_count > 0 && p.is_enabled
@@ -255,6 +277,83 @@ export default function AdminProvidersPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <PageHeader />
+
+      {/* System default models */}
+      <div
+        style={{
+          background: "var(--cv4-surface-primary)",
+          border: "1px solid var(--cv4-border-subtle)",
+          borderRadius: 12,
+          padding: "16px 20px",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "Manrope, sans-serif",
+            fontSize: 12,
+            fontWeight: 700,
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+            color: "var(--cv4-text-muted)",
+            marginBottom: 12,
+          }}
+        >
+          System Default Models
+        </div>
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 200px" }}>
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 12,
+                color: "var(--cv4-text-muted)",
+                marginBottom: 8,
+              }}
+            >
+              LLM Model
+            </div>
+            <ModelSelector
+              value={systemDefaults?.default_llm_model ?? null}
+              onChange={(name) => updateSystemDefault("default_llm_model", name)}
+              modelType="llm"
+              size="md"
+            />
+          </div>
+          <div style={{ flex: "1 1 200px" }}>
+            <div
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 12,
+                color: "var(--cv4-text-muted)",
+                marginBottom: 8,
+              }}
+            >
+              Image Model
+            </div>
+            <ModelSelector
+              value={systemDefaults?.default_image_model ?? null}
+              onChange={(name) => updateSystemDefault("default_image_model", name)}
+              modelType="image"
+              size="md"
+            />
+          </div>
+        </div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            marginTop: 12,
+            fontFamily: "var(--font-body)",
+            fontSize: 12,
+            color: "var(--cv4-text-muted)",
+            opacity: 0.7,
+          }}
+        >
+          <Info size={12} />
+          Final fallback for all users when no project/personal/team default is set
+        </div>
+      </div>
 
       <AdminErrorBoundary>
       {isLoading ? (
