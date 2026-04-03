@@ -1,8 +1,8 @@
 """E2E tests for skill and canvas API endpoints.
 
-Post-Phase 12.1: Only 4 skills remain in SkillRegistry (canvas_ops, asset,
-visual.generate_image, video.generate_video). Reasoning skills now live in
-SKILL.md and are loaded by SkillLoader for the LangChain agent.
+Post-Phase 13: all remaining SkillRegistry handlers are deprecated.
+Reasoning skills live in SKILL.md and are loaded by SkillLoader for the
+LangChain agent.
 """
 import uuid
 
@@ -27,10 +27,7 @@ async def test_skill_list_endpoint(async_client):
     assert resp.status_code == 200
     skills = resp.json()
     assert isinstance(skills, list)
-    assert len(skills) >= 3
-    names = [s["name"] for s in skills]
-    assert "visual.generate_image" in names
-    assert "canvas.get_state" in names
+    assert skills == []
 
 
 @pytest.mark.asyncio
@@ -40,7 +37,7 @@ async def test_skill_tool_definitions(async_client):
     assert resp.status_code == 200
     tools = resp.json()
     assert isinstance(tools, list)
-    assert len(tools) >= 3
+    assert tools == []
 
 
 @pytest.mark.asyncio
@@ -72,8 +69,7 @@ async def test_canvas_to_skill_flow(async_client):
     skills_resp = await async_client.get("/api/v1/skills/")
     assert skills_resp.status_code == 200
     skills = skills_resp.json()
-    skill_names = [s["name"] for s in skills]
-    assert "canvas.get_state" in skill_names, "Canvas state skill should be registered"
+    assert skills == []
 
 
 @pytest.mark.asyncio

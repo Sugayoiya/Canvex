@@ -1,19 +1,30 @@
 """Skill loader — three-level progressive disclosure for Anthropic SKILL.md directories."""
 import logging
 import threading
-import yaml
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import NamedTuple
+
+import yaml
 
 logger = logging.getLogger(__name__)
 
 MAX_PIPELINE_DEPTH = 3
 
 
-class SkillMeta(NamedTuple):
+@dataclass
+class SkillMeta:
     name: str
     description: str
     path: Path
+    skill_kind: str = ""
+    require_prior_kind: list[str] = field(default_factory=list)
+    default_require_prior_kind: list[str] = field(default_factory=list)
+    supports_skip: bool = False
+    skill_tier: str = "capability"
+    is_read_only: bool = False
+    is_destructive: bool = False
+    timeout: int = 120
+    max_result_size_chars: int = 50000
 
 
 class SkillLoader:
@@ -96,7 +107,13 @@ class SkillLoader:
                 "使用 `read_skill(name)` 获取技能详细指令后再执行。\n",
             ]
             for m in self._metadata.values():
-                lines.append(f"- **{m.name}**: {m.description}")
+                safety = ""
+                if m.is_read_only:
+                    safety += " [只读]"
+                if m.is_destructive:
+                    safety += " [⚠️ 破坏性操作]"
+                tier_label = f" [{m.skill_tier}]" if m.skill_tier != "capability" else ""
+                lines.append(f"- **{m.name}**{tier_label}: {m.description}{safety}")
             return "\n".join(lines)
 
     def read_skill(self, name: str) -> str:
@@ -148,4 +165,13 @@ class SkillLoader:
             name=fm["name"],
             description=description,
             path=path.parent,
+            skill_kind=str(fm.get("skill_kind", "")),
+            require_prior_kind=list(fm.get("require_prior_kind") or []),
+            default_require_prior_kind=list(fm.get("default_require_prior_kind") or []),
+            supports_skip=bool(fm.get("supports_skip", False)),
+            skill_tier=str(fm.get("skill_tier", "capability")),
+            is_read_only=bool(fm.get("is_read_only", False)),
+            is_destructive=bool(fm.get("is_destructive", False)),
+            timeout=int(fm.get("timeout", 120)),
+            max_result_size_chars=int(fm.get("max_result_size_chars", 50000)),
         )
