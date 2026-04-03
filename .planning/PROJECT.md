@@ -78,7 +78,7 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 
 ## Constraints
 
-- **Architecture**: SkillRegistry + Celery remains the core invocation path.
+- **Architecture**: Agent Chat uses LangChain + FastAPI async SSE as the primary AI invocation path. SkillRegistry + Celery retained for long-running AI tasks (generate_image, generate_video — PIPE-05, Phase 14) and future skill expansion. Celery provides retry, persistence, and concurrency control for tasks >10s.
 - **Database**: PostgreSQL only — SQLite support dropped. Redis required (Celery + key health cache).
 - **UI consistency**: All pages must use Obsidian Lens design system (--ob-* tokens).
 - **Permission isolation**: Admin routes `require_admin`-guarded; frontend hides admin UI for non-admins.

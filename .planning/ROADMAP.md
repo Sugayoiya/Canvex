@@ -177,15 +177,16 @@ Plans:
 - [ ] 13-03-PLAN.md — Gap closure: safety metadata correction (4 read-only + 1 destructive SKILL.md) + runtime prompt assertion test
 
 ### Phase 14: ArtifactStore + ToolInterceptor
-**Goal**: Session-scoped artifact persistence with automatic injection/persistence hooks replaces inline data passing between tool calls
+**Goal**: Session-scoped artifact persistence with automatic injection/persistence hooks replaces inline data passing between tool calls; long-running AI tools offloaded to Celery for retry/persistence/concurrency guarantees
 **Depends on**: Phase 13 (ToolInterceptor rules declared in enhanced SkillDescriptor metadata)
-**Requirements**: ARTS-01, ARTS-02, ARTS-03, ARTS-04, ARTS-05, ARTS-06, PIPE-03
+**Requirements**: ARTS-01, ARTS-02, ARTS-03, ARTS-04, ARTS-05, ARTS-06, PIPE-03, PIPE-05
 **Success Criteria** (what must be TRUE):
   1. Skill execution results persist to ArtifactStore (PostgreSQL agent_artifacts table) keyed by session_id + skill_name, with structured metadata (artifact_id, skill_kind, summary, timestamp)
   2. ToolInterceptor before-hook auto-injects upstream dependency artifacts into skill parameters based on SkillDescriptor declarations
   3. ToolInterceptor after-hook auto-persists skill results to ArtifactStore without explicit handler code
   4. Agent no longer passes large JSON blobs between tool calls — data flows through artifact references
   5. Pipeline chain passes results through ArtifactStore references instead of _chain_params hard-coding
+  6. generate_image and generate_video @tools submit work to Celery queue via apply_async(), poll with exponential backoff inside the tool, and return the result to the Agent loop — providing automatic retry (max_retries=2), task persistence (acks_late), and worker-level concurrency control
 **Plans**: TBD
 
 ### Phase 15: QueryEngine + Cost Tracking
