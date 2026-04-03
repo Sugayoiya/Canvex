@@ -52,12 +52,12 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 
 ### SkillDescriptor Enhancement
 
-- [ ] **DESC-01**: SkillDescriptor supports `skill_kind` field (artifact category: "script", "storyboard", "character", etc.)
-- [ ] **DESC-02**: SkillDescriptor supports `require_prior_kind` field (list of upstream artifact dependencies for auto mode)
-- [ ] **DESC-03**: SkillDescriptor supports `default_require_prior_kind` field (dependencies for default/skip mode)
-- [ ] **DESC-04**: SkillDescriptor supports `supports_skip` boolean (whether skill can be skipped by user)
-- [ ] **DESC-05**: SkillDescriptor supports Claude Code-style metadata: `is_read_only`, `is_destructive`, `timeout`, `max_result_size_chars`
-- [ ] **DESC-06**: SkillDescriptor supports `skill_tier` field with 3-tier classification: workflow / capability / meta
+- [x] **DESC-01**: SkillDescriptor supports `skill_kind` field (artifact category: "script", "storyboard", "character", etc.)
+- [x] **DESC-02**: SkillDescriptor supports `require_prior_kind` field (list of upstream artifact dependencies for auto mode)
+- [x] **DESC-03**: SkillDescriptor supports `default_require_prior_kind` field (dependencies for default/skip mode)
+- [x] **DESC-04**: SkillDescriptor supports `supports_skip` boolean (whether skill can be skipped by user)
+- [x] **DESC-05**: SkillDescriptor supports Claude Code-style metadata: `is_read_only`, `is_destructive`, `timeout`, `max_result_size_chars`
+- [x] **DESC-06**: SkillDescriptor supports `skill_tier` field with 3-tier classification: workflow / capability / meta
 - [ ] **DESC-07**: Existing 14 skills annotated with new descriptor fields (backward-compatible defaults for missing fields)
 - [ ] **DESC-08**: SkillToolset dynamically filters skills exposed to Agent based on session context (max ~10 tools per context)
 
@@ -143,12 +143,12 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | PROV-05 | Phase 12.2 | Complete |
 | PROV-06 | Phase 12.2 | Complete |
 | PROV-07 | Phase 12.2 | Complete |
-| DESC-01 | Phase 13 | Pending |
-| DESC-02 | Phase 13 | Pending |
-| DESC-03 | Phase 13 | Pending |
-| DESC-04 | Phase 13 | Pending |
-| DESC-05 | Phase 13 | Pending |
-| DESC-06 | Phase 13 | Pending |
+| DESC-01 | Phase 13 | Complete |
+| DESC-02 | Phase 13 | Complete |
+| DESC-03 | Phase 13 | Complete |
+| DESC-04 | Phase 13 | Complete |
+| DESC-05 | Phase 13 | Complete |
+| DESC-06 | Phase 13 | Complete |
 | DESC-07 | Phase 13 | Pending |
 | DESC-08 | Phase 13 | Pending |
 | PIPE-01 | Phase 13 | Pending |

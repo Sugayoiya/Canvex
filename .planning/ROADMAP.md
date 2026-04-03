@@ -172,7 +172,7 @@ Canonical refs:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — SkillDescriptor extension (9 new fields) + SkillMeta upgrade + SkillLoader enhanced parsing + 4 handler deprecation + tests
+- [x] 13-01-PLAN.md — SkillDescriptor extension (9 new fields) + SkillMeta upgrade + SkillLoader enhanced parsing + 4 handler deprecation + tests
 - [ ] 13-02-PLAN.md — 10 SKILL.md annotation + TOOL_METADATA for 17 @tools + metadata-driven tool filtering refactor + tests
 
 ### Phase 14: ArtifactStore + ToolInterceptor
@@ -235,7 +235,7 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | **12.1. Agent-First (INSERTED)** | **v3.0** | **5/5** | **Complete** | **2026-04-02** |
 | **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
 | **12.3. Model Selection (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
-| 13. Descriptor + Pipeline | v3.0 | 0/TBD | Not started | - |
+| 13. Descriptor + Pipeline | v3.0 | 1/2 | In Progress|  |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
 | 16. Admin Skills | v3.0 | 0/TBD | Not started | - |
