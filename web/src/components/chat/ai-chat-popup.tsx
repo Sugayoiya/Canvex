@@ -7,6 +7,7 @@ import { useAgentChat } from "@/hooks/use-agent-chat";
 import { ChatSessionList } from "./chat-session-list";
 import { ToolCallDisplay } from "./tool-call-display";
 import { ThinkingIndicator } from "./thinking-indicator";
+import { ModelSelector } from "@/components/common/model-selector";
 
 interface AIChatPopupProps {
   projectId: string;
@@ -62,6 +63,8 @@ export function AIChatPopup({ projectId, canvasId }: AIChatPopupProps) {
   const messages = useChatStore((s) => s.messages);
   const isStreaming = useChatStore((s) => s.isStreaming);
   const thinkingText = useChatStore((s) => s.thinkingText);
+  const selectedModelName = useChatStore((s) => s.selectedModelName);
+  const setSelectedModel = useChatStore((s) => s.setSelectedModel);
   const { sendMessage, abort } = useAgentChat();
 
   const [minimized, setMinimized] = useState(false);
@@ -403,75 +406,88 @@ export function AIChatPopup({ projectId, canvasId }: AIChatPopupProps) {
                 }}
               />
 
-              {/* Mic button */}
-              <button
+              {/* Bottom bar: ModelSelector + Mic + Send */}
+              <div
                 style={{
                   position: "absolute",
-                  right: 42,
-                  bottom: 8,
-                  width: 28,
-                  height: 28,
-                  borderRadius: 7,
-                  background: "var(--cv4-surface-secondary)",
-                  border: "none",
+                  left: 8,
+                  right: 8,
+                  bottom: 6,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
+                  gap: 6,
                 }}
-                aria-label="语音输入"
               >
-                <Mic size={14} style={{ color: "var(--cv4-text-disabled)" }} />
-              </button>
-
-              {/* Send / Stop button */}
-              {isStreaming ? (
+                <ModelSelector
+                  value={selectedModelName}
+                  onChange={setSelectedModel}
+                  modelType="all"
+                  requiredFeatures={["llm", "image"]}
+                  size="sm"
+                  disabled={isStreaming}
+                />
+                <span style={{ flex: 1 }} />
                 <button
-                  onClick={abort}
                   style={{
-                    position: "absolute",
-                    right: 8,
-                    bottom: 8,
                     width: 28,
                     height: 28,
                     borderRadius: 7,
-                    background: "#EF4444",
+                    background: "var(--cv4-surface-secondary)",
                     border: "none",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
-                    boxShadow: "var(--cv4-shadow-sm)",
+                    flexShrink: 0,
                   }}
-                  aria-label="停止生成"
+                  aria-label="语音输入"
                 >
-                  <Square size={12} style={{ color: "#fff" }} />
+                  <Mic size={14} style={{ color: "var(--cv4-text-disabled)" }} />
                 </button>
-              ) : (
-                <button
-                  onClick={handleSend}
-                  disabled={!inputValue.trim()}
-                  style={{
-                    position: "absolute",
-                    right: 8,
-                    bottom: 8,
-                    width: 28,
-                    height: 28,
-                    borderRadius: 7,
-                    background: inputValue.trim() ? "var(--cv4-btn-primary)" : "var(--cv4-surface-secondary)",
-                    border: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: inputValue.trim() ? "pointer" : "not-allowed",
-                    boxShadow: inputValue.trim() ? "var(--cv4-shadow-sm)" : "none",
-                    transition: "background 120ms",
-                  }}
-                  aria-label="发送消息"
-                >
-                  <ArrowUp size={14} style={{ color: inputValue.trim() ? "var(--cv4-btn-primary-text)" : "var(--cv4-text-disabled)" }} />
-                </button>
-              )}
+                {isStreaming ? (
+                  <button
+                    onClick={abort}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 7,
+                      background: "#EF4444",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      boxShadow: "var(--cv4-shadow-sm)",
+                      flexShrink: 0,
+                    }}
+                    aria-label="停止生成"
+                  >
+                    <Square size={12} style={{ color: "#fff" }} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSend}
+                    disabled={!inputValue.trim()}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 7,
+                      background: inputValue.trim() ? "var(--cv4-btn-primary)" : "var(--cv4-surface-secondary)",
+                      border: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: inputValue.trim() ? "pointer" : "not-allowed",
+                      boxShadow: inputValue.trim() ? "var(--cv4-shadow-sm)" : "none",
+                      transition: "background 120ms",
+                      flexShrink: 0,
+                    }}
+                    aria-label="发送消息"
+                  >
+                    <ArrowUp size={14} style={{ color: inputValue.trim() ? "var(--cv4-btn-primary-text)" : "var(--cv4-text-disabled)" }} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </>

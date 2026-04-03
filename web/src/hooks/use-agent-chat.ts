@@ -67,9 +67,11 @@ export function useAgentChat() {
     if (!sessionId) {
       if (!projectId) return;
       try {
+        const { selectedModelName } = useChatStore.getState();
         const res = await agentApi.createSession({
           project_id: projectId,
           canvas_id: canvasId ?? undefined,
+          model_name: selectedModelName ?? undefined,
         });
         const newId = res.data?.id ?? res.data?.session_id;
         if (!newId) return;
@@ -109,7 +111,10 @@ export function useAgentChat() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ message: content.trim() }),
+          body: JSON.stringify({
+            message: content.trim(),
+            model_name: useChatStore.getState().selectedModelName ?? undefined,
+          }),
           signal: controller.signal,
 
           async onopen(response) {
@@ -189,10 +194,22 @@ export function useAgentChat() {
                 }
                 break;
 
-              case "done":
+              case "done": {
                 setThinkingText(null);
                 setStreaming(false);
+                const requestedModel = useChatStore.getState().selectedModelName;
+                const usedModel = data.used_model;
+                if (requestedModel && usedModel && usedModel !== requestedModel) {
+                  import("sonner").then(({ toast }) => {
+                    toast.info("模型已自动切换", {
+                      description: `${requestedModel} 不可用，已切换到 ${usedModel}`,
+                      duration: 4000,
+                    });
+                  });
+                  useChatStore.getState().setSelectedModel(usedModel);
+                }
                 break;
+              }
 
               case "error":
                 setThinkingText(null);
@@ -202,6 +219,14 @@ export function useAgentChat() {
                   content: `${data.message}`,
                   timestamp: Date.now(),
                 });
+                if (data.message?.includes("无可用模型") || data.message?.includes("No default")) {
+                  import("sonner").then(({ toast }) => {
+                    toast.error("无可用模型", {
+                      description: "请联系管理员配置 API Key",
+                      duration: 6000,
+                    });
+                  });
+                }
                 break;
 
               case "heartbeat":
