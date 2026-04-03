@@ -105,7 +105,13 @@ Plans:
   5. Provider 卡片内可展开模型列表，显示名称/类型/context_size/定价/启用状态
   6. 用户可手动添加自定义模型并关联到指定 Provider
   7. base_url 字段正确传递到 resolve_langchain_llm，支持 OpenAI 兼容类 Provider 自定义端点
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 12.2-01-PLAN.md — Backend data model extensions + PROVIDER_META + preset seed logic
+- [ ] 12.2-02-PLAN.md — resolve_langchain_llm DB-backed base_url + model CRUD endpoints + preset protection
+- [ ] 12.2-03-PLAN.md — Frontend restructure: ProviderIcon, group separation, simplified modal, model list
+
 **UI hint**: yes
 
 Canonical refs:
@@ -187,7 +193,7 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | 11. Dashboard/Polish | v2.1 | 4/4 | Complete | 2026-04-01 |
 | 12. AI Call Convergence | v3.0 | 4/4 | Complete | 2026-04-02 |
 | **12.1. Agent-First (INSERTED)** | **v3.0** | **5/5** | **Complete** | **2026-04-02** |
-| **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
+| **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 0/TBD | Not started | - |
 | 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
