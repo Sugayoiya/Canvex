@@ -5,13 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ChevronRight,
   ChevronDown,
-  Bot,
-  Pencil,
-  Trash2,
+  Settings,
   Lock,
 } from "lucide-react";
 import { aiProvidersApi } from "@/lib/api";
 import { UsageSparkline } from "./usage-sparkline";
+import { ProviderIcon } from "./provider-icon";
+import { ProviderModelList } from "./provider-model-list";
 
 export interface ProviderKey {
   id: string;
@@ -56,7 +56,6 @@ interface ProviderCardProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   onEdit: () => void;
-  onDelete?: () => void;
   onAddKey: (data: { api_key: string; label?: string }) => void;
   onRevokeKey: (keyId: string) => void;
   onToggleKey?: (keyId: string, isActive: boolean) => void;
@@ -294,7 +293,6 @@ export function ProviderCard({
   isExpanded,
   onToggleExpand,
   onEdit,
-  onDelete,
   onAddKey,
   onRevokeKey,
   onToggleKey,
@@ -308,7 +306,6 @@ export function ProviderCard({
   const [keyLabel, setKeyLabel] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [hoverEdit, setHoverEdit] = useState(false);
-  const [hoverDelete, setHoverDelete] = useState(false);
   const [hoverHeader, setHoverHeader] = useState(false);
   const [expandedKeyId, setExpandedKeyId] = useState<string | null>(null);
 
@@ -334,8 +331,10 @@ export function ProviderCard({
     setApiKey("");
   };
 
-  const statusText = provider.is_enabled ? "Active" : "Inactive";
-  const keyCountText = `${provider.key_count} key${provider.key_count !== 1 ? "s" : ""}`;
+  const isConfigured = provider.active_key_count > 0 && provider.is_enabled;
+  const statusText = isConfigured
+    ? `Active • ${provider.key_count} key${provider.key_count !== 1 ? "s" : ""}`
+    : "未配置";
   const Chevron = isExpanded ? ChevronDown : ChevronRight;
 
   const TABLE_HEADERS = [
@@ -387,10 +386,7 @@ export function ProviderCard({
           size={14}
           style={{ color: "var(--cv4-text-muted)", flexShrink: 0 }}
         />
-        <Bot
-          size={20}
-          style={{ color: "var(--cv4-text-secondary)", flexShrink: 0 }}
-        />
+        <ProviderIcon name={provider.provider_name} size={20} />
         <span
           style={{
             fontFamily: "Space Grotesk, sans-serif",
@@ -411,12 +407,12 @@ export function ProviderCard({
             lineHeight: 1.5,
           }}
         >
-          {statusText} • {keyCountText}
+          {statusText}
         </span>
         <span style={{ flex: 1 }} />
         <button
           type="button"
-          aria-label={`Edit ${provider.display_name}`}
+          aria-label={`配置 ${provider.provider_name}`}
           onClick={(e) => {
             e.stopPropagation();
             onEdit();
@@ -442,37 +438,7 @@ export function ProviderCard({
             padding: 0,
           }}
         >
-          <Pencil size={14} />
-        </button>
-        <button
-          type="button"
-          aria-label={`Delete ${provider.display_name}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete?.();
-          }}
-          onMouseEnter={() => setHoverDelete(true)}
-          onMouseLeave={() => setHoverDelete(false)}
-          disabled={disabled}
-          style={{
-            width: 32,
-            height: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: "none",
-            borderRadius: 6,
-            background: hoverDelete ? "#FFB4AB10" : "transparent",
-            color: hoverDelete
-              ? "var(--ob-error)"
-              : "var(--cv4-text-muted)",
-            cursor: disabled ? "not-allowed" : "pointer",
-            opacity: disabled ? 0.5 : 1,
-            transition: "background 100ms, color 100ms",
-            padding: 0,
-          }}
-        >
-          <Trash2 size={14} />
+          <Settings size={14} />
         </button>
       </div>
 
@@ -484,6 +450,20 @@ export function ProviderCard({
             borderTop: "1px solid var(--cv4-border-subtle)",
           }}
         >
+          {/* Description */}
+          {provider.description && (
+            <div
+              style={{
+                fontSize: 12,
+                fontFamily: "Manrope, sans-serif",
+                color: "var(--cv4-text-muted)",
+                padding: "8px 0 8px 22px",
+              }}
+            >
+              {provider.description}
+            </div>
+          )}
+
           {/* Key management table */}
           <table
             style={{ width: "100%", borderCollapse: "collapse", marginTop: 16 }}
@@ -660,6 +640,16 @@ export function ProviderCard({
                 {isAddingKey ? "..." : "Authorize Key"}
               </button>
             </div>
+          </div>
+
+          {/* Model list section */}
+          <div
+            style={{
+              borderTop: "1px solid var(--cv4-border-subtle)",
+              paddingTop: 16,
+            }}
+          >
+            <ProviderModelList providerId={provider.id} />
           </div>
         </div>
       )}
