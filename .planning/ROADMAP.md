@@ -187,7 +187,12 @@ Plans:
   4. Agent no longer passes large JSON blobs between tool calls — data flows through artifact references
   5. Pipeline chain passes results through ArtifactStore references instead of _chain_params hard-coding
   6. generate_image and generate_video @tools submit work to Celery queue via apply_async(), poll with exponential backoff inside the tool, and return the result to the Agent loop — providing automatic retry (max_retries=2), task persistence (acks_late), and worker-level concurrency control
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 14-01-PLAN.md — ArtifactStore data layer: AgentArtifact model + ArtifactStoreService CRUD + ToolContext session_id extension
+- [ ] 14-02-PLAN.md — Celery AI generation tasks: generate_image_task/generate_video_task + ai_tools.py Celery offload refactor
+- [ ] 14-03-PLAN.md — ToolInterceptor: before/after hooks + recursive backfill + get_all_tools() integration + system prompt update
 
 ### Phase 15: QueryEngine + Cost Tracking
 **Goal**: Agent loop has token budget controls, smart termination, plan-then-execute mode, and full cost visibility in both backend and frontend
@@ -238,6 +243,6 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
 | **12.3. Model Selection (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 3/3 | Complete | 2026-04-04 |
-| 14. ArtifactStore | v3.0 | 0/TBD | Not started | - |
+| 14. ArtifactStore | v3.0 | 0/3 | Planned | - |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
 | 16. Admin Skills | v3.0 | 0/TBD | Not started | - |
