@@ -32,10 +32,12 @@ celery_app.conf.update(
 
     task_routes={
         "app.tasks.skill_task.run_skill_task": {"queue": "ai_generation"},
+        "app.tasks.ai_generation_task.generate_image_task": {"queue": "ai_generation"},
+        "app.tasks.ai_generation_task.generate_video_task": {"queue": "media_processing"},
     },
 )
 
-celery_app.conf.include = ["app.tasks.skill_task", "app.tasks.health_sync"]
+celery_app.conf.include = ["app.tasks.skill_task", "app.tasks.health_sync", "app.tasks.ai_generation_task"]
 
 celery_app.conf.beat_schedule = {
     "sync-key-health": {
