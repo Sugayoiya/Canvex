@@ -243,6 +243,6 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
 | **12.3. Model Selection (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 3/3 | Complete | 2026-04-04 |
-| 14. ArtifactStore | v3.0 | 3/3 | Complete   | 2026-04-04 |
+| 14. ArtifactStore | v3.0 | 3/3 | Complete    | 2026-04-04 |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
 | 16. Admin Skills | v3.0 | 0/TBD | Not started | - |
