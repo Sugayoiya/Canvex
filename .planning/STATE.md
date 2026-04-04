@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
 status: executing
-stopped_at: Completed 14-01-PLAN.md
-last_updated: "2026-04-04T04:47:26.581Z"
+stopped_at: Completed 14-02-PLAN.md
+last_updated: "2026-04-04T04:49:09.106Z"
 last_activity: 2026-04-04
 progress:
   total_phases: 8
   completed_phases: 5
   total_plans: 23
-  completed_plans: 21
+  completed_plans: 22
   percent: 63
 ---
 
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 ## Current Position
 
 Phase: 14 (artifactstore-toolinterceptor) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-04-04
 
@@ -68,6 +68,7 @@ Progress: [██████░░░░] 63%
 | Phase 13 P02 | 7 min | 2 tasks | 17 files |
 | Phase 13 P03 | 2 min | 2 tasks | 6 files |
 | Phase 14 P01 | 2min | 2 tasks | 6 files |
+| Phase 14 P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,8 @@ Progress: [██████░░░░] 63%
 - [Phase 13]: Keep deprecated provider request fields as a fallback when model-to-provider mappings are unavailable for agent session or chat resolution.
 - [Phase 14]: JSONB payload column for flexible skill output schema; append-only artifacts per D-06
 - [Phase 14]: set_tool_context_obj() overload to avoid modifying existing set_tool_context signature
+- [Phase 14]: 110s image / 280s video provider timeout inside Celery tasks (buffer below 600s soft limit)
+- [Phase 14]: Exponential backoff polling in @tool: 1s→2s→4s→8s cap for non-blocking event loop
 
 ### Roadmap Evolution
 
@@ -126,6 +129,6 @@ Progress: [██████░░░░] 63%
 
 ## Session Continuity
 
-Last session: 2026-04-04T04:47:26.578Z
-Stopped at: Completed 14-01-PLAN.md
+Last session: 2026-04-04T04:49:09.103Z
+Stopped at: Completed 14-02-PLAN.md
 Resume file: None

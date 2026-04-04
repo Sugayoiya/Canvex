@@ -67,7 +67,7 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 - [ ] **PIPE-02**: Pipeline properly handles Celery async skills with poll loop (not treating async returns as sync results)
 - [ ] **PIPE-03**: Pipeline chain passes results through ArtifactStore instead of _chain_params hard-coding
 - [ ] **PIPE-04**: Pipeline reports per-step progress via SSE events
-- [ ] **PIPE-05**: Long-running AI @tools (generate_image, generate_video; >10s) offloaded to Celery async queue — @tool submits via apply_async(), polls with backoff, returns result to Agent loop; provides retry (max_retries=2), persistence (acks_late), and concurrency control (worker prefetch)
+- [x] **PIPE-05**: Long-running AI @tools (generate_image, generate_video; >10s) offloaded to Celery async queue — @tool submits via apply_async(), polls with backoff, returns result to Agent loop; provides retry (max_retries=2), persistence (acks_late), and concurrency control (worker prefetch)
 
 ### Provider & Model Preset Management
 
@@ -162,7 +162,7 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | ARTS-05 | Phase 14 | Pending |
 | ARTS-06 | Phase 14 | Complete |
 | PIPE-03 | Phase 14 | Pending |
-| PIPE-05 | Phase 14 | Pending |
+| PIPE-05 | Phase 14 | Complete |
 | QENG-01 | Phase 15 | Pending |
 | QENG-02 | Phase 15 | Pending |
 | QENG-03 | Phase 15 | Pending |
