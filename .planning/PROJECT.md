@@ -44,10 +44,11 @@ A single, reliable Skill execution backbone that both canvas nodes and AI agents
 - ✓ v3.0 Phase 12.1 Agent-First Architecture — LangChain 替代 PydanticAI，17 @tool 纯函数工具集，10 Anthropic SKILL.md 三级加载，多供应商 LLM 切换（Gemini/OpenAI/DeepSeek），LangGraph SSE 流式
 - ✓ v3.0 Phase 12.2 Provider & Model Preset Management — 系统预置 Provider/Model + 用户填 Key/BaseURL，ModelPricing 兼任关联表+定价表，Dify 风格模型列表嵌入 Provider 卡片
 - ✓ v3.0 Phase 12.3 Model Selection Feature — Available Models API, resolve_provider_for_model, 4 层 fallback 链, ModelSelector Pill+Popover 组件, Chat/Canvas 集成, 项目/个人/团队/系统默认模型配置
+- ✓ v3.0 Phase 13 SkillDescriptor Enhancement + Pipeline Fix — Skill 元数据增强（依赖声明/分类/安全标注），元数据驱动动态工具筛选
+- ✓ v3.0 Phase 14 ArtifactStore + ToolInterceptor — AgentArtifact JSONB 持久化，ArtifactStoreService CRUD，ToolInterceptor before/after hooks 自动注入/持久化，Celery AI 生成任务重构，40 个测试通过。Validated in Phase 14: artifactstore-toolinterceptor
 
 ### Active
 - [ ] QueryEngine——Token 预算、轮次限制、递减检测、"先计划再执行"模式
-- [ ] ArtifactStore + ToolInterceptor——会话级产物自动注入/持久化
 - [ ] SkillDescriptor 增强——依赖声明、mode 参数、三层分类
 - [ ] Admin 技能管理页面
 - [ ] 成本跟踪 + SSE 工具进度事件
