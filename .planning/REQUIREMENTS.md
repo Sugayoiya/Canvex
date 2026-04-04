@@ -43,12 +43,12 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 
 ### ArtifactStore + ToolInterceptor
 
-- [ ] **ARTS-01**: Session-scoped artifact store persists skill execution results (keyed by session_id + skill_name)
-- [ ] **ARTS-02**: Artifacts stored as structured data with metadata (artifact_id, skill_kind, summary, timestamp)
+- [x] **ARTS-01**: Session-scoped artifact store persists skill execution results (keyed by session_id + skill_name)
+- [x] **ARTS-02**: Artifacts stored as structured data with metadata (artifact_id, skill_kind, summary, timestamp)
 - [ ] **ARTS-03**: ToolInterceptor before-hook auto-injects upstream dependency artifacts into skill parameters
 - [ ] **ARTS-04**: ToolInterceptor after-hook auto-persists skill results to ArtifactStore
 - [ ] **ARTS-05**: Agent no longer needs to pass large JSON blobs between tool calls (interceptor handles data flow)
-- [ ] **ARTS-06**: ArtifactStore uses PostgreSQL/SQLAlchemy (agent_artifacts table), not file system
+- [x] **ARTS-06**: ArtifactStore uses PostgreSQL/SQLAlchemy (agent_artifacts table), not file system
 
 ### SkillDescriptor Enhancement
 
@@ -155,12 +155,12 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | PIPE-01 | Phase 13 | Pending |
 | PIPE-02 | Phase 13 | Pending |
 | PIPE-04 | Phase 13 | Pending |
-| ARTS-01 | Phase 14 | Pending |
-| ARTS-02 | Phase 14 | Pending |
+| ARTS-01 | Phase 14 | Complete |
+| ARTS-02 | Phase 14 | Complete |
 | ARTS-03 | Phase 14 | Pending |
 | ARTS-04 | Phase 14 | Pending |
 | ARTS-05 | Phase 14 | Pending |
-| ARTS-06 | Phase 14 | Pending |
+| ARTS-06 | Phase 14 | Complete |
 | PIPE-03 | Phase 14 | Pending |
 | PIPE-05 | Phase 14 | Pending |
 | QENG-01 | Phase 15 | Pending |

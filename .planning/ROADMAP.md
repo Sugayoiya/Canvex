@@ -190,7 +190,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — ArtifactStore data layer: AgentArtifact model + ArtifactStoreService CRUD + ToolContext session_id extension
+- [x] 14-01-PLAN.md — ArtifactStore data layer: AgentArtifact model + ArtifactStoreService CRUD + ToolContext session_id extension
 - [ ] 14-02-PLAN.md — Celery AI generation tasks: generate_image_task/generate_video_task + ai_tools.py Celery offload refactor
 - [ ] 14-03-PLAN.md — ToolInterceptor: before/after hooks + recursive backfill + get_all_tools() integration + system prompt update
 
@@ -243,6 +243,6 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
 | **12.3. Model Selection (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 3/3 | Complete | 2026-04-04 |
-| 14. ArtifactStore | v3.0 | 0/3 | Planned | - |
+| 14. ArtifactStore | v3.0 | 1/3 | In Progress|  |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
 | 16. Admin Skills | v3.0 | 0/TBD | Not started | - |
