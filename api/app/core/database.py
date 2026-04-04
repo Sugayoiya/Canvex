@@ -106,6 +106,7 @@ async def init_db():
     from app.models.ai_provider_config import AIProviderConfig, AIProviderKey, AIModelConfig  # noqa
     from app.models.admin_audit_log import AdminAuditLog  # noqa
     from app.models.system_setting import SystemSetting  # noqa
+    from app.models.agent_artifact import AgentArtifact  # noqa
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
