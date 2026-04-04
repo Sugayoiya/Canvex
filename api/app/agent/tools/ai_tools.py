@@ -1,14 +1,13 @@
 """AI tools — 2 LangChain @tool wrappers for image/video generation.
 
-Both tools use ProviderManager for credential resolution and KeyHealthManager
-for health reporting. 120s timeout via asyncio.wait_for.
+Both tools offload work to Celery tasks for retry, persistence, and concurrency
+control. In-tool polling with exponential backoff (per D-15).
 """
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
-import time
 
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
@@ -30,42 +29,45 @@ class GenerateVideoInput(BaseModel):
     model: str = Field(default="veo-2.0-generate-001", description="Veo model name")
 
 
+async def _poll_celery_result(async_result, *, timeout: float, tool_name: str) -> dict:
+    """Poll Celery AsyncResult with exponential backoff. Returns parsed result or error dict."""
+    delay = 1.0
+    elapsed = 0.0
+    while elapsed < timeout:
+        await asyncio.sleep(delay)
+        elapsed += delay
+        if async_result.ready():
+            break
+        delay = min(delay * 2, 8.0)
+
+    if not async_result.ready():
+        return {"error": f"{tool_name} 超时（{int(timeout)}秒），请稍后重试"}
+    if async_result.failed():
+        exc = async_result.result
+        return {"error": f"{tool_name} 失败: {str(exc)[:200]}"}
+    return async_result.result
+
+
 @tool(args_schema=GenerateImageInput)
 async def generate_image(prompt: str, aspect_ratio: str = "16:9", model: str = "imagen-4.0-generate-001") -> str:
-    """Generate an image using AI. Returns JSON with url and filename. Timeout: 120s."""
+    """Generate an image using AI. Offloads to Celery worker. Returns JSON with url and filename."""
     from app.agent.tool_context import get_tool_context
-    from app.services.ai.provider_manager import get_provider_manager
-    from app.services.ai.key_health import get_key_health_manager
+    from app.tasks.ai_generation_task import generate_image_task
 
     ctx = get_tool_context()
-    pm = get_provider_manager()
-
-    try:
-        provider, _owner, key_id = await pm.get_provider(
-            "gemini", team_id=ctx.team_id, user_id=ctx.user_id,
-        )
-    except ValueError as e:
-        return json.dumps({"error": f"Gemini 未配置: {e}"}, ensure_ascii=False)
-
-    start = time.monotonic()
-    try:
-        result = await asyncio.wait_for(
-            provider.generate_image(prompt, aspect_ratio=aspect_ratio, model=model),
-            timeout=120,
-        )
-        await get_key_health_manager().report_success(key_id)
-        return json.dumps(result, ensure_ascii=False)
-    except asyncio.TimeoutError:
-        await get_key_health_manager().report_error(key_id, "TimeoutError", "图片生成超时（120秒）")
-        return json.dumps({"error": "图片生成超时（120秒），请稍后重试"}, ensure_ascii=False)
-    except Exception as e:
-        from app.services.ai.errors import ContentBlockedError
-        duration_ms = int((time.monotonic() - start) * 1000)
-        await get_key_health_manager().report_error(key_id, type(e).__name__, str(e)[:200])
-        if isinstance(e, ContentBlockedError):
-            return json.dumps({"error": f"内容安全策略拦截: {str(e)[:200]}"}, ensure_ascii=False)
-        logger.warning("generate_image failed after %dms: %s", duration_ms, str(e)[:200])
-        return json.dumps({"error": f"图片生成失败: {str(e)[:200]}"}, ensure_ascii=False)
+    task_result = generate_image_task.apply_async(
+        kwargs={
+            "prompt": prompt,
+            "aspect_ratio": aspect_ratio,
+            "model": model,
+            "team_id": ctx.team_id,
+            "user_id": ctx.user_id,
+            "project_id": ctx.project_id,
+        },
+        queue="ai_generation",
+    )
+    result = await _poll_celery_result(task_result, timeout=120, tool_name="图片生成")
+    return json.dumps(result, ensure_ascii=False)
 
 
 @tool(args_schema=GenerateVideoInput)
@@ -76,61 +78,26 @@ async def generate_video(
     duration_seconds: int = 5,
     model: str = "veo-2.0-generate-001",
 ) -> str:
-    """Generate a video using AI. Returns JSON with url, filename, duration_seconds. Timeout: 120s."""
+    """Generate a video using AI. Offloads to Celery worker. Returns JSON with url, filename, duration."""
     from app.agent.tool_context import get_tool_context
-    from app.services.ai.provider_manager import get_provider_manager
-    from app.services.ai.key_health import get_key_health_manager
+    from app.tasks.ai_generation_task import generate_video_task
 
     ctx = get_tool_context()
-    pm = get_provider_manager()
-
-    try:
-        provider, _owner, key_id = await pm.get_provider(
-            "gemini", team_id=ctx.team_id, user_id=ctx.user_id,
-        )
-    except ValueError as e:
-        return json.dumps({"error": f"Gemini 未配置: {e}"}, ensure_ascii=False)
-
-    image_bytes = None
-    if image_url:
-        import httpx
-        try:
-            async with httpx.AsyncClient(timeout=30) as client:
-                resp = await client.get(image_url)
-                resp.raise_for_status()
-                image_bytes = resp.content
-        except Exception:
-            return json.dumps({"error": "无法下载首帧图片"}, ensure_ascii=False)
-
-    start = time.monotonic()
-    try:
-        result = await asyncio.wait_for(
-            provider.generate_video(
-                prompt=prompt,
-                image_bytes=image_bytes,
-                aspect_ratio=aspect_ratio,
-                duration_seconds=duration_seconds,
-                model=model,
-            ),
-            timeout=120,
-        )
-        await get_key_health_manager().report_success(key_id)
-        return json.dumps(
-            {
-                "url": result["url"],
-                "filename": result["filename"],
-                "duration_seconds": result.get("duration_seconds"),
-            },
-            ensure_ascii=False,
-        )
-    except asyncio.TimeoutError:
-        await get_key_health_manager().report_error(key_id, "TimeoutError", "视频生成超时（120秒）")
-        return json.dumps({"error": "视频生成超时（120秒），请稍后重试"}, ensure_ascii=False)
-    except Exception as e:
-        duration_ms = int((time.monotonic() - start) * 1000)
-        await get_key_health_manager().report_error(key_id, type(e).__name__, str(e)[:200])
-        logger.warning("generate_video failed after %dms: %s", duration_ms, str(e)[:200])
-        return json.dumps({"error": f"视频生成失败: {str(e)[:200]}"}, ensure_ascii=False)
+    task_result = generate_video_task.apply_async(
+        kwargs={
+            "prompt": prompt,
+            "aspect_ratio": aspect_ratio,
+            "model": model,
+            "team_id": ctx.team_id,
+            "user_id": ctx.user_id,
+            "image_url": image_url,
+            "duration_seconds": duration_seconds,
+            "project_id": ctx.project_id,
+        },
+        queue="media_processing",
+    )
+    result = await _poll_celery_result(task_result, timeout=300, tool_name="视频生成")
+    return json.dumps(result, ensure_ascii=False)
 
 
 AI_TOOLS = [generate_image, generate_video]
