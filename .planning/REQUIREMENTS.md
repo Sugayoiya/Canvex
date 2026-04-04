@@ -45,9 +45,9 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 
 - [x] **ARTS-01**: Session-scoped artifact store persists skill execution results (keyed by session_id + skill_name)
 - [x] **ARTS-02**: Artifacts stored as structured data with metadata (artifact_id, skill_kind, summary, timestamp)
-- [ ] **ARTS-03**: ToolInterceptor before-hook auto-injects upstream dependency artifacts into skill parameters
-- [ ] **ARTS-04**: ToolInterceptor after-hook auto-persists skill results to ArtifactStore
-- [ ] **ARTS-05**: Agent no longer needs to pass large JSON blobs between tool calls (interceptor handles data flow)
+- [x] **ARTS-03**: ToolInterceptor before-hook auto-injects upstream dependency artifacts into skill parameters
+- [x] **ARTS-04**: ToolInterceptor after-hook auto-persists skill results to ArtifactStore
+- [x] **ARTS-05**: Agent no longer needs to pass large JSON blobs between tool calls (interceptor handles data flow)
 - [x] **ARTS-06**: ArtifactStore uses PostgreSQL/SQLAlchemy (agent_artifacts table), not file system
 
 ### SkillDescriptor Enhancement
@@ -65,7 +65,7 @@ Requirements for Agent System Upgrade milestone. Each maps to roadmap phases.
 
 - [ ] **PIPE-01**: pipeline_tools.py parameter names aligned with actual skill handler field names (text→story, clips→clip_content, shot_plan→shots)
 - [ ] **PIPE-02**: Pipeline properly handles Celery async skills with poll loop (not treating async returns as sync results)
-- [ ] **PIPE-03**: Pipeline chain passes results through ArtifactStore instead of _chain_params hard-coding
+- [x] **PIPE-03**: Pipeline chain passes results through ArtifactStore instead of _chain_params hard-coding
 - [ ] **PIPE-04**: Pipeline reports per-step progress via SSE events
 - [x] **PIPE-05**: Long-running AI @tools (generate_image, generate_video; >10s) offloaded to Celery async queue — @tool submits via apply_async(), polls with backoff, returns result to Agent loop; provides retry (max_retries=2), persistence (acks_late), and concurrency control (worker prefetch)
 
@@ -157,11 +157,11 @@ Deferred to next milestone. Tracked but not in current roadmap.
 | PIPE-04 | Phase 13 | Pending |
 | ARTS-01 | Phase 14 | Complete |
 | ARTS-02 | Phase 14 | Complete |
-| ARTS-03 | Phase 14 | Pending |
-| ARTS-04 | Phase 14 | Pending |
-| ARTS-05 | Phase 14 | Pending |
+| ARTS-03 | Phase 14 | Complete |
+| ARTS-04 | Phase 14 | Complete |
+| ARTS-05 | Phase 14 | Complete |
 | ARTS-06 | Phase 14 | Complete |
-| PIPE-03 | Phase 14 | Pending |
+| PIPE-03 | Phase 14 | Complete |
 | PIPE-05 | Phase 14 | Complete |
 | QENG-01 | Phase 15 | Pending |
 | QENG-02 | Phase 15 | Pending |

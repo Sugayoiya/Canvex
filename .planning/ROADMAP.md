@@ -45,7 +45,7 @@ See: `.planning/milestones/v2.1-ROADMAP.md`
 - [x] **Phase 12.2: Provider & Model Preset Management** — (INSERTED) Provider 系统预置 + 用户填 Key/BaseURL，Model 预置常用模型，ModelPricing 兼任关联表+定价表，模型列表嵌入 Provider 卡片（Dify 风格） (completed 2026-04-03)
 - [x] **Phase 12.3: Model Selection Feature** — (INSERTED) 可用模型 API + 四层 fallback 链 + ModelSelector 组件 + Chat/Canvas 集成 + 项目/个人/Team 默认模型设置 (completed 2026-04-03)
 - [x] **Phase 13: SkillDescriptor Enhancement + Pipeline Fix** — 增强 Skill 元数据（依赖声明/分类/安全标注），废弃冗余 handler，元数据驱动动态工具筛选（PIPE-01/02/04 延迟至 Phase 14）(completed 2026-04-04)
-- [ ] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链
+- [x] **Phase 14: ArtifactStore + ToolInterceptor** — 会话级产物自动存储/注入，替代内联大 JSON 传递和硬编码参数链 (completed 2026-04-04)
 - [ ] **Phase 15: QueryEngine + Cost Tracking** — Token 预算/轮次限制/递减检测/"先计划再执行"模式 + 成本跟踪与前端展示
 - [ ] **Phase 16: Admin Skill Management** — Admin 技能管理页面（列表/统计/启停控制）
 
@@ -192,7 +192,7 @@ Plans:
 Plans:
 - [x] 14-01-PLAN.md — ArtifactStore data layer: AgentArtifact model + ArtifactStoreService CRUD + ToolContext session_id extension
 - [x] 14-02-PLAN.md — Celery AI generation tasks: generate_image_task/generate_video_task + ai_tools.py Celery offload refactor
-- [ ] 14-03-PLAN.md — ToolInterceptor: before/after hooks + recursive backfill + get_all_tools() integration + system prompt update
+- [x] 14-03-PLAN.md — ToolInterceptor: before/after hooks + recursive backfill + get_all_tools() integration + system prompt update
 
 ### Phase 15: QueryEngine + Cost Tracking
 **Goal**: Agent loop has token budget controls, smart termination, plan-then-execute mode, and full cost visibility in both backend and frontend
@@ -243,6 +243,6 @@ Phases execute in numeric order: 12 → **12.1 (INSERTED)** → **12.2 (INSERTED
 | **12.2. Provider Preset (INSERTED)** | **v3.0** | **0/3** | **Planned** | **-** |
 | **12.3. Model Selection (INSERTED)** | **v3.0** | **0/TBD** | **Not started** | **-** |
 | 13. Descriptor + Pipeline | v3.0 | 3/3 | Complete | 2026-04-04 |
-| 14. ArtifactStore | v3.0 | 2/3 | In Progress|  |
+| 14. ArtifactStore | v3.0 | 3/3 | Complete   | 2026-04-04 |
 | 15. QueryEngine + Cost | v3.0 | 0/TBD | Not started | - |
 | 16. Admin Skills | v3.0 | 0/TBD | Not started | - |

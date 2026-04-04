@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: Agent System Upgrade
-status: executing
-stopped_at: Completed 14-02-PLAN.md
-last_updated: "2026-04-04T04:49:09.106Z"
+status: verifying
+stopped_at: Completed 14-03-PLAN.md
+last_updated: "2026-04-04T04:58:31.112Z"
 last_activity: 2026-04-04
 progress:
   total_phases: 8
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 23
-  completed_plans: 22
+  completed_plans: 23
   percent: 63
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-02)
 
 Phase: 14 (artifactstore-toolinterceptor) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-04
 
 Progress: [██████░░░░] 63%
@@ -69,6 +69,7 @@ Progress: [██████░░░░] 63%
 | Phase 13 P03 | 2 min | 2 tasks | 6 files |
 | Phase 14 P01 | 2min | 2 tasks | 6 files |
 | Phase 14 P02 | 3min | 2 tasks | 4 files |
+| Phase 14 P03 | 3min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,9 @@ Progress: [██████░░░░] 63%
 - [Phase 14]: set_tool_context_obj() overload to avoid modifying existing set_tool_context signature
 - [Phase 14]: 110s image / 280s video provider timeout inside Celery tasks (buffer below 600s soft limit)
 - [Phase 14]: Exponential backoff polling in @tool: 1s→2s→4s→8s cap for non-blocking event loop
+- [Phase 14]: Before-hook injects via ToolContext.injected_artifacts contextvars, not kwargs — tool functions have fixed Pydantic schemas
+- [Phase 14]: Two-pass wrapping with shared mutable wrapped_ref list ensures recursive backfill finds wrapped tools
+- [Phase 14]: 9 read-only/meta tools have produces_artifact=False — after-hook skips storage for query/meta tools
 
 ### Roadmap Evolution
 
@@ -129,6 +133,6 @@ Progress: [██████░░░░] 63%
 
 ## Session Continuity
 
-Last session: 2026-04-04T04:49:09.103Z
-Stopped at: Completed 14-02-PLAN.md
+Last session: 2026-04-04T04:58:31.110Z
+Stopped at: Completed 14-03-PLAN.md
 Resume file: None
