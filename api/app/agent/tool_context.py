@@ -17,6 +17,7 @@ class ToolContext:
     canvas_id: str | None = None
     episode_id: str | None = None
     session_id: str | None = None
+    injected_artifacts: dict | None = None
 
 
 _tool_ctx_var: contextvars.ContextVar[ToolContext | None] = contextvars.ContextVar(
