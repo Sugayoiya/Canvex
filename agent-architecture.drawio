@@ -1,0 +1,371 @@
+<mxGraphModel adaptiveColors="auto" dx="2400" dy="1600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="3300" pageHeight="2000" math="0" shadow="0">
+  <root>
+    <mxCell id="0"/>
+    <mxCell id="1" parent="0"/>
+
+    <!-- ==================== TITLE ==================== -->
+    <mxCell id="title" value="&lt;b&gt;Canvex Agent System Architecture&lt;/b&gt;&lt;br&gt;Data Flow &amp; Component Map" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fontSize=18;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="900" y="20" width="420" height="60" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== A: HTTP ENTRY (Yellow) ==================== -->
+    <mxCell id="grp_http" value="A. HTTP Entry &amp;amp; SSE Streaming" style="swimlane;startSize=30;fillColor=#FFF2CC;strokeColor=#D6B656;fontStyle=1;fontSize=13;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="100" width="520" height="400" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="http_entry" value="&lt;b&gt;POST /api/v1/agent/chat/{session_id}&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;body: ChatRequest(message, model_name, provider)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE599;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="30" y="45" width="460" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="auth_session" value="&lt;b&gt;get_owned_session()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;verify ownership + resolve_project_access&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="30" y="110" width="220" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="set_ctx" value="&lt;b&gt;set_tool_context()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;project_id, user_id, team_id,&lt;br&gt;canvas_id, session_id&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="270" y="110" width="220" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="resolve_model" value="&lt;b&gt;resolve_model_for_task()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;4-layer fallback: explicit &amp;rarr; project &amp;rarr;&lt;br&gt;user &amp;rarr; team &amp;rarr; system default&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="30" y="180" width="220" height="55" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="resolve_provider" value="&lt;b&gt;_resolve_provider_with_fallback()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;resolve_provider_for_model&lt;br&gt;via ModelPricing JOIN&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="270" y="180" width="220" height="55" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="sse_stream" value="&lt;b&gt;EventSourceResponse&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;event_generator() async generator&lt;br&gt;sse_protocol.py: THINKING | TOOL_CALL |&lt;br&gt;TOOL_RESULT | TOKEN | DONE | ERROR&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFE599;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="30" y="260" width="280" height="65" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="save_msg" value="&lt;b&gt;save_messages()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;user + assistant + langchain_messages_json&lt;br&gt;+ tool_calls / tool_results rows&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="30" y="340" width="280" height="50" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="clear_ctx" value="&lt;b&gt;clear_tool_context()&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="grp_http">
+      <mxGeometry x="330" y="340" width="160" height="50" as="geometry"/>
+    </mxCell>
+
+    <!-- edges inside HTTP -->
+    <mxCell id="e_h1" edge="1" parent="grp_http" source="http_entry" target="auth_session" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_h2" edge="1" parent="grp_http" source="http_entry" target="set_ctx" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_h3" edge="1" parent="grp_http" source="auth_session" target="resolve_model" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_h4" edge="1" parent="grp_http" source="set_ctx" target="resolve_provider" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== B: AGENT CREATION (Blue) ==================== -->
+    <mxCell id="grp_agent" value="B. Agent Creation (AgentService)" style="swimlane;startSize=30;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=13;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="600" y="100" width="520" height="400" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="create_agent" value="&lt;b&gt;AgentService.create_agent()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;provider, model_name, project_name,&lt;br&gt;canvas_name, canvas_summary,&lt;br&gt;team_id, user_id, has_canvas, has_episode&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CCE5FF;strokeColor=#6C8EBF;" vertex="1" parent="grp_agent">
+      <mxGeometry x="30" y="45" width="460" height="60" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="resolve_llm" value="&lt;b&gt;ProviderManager.resolve_langchain_llm()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;native (Gemini) &amp;rarr; ChatGoogleGenerativeAI&lt;br&gt;openai-compat &amp;rarr; ChatOpenAI(base_url)&lt;br&gt;Key fallback: team &amp;rarr; personal &amp;rarr; system&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="grp_agent">
+      <mxGeometry x="30" y="125" width="220" height="70" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="get_tools_ctx" value="&lt;b&gt;get_tools_for_context()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;get_all_tools() &amp;rarr; tool_middleware&lt;br&gt;filter by context_group:&lt;br&gt;always | canvas | episode | script&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="grp_agent">
+      <mxGeometry x="270" y="125" width="220" height="70" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="build_prompt" value="&lt;b&gt;build_system_prompt()&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;SYSTEM_PROMPT_TEMPLATE:&lt;br&gt;- tool usage strategy&lt;br&gt;- artifact auto-flow guidance&lt;br&gt;- {skills_section} from SkillLoader&lt;br&gt;- {context_section} project/canvas info&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="grp_agent">
+      <mxGeometry x="30" y="215" width="280" height="90" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="skill_loader" value="&lt;b&gt;SkillLoader&lt;/b&gt; (singleton)&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;agent/skills/*/SKILL.md&lt;br&gt;load_metadata() + build_system_prompt_fragment()&lt;br&gt;L1: skill list | L2: read_skill | L3: read_resource&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="grp_agent">
+      <mxGeometry x="330" y="215" width="180" height="90" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="langchain_agent" value="&lt;b&gt;langchain.agents.create_agent(llm, tools, system_prompt)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Returns CompiledStateGraph&lt;br&gt;supports astream_events(v2) / ainvoke&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#CCE5FF;strokeColor=#6C8EBF;fontStyle=0;" vertex="1" parent="grp_agent">
+      <mxGeometry x="30" y="330" width="460" height="55" as="geometry"/>
+    </mxCell>
+
+    <!-- edges inside Agent creation -->
+    <mxCell id="e_a1" edge="1" parent="grp_agent" source="create_agent" target="resolve_llm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_a2" edge="1" parent="grp_agent" source="create_agent" target="get_tools_ctx" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_a3" edge="1" parent="grp_agent" source="resolve_llm" target="build_prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_a4" edge="1" parent="grp_agent" source="skill_loader" target="build_prompt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;dashed=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_a5" edge="1" parent="grp_agent" source="build_prompt" target="langchain_agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_a6" edge="1" parent="grp_agent" source="get_tools_ctx" target="langchain_agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Cross-group edge: HTTP to Agent -->
+    <mxCell id="e_cross1" value="create_agent()" edge="1" parent="1" source="resolve_provider" target="create_agent" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#6C8EBF;fontStyle=1;fontSize=10;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== C: TOOL SYSTEM (Green) ==================== -->
+    <mxCell id="grp_tools" value="C. Tool System (17 Tools + Interceptor)" style="swimlane;startSize=30;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=13;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="40" y="540" width="1080" height="520" as="geometry"/>
+    </mxCell>
+
+    <!-- Tool registry box -->
+    <mxCell id="tool_registry" value="&lt;b&gt;tools/__init__.py&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;TOOL_METADATA (17 entries): skill_kind, context_group,&lt;br&gt;produces_artifact, is_read_only, timeout, ...&lt;br&gt;&lt;br&gt;&lt;b&gt;get_all_tools()&lt;/b&gt; &amp;rarr; _attach_tool_metadata &amp;rarr; wrap_tool_with_interceptor&lt;br&gt;&lt;b&gt;get_tools_for_context()&lt;/b&gt; &amp;rarr; tool_middleware filter by context_group&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="grp_tools">
+      <mxGeometry x="20" y="40" width="450" height="90" as="geometry"/>
+    </mxCell>
+
+    <!-- 4 tool categories -->
+    <mxCell id="ctx_tools" value="&lt;b&gt;CONTEXT_TOOLS&lt;/b&gt; (7)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;produces_artifact: False&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;get_project_info&lt;br&gt;get_episodes&lt;br&gt;get_characters&lt;br&gt;get_scenes&lt;br&gt;get_script&lt;br&gt;get_canvas_state&lt;br&gt;get_style_templates&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F5E6;strokeColor=#82B366;align=left;verticalAlign=top;" vertex="1" parent="grp_tools">
+      <mxGeometry x="20" y="155" width="170" height="175" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="mut_tools" value="&lt;b&gt;MUTATION_TOOLS&lt;/b&gt; (6)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;produces_artifact: True&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;save_characters&lt;br&gt;save_scenes&lt;br&gt;save_screenplay&lt;br&gt;save_shot_plan&lt;br&gt;save_shot_details&lt;br&gt;update_shot&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F5E6;strokeColor=#82B366;align=left;verticalAlign=top;" vertex="1" parent="grp_tools">
+      <mxGeometry x="210" y="155" width="170" height="175" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="ai_tools" value="&lt;b&gt;AI_TOOLS&lt;/b&gt; (2)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;produces_artifact: True&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;generate_image&lt;br&gt;&amp;nbsp;&amp;nbsp;apply_async &amp;rarr; Celery&lt;br&gt;&amp;nbsp;&amp;nbsp;_poll_celery_result(120s)&lt;br&gt;&lt;br&gt;generate_video&lt;br&gt;&amp;nbsp;&amp;nbsp;apply_async &amp;rarr; Celery&lt;br&gt;&amp;nbsp;&amp;nbsp;_poll_celery_result(300s)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F5E6;strokeColor=#82B366;align=left;verticalAlign=top;" vertex="1" parent="grp_tools">
+      <mxGeometry x="400" y="155" width="200" height="175" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="skill_tools" value="&lt;b&gt;SKILL_TOOLS&lt;/b&gt; (2)&lt;br&gt;&lt;font style=&quot;font-size:9px&quot;&gt;produces_artifact: False&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;read_skill(name)&lt;br&gt;&amp;nbsp;&amp;nbsp;skills/{name}/SKILL.md&lt;br&gt;&lt;br&gt;read_resource(name, filename)&lt;br&gt;&amp;nbsp;&amp;nbsp;100KB limit&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F5E6;strokeColor=#82B366;align=left;verticalAlign=top;" vertex="1" parent="grp_tools">
+      <mxGeometry x="620" y="155" width="200" height="175" as="geometry"/>
+    </mxCell>
+
+    <!-- ToolInterceptor box -->
+    <mxCell id="interceptor" value="&lt;b&gt;ToolInterceptor&lt;/b&gt; (tool_interceptor.py)&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;wrap_tool_with_interceptor(tool, TOOL_METADATA, all_tools)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#B6D7A8;strokeColor=#82B366;fontStyle=0;" vertex="1" parent="grp_tools">
+      <mxGeometry x="20" y="355" width="800" height="35" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="before_hook" value="&lt;b&gt;Before-Hook&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;if require_prior_kind + session_id:&lt;br&gt;_inject_dependencies() &amp;rarr; ArtifactStore.get_latest_payload()&lt;br&gt;replace(ctx, injected_artifacts={...}) &amp;rarr; set_tool_context_obj()&lt;br&gt;Recursive backfill (max depth 3) with _can_backfill_without_input()&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E2EFDA;strokeColor=#82B366;align=left;" vertex="1" parent="grp_tools">
+      <mxGeometry x="20" y="410" width="390" height="85" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="after_hook" value="&lt;b&gt;After-Hook&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;if produces_artifact + session_id + no error:&lt;br&gt;_parse_tool_result() &amp;rarr; generate_summary()&lt;br&gt;ArtifactStoreService.save() &amp;rarr; {summary, artifact_id}&lt;br&gt;Extracts log_id for execution_log_id FK&lt;br&gt;reset_tool_context(token) in finally block&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E2EFDA;strokeColor=#82B366;align=left;" vertex="1" parent="grp_tools">
+      <mxGeometry x="430" y="410" width="390" height="85" as="geometry"/>
+    </mxCell>
+
+    <!-- edges inside Tool System -->
+    <mxCell id="e_t1" edge="1" parent="grp_tools" source="tool_registry" target="ctx_tools" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_t2" edge="1" parent="grp_tools" source="tool_registry" target="mut_tools" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_t3" edge="1" parent="grp_tools" source="tool_registry" target="ai_tools" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+    <mxCell id="e_t4" edge="1" parent="grp_tools" source="tool_registry" target="skill_tools" style="edgeStyle=orthogonalEdgeStyle;rounded=1;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== D: TOOL CONTEXT (Purple) ==================== -->
+    <mxCell id="grp_ctx" value="D. ToolContext (contextvars)" style="swimlane;startSize=30;fillColor=#E1D5E7;strokeColor=#9673A6;fontStyle=1;fontSize=13;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="100" width="320" height="400" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="toolctx" value="&lt;b&gt;@dataclass(frozen=True)&lt;br&gt;ToolContext&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;project_id: str&lt;br&gt;user_id: str&lt;br&gt;team_id: str | None&lt;br&gt;canvas_id: str | None&lt;br&gt;episode_id: str | None&lt;br&gt;session_id: str | None&lt;br&gt;&lt;b&gt;injected_artifacts: dict | None&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;align=left;" vertex="1" parent="grp_ctx">
+      <mxGeometry x="20" y="45" width="280" height="155" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="ctx_funcs" value="&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;set_tool_context()&lt;/b&gt; - kwargs form (agent.py)&lt;br&gt;&lt;b&gt;set_tool_context_obj(ctx)&lt;/b&gt; - object form (interceptor)&lt;br&gt;&lt;b&gt;get_tool_context()&lt;/b&gt; - read from contextvar&lt;br&gt;&lt;b&gt;reset_tool_context(token)&lt;/b&gt; - restore previous&lt;br&gt;&lt;b&gt;clear_tool_context()&lt;/b&gt; - set None (finally)&lt;br&gt;&lt;b&gt;get_context_snapshot()&lt;/b&gt; - cross-task copy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E1D5E7;strokeColor=#9673A6;align=left;" vertex="1" parent="grp_ctx">
+      <mxGeometry x="20" y="220" width="280" height="100" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="ctx_note" value="&lt;font style=&quot;font-size:9px;color:#666&quot;&gt;All 17 tools use get_tool_context()&lt;br&gt;to access project_id, user_id, session_id.&lt;br&gt;Interceptor injects artifacts via&lt;br&gt;dataclasses.replace() + set_tool_context_obj()&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E8F9;strokeColor=#9673A6;dashed=1;" vertex="1" parent="grp_ctx">
+      <mxGeometry x="20" y="335" width="280" height="55" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== E: ARTIFACT STORE (Orange) ==================== -->
+    <mxCell id="grp_artifact" value="E. ArtifactStore (PostgreSQL)" style="swimlane;startSize=30;fillColor=#FCE5CD;strokeColor=#D79B00;fontStyle=1;fontSize=13;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="540" width="320" height="340" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="artifact_model" value="&lt;b&gt;AgentArtifact&lt;/b&gt; (agent_artifacts)&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;id: UUID PK&lt;br&gt;session_id: FK &amp;rarr; agent_sessions (CASCADE)&lt;br&gt;skill_kind: VARCHAR(100)&lt;br&gt;summary: TEXT (&amp;le;500 chars)&lt;br&gt;payload: JSONB&lt;br&gt;execution_log_id: FK &amp;rarr; skill_execution_logs&lt;br&gt;created_at: TZDateTime&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size:9px&quot;&gt;Indexes: (session_id, skill_kind), (session_id, created_at)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;align=left;" vertex="1" parent="grp_artifact">
+      <mxGeometry x="20" y="45" width="280" height="155" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="artifact_svc" value="&lt;b&gt;ArtifactStoreService&lt;/b&gt;&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;save(session_id, skill_kind, summary, payload, log_id)&lt;br&gt;get_latest(session_id, skill_kind)&lt;br&gt;get_latest_payload(session_id, skill_kind)&lt;br&gt;list_session_artifacts(session_id)&lt;/font&gt;&lt;hr&gt;&lt;font style=&quot;font-size:10px&quot;&gt;&lt;b&gt;generate_summary()&lt;/b&gt;&lt;br&gt;8 SUMMARY_TEMPLATES (save_characters,&lt;br&gt;scenes, screenplay, shot_plan, ...&lt;br&gt;generate_image, generate_video)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FCE5CD;strokeColor=#D79B00;align=left;" vertex="1" parent="grp_artifact">
+      <mxGeometry x="20" y="210" width="280" height="120" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== F: CELERY (Red) ==================== -->
+    <mxCell id="grp_celery" value="F. Celery Workers (Redis)" style="swimlane;startSize=30;fillColor=#F8CECC;strokeColor=#B85450;fontStyle=1;fontSize=13;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="1160" y="920" width="320" height="260" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="celery_img" value="&lt;b&gt;generate_image_task&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;queue: ai_generation&lt;br&gt;max_retries=2, acks_late=True&lt;br&gt;asyncio.wait_for(110s)&lt;br&gt;ProviderManager.get_provider('gemini')&lt;br&gt;&amp;rarr; provider.generate_image()&lt;br&gt;SkillExecutionLog + KeyHealthManager&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;align=left;" vertex="1" parent="grp_celery">
+      <mxGeometry x="10" y="40" width="295" height="100" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="celery_vid" value="&lt;b&gt;generate_video_task&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;queue: media_processing&lt;br&gt;max_retries=2, asyncio.wait_for(280s)&lt;br&gt;Optional image_url download (httpx 30s)&lt;br&gt;&amp;rarr; provider.generate_video()&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8CECC;strokeColor=#B85450;align=left;" vertex="1" parent="grp_celery">
+      <mxGeometry x="10" y="155" width="295" height="85" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== G: DATABASE (Gray) ==================== -->
+    <mxCell id="db" value="&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;agent_sessions | agent_messages | agent_artifacts&lt;br&gt;skill_execution_logs | projects | canvas | ...&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#F5F5F5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="40" y="1120" width="360" height="80" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="redis" value="&lt;b&gt;Redis&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px&quot;&gt;Celery broker + result backend&lt;br&gt;Key health cache&lt;/font&gt;" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#F5F5F5;strokeColor=#666666;fontColor=#333333;" vertex="1" parent="1">
+      <mxGeometry x="460" y="1120" width="240" height="80" as="geometry"/>
+    </mxCell>
+
+    <!-- ==================== CROSS-GROUP EDGES ==================== -->
+
+    <!-- Agent creation to SSE streaming -->
+    <mxCell id="e_cross2" value="astream_events(v2)" edge="1" parent="1" source="langchain_agent" target="sse_stream" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#D6B656;fontStyle=1;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="590" y="488"/>
+          <mxPoint x="590" y="393"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- SSE to save messages -->
+    <mxCell id="e_cross2b" edge="1" parent="1" source="sse_stream" target="save_msg" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#D6B656;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <!-- Tool interceptor to ArtifactStore -->
+    <mxCell id="e_cross3" value="save() / get_latest_payload()" edge="1" parent="1" source="after_hook" target="artifact_svc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#D79B00;fontStyle=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry"/>
+    </mxCell>
+
+    <mxCell id="e_cross3b" value="get_latest_payload()" edge="1" parent="1" source="before_hook" target="artifact_svc" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#D79B00;dashed=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.3;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1140" y="993"/>
+          <mxPoint x="1140" y="786"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- AI tools to Celery -->
+    <mxCell id="e_cross4" value="apply_async()" edge="1" parent="1" source="ai_tools" target="celery_img" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=2;strokeColor=#B85450;fontStyle=1;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1130" y="783"/>
+          <mxPoint x="1130" y="1010"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Celery to DB -->
+    <mxCell id="e_cross5" edge="1" parent="1" source="celery_img" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#B85450;dashed=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1150" y="1060"/>
+          <mxPoint x="1150" y="1160"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- Celery to Redis -->
+    <mxCell id="e_cross6" edge="1" parent="1" source="celery_img" target="redis" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#B85450;exitX=0;exitY=0.5;exitDx=0;exitDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1150" y="1010"/>
+          <mxPoint x="1150" y="1100"/>
+          <mxPoint x="580" y="1100"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ArtifactStore to DB -->
+    <mxCell id="e_cross7" edge="1" parent="1" source="artifact_model" target="db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#D79B00;dashed=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1160" y="740"/>
+          <mxPoint x="1060" y="740"/>
+          <mxPoint x="1060" y="1100"/>
+          <mxPoint x="220" y="1100"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ToolContext connection to tools -->
+    <mxCell id="e_cross8" value="get_tool_context()" edge="1" parent="1" source="toolctx" target="tool_registry" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeWidth=1;strokeColor=#9673A6;dashed=1;fontSize=10;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;">
+      <mxGeometry relative="1" as="geometry">
+        <Array as="points">
+          <mxPoint x="1150" y="350"/>
+          <mxPoint x="1150" y="530"/>
+          <mxPoint x="510" y="530"/>
+          <mxPoint x="510" y="570"/>
+        </Array>
+      </mxGeometry>
+    </mxCell>
+
+    <!-- ==================== LEGEND ==================== -->
+    <mxCell id="legend" value="" style="swimlane;startSize=20;fillColor=#F5F5F5;strokeColor=#999999;fontStyle=1;fontSize=11;collapsible=0;" vertex="1" parent="1">
+      <mxGeometry x="750" y="1100" width="380" height="100" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg_title" value="&lt;b&gt;Legend&lt;/b&gt;" style="text;html=1;fontSize=11;" vertex="1" parent="legend">
+      <mxGeometry x="10" y="5" width="60" height="20" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg1" value="" style="rounded=1;fillColor=#FFF2CC;strokeColor=#D6B656;" vertex="1" parent="legend">
+      <mxGeometry x="10" y="30" width="20" height="12" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg1t" value="HTTP / SSE" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="35" y="27" width="60" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg2" value="" style="rounded=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;" vertex="1" parent="legend">
+      <mxGeometry x="100" y="30" width="20" height="12" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg2t" value="Agent / LLM" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="125" y="27" width="70" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg3" value="" style="rounded=1;fillColor=#D5E8D4;strokeColor=#82B366;" vertex="1" parent="legend">
+      <mxGeometry x="200" y="30" width="20" height="12" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg3t" value="Tools" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="225" y="27" width="40" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg4" value="" style="rounded=1;fillColor=#E1D5E7;strokeColor=#9673A6;" vertex="1" parent="legend">
+      <mxGeometry x="270" y="30" width="20" height="12" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg4t" value="ToolContext" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="295" y="27" width="70" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg5" value="" style="rounded=1;fillColor=#FCE5CD;strokeColor=#D79B00;" vertex="1" parent="legend">
+      <mxGeometry x="10" y="55" width="20" height="12" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg5t" value="ArtifactStore" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="35" y="52" width="70" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg6" value="" style="rounded=1;fillColor=#F8CECC;strokeColor=#B85450;" vertex="1" parent="legend">
+      <mxGeometry x="100" y="55" width="20" height="12" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg6t" value="Celery" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="125" y="52" width="40" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg7" value="" style="endArrow=classic;strokeWidth=2;" edge="1" parent="legend">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="200" y="62" as="sourcePoint"/>
+        <mxPoint x="250" y="62" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="leg7t" value="Data flow" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="255" y="55" width="50" height="16" as="geometry"/>
+    </mxCell>
+    <mxCell id="leg8" value="" style="endArrow=classic;dashed=1;" edge="1" parent="legend">
+      <mxGeometry relative="1" as="geometry">
+        <mxPoint x="10" y="82" as="sourcePoint"/>
+        <mxPoint x="60" y="82" as="targetPoint"/>
+      </mxGeometry>
+    </mxCell>
+    <mxCell id="leg8t" value="Optional / query" style="text;html=1;fontSize=9;" vertex="1" parent="legend">
+      <mxGeometry x="65" y="77" width="80" height="16" as="geometry"/>
+    </mxCell>
+
+  </root>
+</mxGraphModel>
