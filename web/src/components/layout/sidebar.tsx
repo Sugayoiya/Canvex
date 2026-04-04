@@ -97,13 +97,14 @@ export function Sidebar() {
     <aside
       style={{
         width: 180,
-        minHeight: "100vh",
+        height: "100%",
         background: "var(--ob-surface-low)",
         borderRight: "1px solid var(--ob-glass-border)",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
         padding: "12px 8px",
+        overflow: "hidden",
       }}
     >
       {/* Space identity */}

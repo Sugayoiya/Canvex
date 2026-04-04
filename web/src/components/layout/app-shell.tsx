@@ -5,13 +5,14 @@ import { Topbar } from "./topbar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ display: "flex", minHeight: "100vh", background: "var(--ob-surface-base)" }}>
+    <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "var(--ob-surface-base)" }}>
       <Sidebar />
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
         <Topbar />
         <main
           style={{
             flex: 1,
+            minHeight: 0,
             padding: "24px 32px",
             overflowY: "auto",
             backgroundImage: "var(--ob-dot-grid)",

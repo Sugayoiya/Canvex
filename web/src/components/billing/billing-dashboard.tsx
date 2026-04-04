@@ -136,7 +136,6 @@ export function BillingDashboard() {
     return (
       <div
         style={{
-          padding: "24px 32px",
           fontFamily: "Manrope, sans-serif",
         }}
       >
@@ -185,9 +184,7 @@ export function BillingDashboard() {
   return (
     <div
       style={{
-        padding: "24px 32px",
         fontFamily: "Manrope, sans-serif",
-        minHeight: "100vh",
       }}
     >
       {/* Page Header */}

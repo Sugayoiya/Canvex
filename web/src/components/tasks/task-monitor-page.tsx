@@ -75,7 +75,6 @@ export function TaskMonitorPage() {
     return (
       <div
         style={{
-          padding: "24px 32px",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -115,7 +114,7 @@ export function TaskMonitorPage() {
   }
 
   return (
-    <div style={{ padding: "24px 32px", minHeight: "100vh" }}>
+    <div>
       {/* Header */}
       <div
         style={{
