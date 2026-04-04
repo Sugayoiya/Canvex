@@ -201,6 +201,7 @@ async def chat(
                 user_id=user.id,
                 team_id=getattr(user, "current_team_id", None),
                 canvas_id=session.canvas_id,
+                session_id=session.id,
             )
 
             history = await agent_service.load_message_history(db, session.id)

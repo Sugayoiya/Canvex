@@ -16,6 +16,7 @@ class ToolContext:
     team_id: str | None = None
     canvas_id: str | None = None
     episode_id: str | None = None
+    session_id: str | None = None
 
 
 _tool_ctx_var: contextvars.ContextVar[ToolContext | None] = contextvars.ContextVar(
@@ -29,6 +30,7 @@ def set_tool_context(
     team_id: str | None = None,
     canvas_id: str | None = None,
     episode_id: str | None = None,
+    session_id: str | None = None,
 ) -> contextvars.Token:
     """Set tool context for current async task. Returns token for reset.
 
@@ -41,8 +43,19 @@ def set_tool_context(
             team_id=team_id,
             canvas_id=canvas_id,
             episode_id=episode_id,
+            session_id=session_id,
         )
     )
+
+
+def set_tool_context_obj(ctx: ToolContext) -> contextvars.Token:
+    """Set tool context from a pre-built ToolContext object. Used by ToolInterceptor."""
+    return _tool_ctx_var.set(ctx)
+
+
+def reset_tool_context(token: contextvars.Token) -> None:
+    """Restore tool context to pre-set state. Used by ToolInterceptor after-hook."""
+    _tool_ctx_var.reset(token)
 
 
 def get_tool_context() -> ToolContext:
