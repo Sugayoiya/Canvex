@@ -6,6 +6,7 @@ TOOL_METADATA = {
         "skill_kind": "get_project_info",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 60,
         "max_result_size_chars": 50000,
         "context_group": "always",
@@ -15,6 +16,7 @@ TOOL_METADATA = {
         "skill_kind": "get_episodes",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 60,
         "max_result_size_chars": 50000,
         "context_group": "always",
@@ -24,6 +26,7 @@ TOOL_METADATA = {
         "skill_kind": "get_characters",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 60,
         "max_result_size_chars": 50000,
         "context_group": "always",
@@ -33,6 +36,7 @@ TOOL_METADATA = {
         "skill_kind": "get_scenes",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 60,
         "max_result_size_chars": 50000,
         "context_group": "always",
@@ -42,6 +46,7 @@ TOOL_METADATA = {
         "skill_kind": "get_script",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 60,
         "max_result_size_chars": 50000,
         "context_group": "always",
@@ -51,6 +56,7 @@ TOOL_METADATA = {
         "skill_kind": "get_canvas_state",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 60,
         "max_result_size_chars": 50000,
         "context_group": "canvas",
@@ -60,6 +66,7 @@ TOOL_METADATA = {
         "skill_kind": "get_style_templates",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 60,
         "max_result_size_chars": 50000,
         "context_group": "episode",
@@ -141,6 +148,7 @@ TOOL_METADATA = {
         "skill_kind": "read_skill",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 10,
         "max_result_size_chars": 100000,
         "context_group": "always",
@@ -150,6 +158,7 @@ TOOL_METADATA = {
         "skill_kind": "read_resource",
         "is_read_only": True,
         "is_destructive": False,
+        "produces_artifact": False,
         "timeout": 10,
         "max_result_size_chars": 100000,
         "context_group": "always",
@@ -167,13 +176,22 @@ def _attach_tool_metadata(tools: list) -> list:
 
 
 def get_all_tools() -> list:
-    """Return all 17 tools (unfiltered). Use get_tools_for_context() for agent invocation."""
+    """Return all 17 tools with interceptor wrappers. Use get_tools_for_context() for agent invocation."""
+    from app.agent.tool_interceptor import wrap_tool_with_interceptor
+    from app.agent.tools.ai_tools import AI_TOOLS
     from app.agent.tools.context_tools import CONTEXT_TOOLS
     from app.agent.tools.mutation_tools import MUTATION_TOOLS
-    from app.agent.tools.ai_tools import AI_TOOLS
     from app.agent.tools.skill_tools import SKILL_TOOLS
-    tools = [*CONTEXT_TOOLS, *MUTATION_TOOLS, *AI_TOOLS, *SKILL_TOOLS]
-    return _attach_tool_metadata(tools)
+
+    raw_tools = [*CONTEXT_TOOLS, *MUTATION_TOOLS, *AI_TOOLS, *SKILL_TOOLS]
+    raw_tools = _attach_tool_metadata(raw_tools)
+
+    # Two-pass wrapping: shared mutable list ensures recursive backfill
+    # finds WRAPPED tools (with after-hooks), not raw originals.
+    wrapped_ref: list = []
+    wrapped = [wrap_tool_with_interceptor(t, TOOL_METADATA, wrapped_ref) for t in raw_tools]
+    wrapped_ref.extend(wrapped)
+    return wrapped
 
 
 def get_tools_for_context(*, has_canvas: bool = False, has_episode: bool = False) -> list:
